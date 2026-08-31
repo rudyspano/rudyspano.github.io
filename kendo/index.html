@@ -155,8 +155,8 @@
 
   <h2>Vue</h2>
   <div class="row" id="viewModeRow">
+    <button data-view-mode="normal">Normal</button>
     <button data-view-mode="calque">Calque</button>
-    <button data-view-mode="occlusion">Occlusion</button>
   </div>
 
   <h2>Décomposition du mouvement</h2>
@@ -209,7 +209,9 @@ const TOE_LENGTH = 7;
 const SHINAI_BUTT_OVERHANG = 5;
 const SHINAI_LENGTH_FROM_LEFT_GRIP = 115;
 const GRIP_SPACING = 24;
-const TSUBA_DISTANCE_FROM_LEFT_GRIP = 36;
+/* Poing droit contre la tsuba : 24 cm entre les deux mains, la garde
+   se trouve juste après le poing droit. */
+const TSUBA_DISTANCE_FROM_LEFT_GRIP = 29;
 const MONOUCHI_START_FROM_LEFT_GRIP = 88;
 
 /* Le genou n'a que deux solutions possibles en 2D : on fige le côté
@@ -267,28 +269,28 @@ const keyframeList = [
       rootX: 0, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -14, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 16, gripY: 98, shinaiDegrees: 16,
+      gripX: 24, gripY: 100, shinaiDegrees: 16,
       leftElbowBias: 5, rightElbowBias: 6 } },
 
   { frame: 20, easing: "easeInOutSine", pose: {
       rootX: 0, rootY: 85.4, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
       rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -14, leftAnkleY: 9, leftFootDegrees: -13,
-      gripX: 16, gripY: 97.5, shinaiDegrees: 16,
+      gripX: 24, gripY: 99.5, shinaiDegrees: 16,
       leftElbowBias: 5, rightElbowBias: 6 } },
 
   { frame: 44, easing: "easeOutCubic", pose: {
       rootX: 6, rootY: 86, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 28, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -9, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 22, gripY: 99, shinaiDegrees: 12,
+      gripX: 30, gripY: 101, shinaiDegrees: 12,
       leftElbowBias: 5, rightElbowBias: 6 } },
 
   { frame: 62, easing: "easeInQuad", pose: {
       rootX: 12, rootY: 87, torsoLeanDegrees: 4, headTiltDegrees: -2,
       rightAnkleX: 32, rightAnkleY: 8, rightFootDegrees: 4,
       leftAnkleX: -3.2, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 22, gripY: 168, shinaiDegrees: 198,
+      gripX: 22, gripY: 168, shinaiDegrees: 135,
       leftElbowBias: -9, rightElbowBias: -10 } },
 
   /* Le talon gauche monte, l'orteil reste planté en x = 12 : c'est lui
@@ -297,7 +299,7 @@ const keyframeList = [
       rootX: 24, rootY: 89, torsoLeanDegrees: 6, headTiltDegrees: -1,
       rightAnkleX: 44, rightAnkleY: 24, rightFootDegrees: 12,
       leftAnkleX: -1.4, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 34, gripY: 170, shinaiDegrees: 202,
+      gripX: 34, gripY: 170, shinaiDegrees: 140,
       leftElbowBias: -9, rightElbowBias: -10 } },
 
   /* Extension maximale : jambe gauche tendue à 98 %, sur la pointe. */
@@ -305,14 +307,14 @@ const keyframeList = [
       rootX: 42, rootY: 88, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
       leftAnkleX: 1.6, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 54, gripY: 172, shinaiDegrees: 196,
+      gripX: 54, gripY: 172, shinaiDegrees: 132,
       leftElbowBias: -9, rightElbowBias: -10 } },
 
   { frame: 76, easing: "linear", pose: {
       rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
       leftAnkleX: 30, leftAnkleY: 24, leftFootDegrees: -40,
-      gripX: 96, gripY: 164, shinaiDegrees: 130,
+      gripX: 96, gripY: 162, shinaiDegrees: 100,
       leftElbowBias: -8, rightElbowBias: -9 } },
 
   { frame: 82, easing: "easeOutCubic", pose: {
@@ -354,14 +356,14 @@ const keyframeList = [
       rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 176, gripY: 98, shinaiDegrees: 16,
+      gripX: 184, gripY: 100, shinaiDegrees: 16,
       leftElbowBias: 5, rightElbowBias: 6 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 176, gripY: 98, shinaiDegrees: 16,
+      gripX: 184, gripY: 100, shinaiDegrees: 16,
       leftElbowBias: 5, rightElbowBias: 6 } }
 ];
 
@@ -370,11 +372,11 @@ const IMPACT_FRAME = 82;
 
 const phaseList = [
   { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. Pointe à la gorge, pied droit devant, talon gauche décollé." },
+    detail: "Garde. Poing gauche à un poing du corps, pied droit devant, talon gauche décollé." },
   { name: "Seme", startFrame: 20, endFrame: 44,
     detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
   { name: "Furikaburi", startFrame: 44, endFrame: 62,
-    detail: "Armé grande amplitude : mains au-dessus du front, kissaki derrière." },
+    detail: "Armé grande amplitude : les poings montent au-dessus du front, shinai dressé, pas rabattu dans le dos." },
   { name: "Tame (sommet)", startFrame: 62, endFrame: 68,
     detail: "Instant suspendu, le talon gauche monte, le genou droit s'arme." },
   { name: "Poussée sur les orteils", startFrame: 68, endFrame: 72,
@@ -641,11 +643,13 @@ function blendOverPaper(hexColor, ratio) {
     + Math.round(blue * ratio + PAPER_BLUE * (1 - ratio)) + ")";
 }
 
-function isOcclusionMode() { return viewState.viewMode === "occlusion"; }
+/** Vue normale : aplats opaques, ce qui est devant masque ce qui est derrière.
+    Vue calque : tout est translucide, on voit le côté éloigné à travers le corps. */
+function isSolidView() { return viewState.viewMode === "normal"; }
 
 function fillPath(pointList, color, alpha) {
   const requestedAlpha = alpha === undefined ? 0.16 : alpha;
-  if (isOcclusionMode() && color.charAt(0) === "#") {
+  if (isSolidView() && color.charAt(0) === "#") {
     context.globalAlpha = 1;
     context.fillStyle = blendOverPaper(color, requestedAlpha);
   } else {
@@ -781,7 +785,7 @@ function drawTorsoAndHead(skeleton) {
   context.save();
   context.translate(skeleton.headCenter.x, skeleton.headCenter.y);
   context.rotate(-headAngle);
-  if (isOcclusionMode()) {
+  if (isSolidView()) {
     context.fillStyle = BODY_VOLUME_NEAR;
     context.beginPath();
     context.ellipse(0, 0, HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, 0, 0, Math.PI * 2);
@@ -1144,7 +1148,7 @@ function collectJoints(skeleton) {
    ============================================================ */
 
 const viewState = {
-  viewMode: "calque",
+  viewMode: "normal",
   currentFrame: 0,
   isPlaying: false,
   playbackSpeed: 0.35,
@@ -1167,7 +1171,7 @@ function render() {
   context.fillStyle = "#f4f1e8";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  camera.scale = (canvas.height / 250);
+  camera.scale = (canvas.height / 310);
   const framesSinceImpact = frame - IMPACT_FRAME;
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
@@ -1193,19 +1197,19 @@ function render() {
     context.setLineDash([]);
   }
 
-  /* Du plus lointain au plus proche : en mode occlusion chaque volume
-     est opaque, donc cet ordre suffit à masquer ce qui est derrière. */
-  const occlusion = isOcclusionMode();
+  /* Du plus lointain au plus proche : en vue normale chaque volume est
+     opaque, donc cet ordre suffit à masquer ce qui est derrière. */
+  const solid = isSolidView();
   const showArmour = viewState.showArmour;
 
-  if (occlusion) {
+  if (solid) {
     drawLimbVolume([skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_FAR);
     drawFootVolume(skeleton.leftFoot, BODY_VOLUME_FAR);
   }
   if (showArmour) drawHakamaLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle, 90);
   drawLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot, FAR_INK, 10);
 
-  if (occlusion) {
+  if (solid) {
     drawLimbVolume([skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip],
       [5.5, 4, 3.2, 3.6], BODY_VOLUME_FAR);
   }
@@ -1215,11 +1219,11 @@ function render() {
   }
   drawArm(skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip, FAR_INK, 14);
 
-  if (occlusion) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
+  if (solid) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
 
-  if (occlusion) {
+  if (solid) {
     drawLimbVolume([skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_NEAR);
     drawFootVolume(skeleton.rightFoot, BODY_VOLUME_NEAR);
   }
@@ -1232,7 +1236,7 @@ function render() {
 
   drawShinai(skeleton);
 
-  if (occlusion) {
+  if (solid) {
     drawLimbVolume([skeleton.rightShoulder, skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip],
       [5.5, 4, 3.2, 3.6], BODY_VOLUME_NEAR);
   }
