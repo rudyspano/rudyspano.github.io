@@ -168,7 +168,7 @@
   <label class="toggle"><input type="checkbox" id="showArmour" checked> Armure (bōgu)</label>
   <label class="toggle"><input type="checkbox" id="showArmourLabels"> Noms des pièces d'armure</label>
   <label class="toggle"><input type="checkbox" id="showTrail" checked> Trace du kissaki</label>
-  <label class="toggle"><input type="checkbox" id="showTarget" checked> Cible (men adverse)</label>
+  <label class="toggle"><input type="checkbox" id="showMotodachi" checked> Motodachi (partenaire)</label>
   <label class="toggle"><input type="checkbox" id="showConstruction"> Lignes de construction</label>
 
   <h2>Pièces découpées</h2>
@@ -232,8 +232,48 @@ const ELBOW_RATIO_ALONG_ARM = 0.52;
    corps étant de trois quarts. */
 const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
 
-const TARGET_MEN_CENTER = { x: 275, y: 155 };
-const TARGET_MEN_RADIUS = 13;
+/* Motodachi : le partenaire qui reçoit le men. Il est construit avec le
+   même squelette, résolu en coordonnées locales tourné vers +x, puis
+   dessiné en miroir autour de cette abscisse — d'où `world = BASE - local`. */
+const MOTODACHI_BASE_X = 277;
+
+function motodachiToWorld(point) {
+  return { x: MOTODACHI_BASE_X - point.x, y: point.y };
+}
+
+/** Recul du motodachi : il rompt dès qu'il a encaissé, un peu plus vite
+    que le frappeur n'avance, pour que la distance ne se referme jamais. */
+function motodachiRetreat(frame) {
+  const progress = Math.max(0, Math.min(1, (frame - IMPACT_FRAME) / 52));
+  return 60 * easingFunctions.easeOutCubic(progress);
+}
+
+/** Encaissement : le corps se tasse et la tête part en arrière, puis
+    l'oscillation s'amortit. */
+function motodachiShock(frame) {
+  const elapsed = frame - IMPACT_FRAME;
+  if (elapsed < 0 || elapsed > 24) return 0;
+  return Math.exp(-elapsed / 5) * Math.cos(elapsed * 0.8);
+}
+
+function buildMotodachiPose(frame) {
+  const retreat = motodachiRetreat(frame);
+  const shock = motodachiShock(frame);
+  return {
+    rootX: -retreat, rootY: 89 - shock * 2.5,
+    torsoLeanDegrees: 6 + shock * 4, headTiltDegrees: -shock * 8,
+    rightAnkleX: 13 - retreat, rightAnkleY: 6, rightFootDegrees: 0,
+    leftAnkleX: -15 - retreat, leftAnkleY: 9.2, leftFootDegrees: -14,
+    gripX: 26 - retreat, gripY: 104, shinaiDegrees: -20,
+    leftElbowBias: -8, rightElbowBias: -15
+  };
+}
+
+/** Point de contact de la lame sur le men du motodachi. */
+function motodachiMenPoint(frame) {
+  const head = solveSkeleton(buildMotodachiPose(frame)).headCenter;
+  return motodachiToWorld({ x: head.x, y: head.y + 10 });
+}
 
 /* ============================================================
    2. Découpage des pièces (le "catalogue" à remplacer par des
@@ -291,49 +331,63 @@ const keyframeList = [
       gripX: 32, gripY: 104, shinaiDegrees: 12,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
-  { frame: 62, easing: "easeInQuad", pose: {
-      rootX: 16, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
-      rightAnkleX: 27, rightAnkleY: 8, rightFootDegrees: 4,
+  /* Sommet de l'armé : keyframe de passage, jamais tenue. Le shinai
+     repart vers le bas dès la frame suivante. */
+  { frame: 58, easing: "easeInQuad", pose: {
+      rootX: 18, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
+      rightAnkleX: 30, rightAnkleY: 8, rightFootDegrees: 4,
       leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 26, gripY: 177, shinaiDegrees: 135,
+      gripX: 28, gripY: 179, shinaiDegrees: 140,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
   /* Le talon gauche monte, l'orteil reste planté en x = 16,2 : c'est lui
-     le point d'appui de toute la poussée. Le genou droit part devant. */
-  { frame: 68, easing: "linear", pose: {
-      rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
-      rightAnkleX: 48, rightAnkleY: 24, rightFootDegrees: 12,
+     le point d'appui de toute la poussée. Le genou droit part devant et
+     le shinai a déjà entamé sa descente. */
+  { frame: 66, easing: "linear", pose: {
+      rootX: 30, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
+      rightAnkleX: 52, rightAnkleY: 26, rightFootDegrees: 12,
       leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 36, gripY: 179, shinaiDegrees: 140,
+      gripX: 44, gripY: 172, shinaiDegrees: 120,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
-  /* Extension maximale : jambe gauche tendue à 98 %, sur la pointe. */
+  /* Décollage : jambe gauche tendue à 98 %, sur la pointe. */
   { frame: 72, easing: "linear", pose: {
       rootX: 42, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
       leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 54, gripY: 178, shinaiDegrees: 132,
+      gripX: 62, gripY: 165, shinaiDegrees: 95,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
   { frame: 76, easing: "linear", pose: {
       rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
       leftAnkleX: 26, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 96, gripY: 162, shinaiDegrees: 100,
+      gripX: 96, gripY: 158, shinaiDegrees: 55,
       leftElbowBias: -6, rightElbowBias: -7 } },
 
+  { frame: 80, easing: "easeOutSine", pose: {
+      rootX: 101, rootY: 83, torsoLeanDegrees: 10, headTiltDegrees: 2,
+      rightAnkleX: 130, rightAnkleY: 14, rightFootDegrees: 2,
+      leftAnkleX: 52, leftAnkleY: 18, leftFootDegrees: -36,
+      gripX: 150, gripY: 144, shinaiDegrees: 25,
+      leftElbowBias: -4, rightElbowBias: -4 } },
+
+  /* Frappe : le shinai freine sur les deux dernières frames, c'est le
+     tenouchi qui arrête la lame sur le men. */
   { frame: 82, easing: "easeOutCubic", pose: {
       rootX: 116, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 3,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 64, leftAnkleY: 16, leftFootDegrees: -34,
-      gripX: 169, gripY: 138, shinaiDegrees: 6,
+      gripX: 169, gripY: 138, shinaiDegrees: 16,
       leftElbowBias: -3, rightElbowBias: -3 } },
 
-  { frame: 88, easing: "easeOutSine", pose: {
-      rootX: 122, rootY: 85, torsoLeanDegrees: 10, headTiltDegrees: 2,
+  /* Hikitsuke : le pied gauche revient sous le corps en 4 frames, soit
+     52 cm parcourus, presque 8 m/s. */
+  { frame: 86, easing: "easeOutSine", pose: {
+      rootX: 120, rootY: 85, torsoLeanDegrees: 10, headTiltDegrees: 2,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 116, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 170, gripY: 138, shinaiDegrees: 4,
+      gripX: 170, gripY: 138, shinaiDegrees: 12,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 92, easing: "easeInOutSine", pose: {
@@ -380,20 +434,18 @@ const phaseList = [
     detail: "Garde. Poing gauche à un poing du corps, pied droit devant, jambe gauche quasiment tendue : c'est elle qui propulsera." },
   { name: "Seme", startFrame: 20, endFrame: 44,
     detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
-  { name: "Furikaburi", startFrame: 44, endFrame: 62,
+  { name: "Furikaburi", startFrame: 44, endFrame: 58,
     detail: "Armé grande amplitude : les poings montent à un poing au-dessus du crâne, shinai dressé, pas rabattu dans le dos." },
-  { name: "Tame (sommet)", startFrame: 62, endFrame: 68,
-    detail: "Instant suspendu, le talon gauche monte, le genou droit s'arme." },
-  { name: "Poussée sur les orteils", startFrame: 68, endFrame: 72,
-    detail: "Appui sur la pointe du pied gauche, jambe tendue à 97 % : le genou droit est lancé loin devant." },
+  { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
+    detail: "Aucun temps d'arrêt en haut : le shinai redescend pendant que la jambe gauche se tend à 98 % sur la pointe." },
   { name: "Envol", startFrame: 72, endFrame: 76,
-    detail: "Plus aucun appui au sol, le bassin file à 4,4 m/s, la coupe s'enclenche." },
+    detail: "Plus aucun appui au sol, le bassin file à 4,5 m/s, la lame accélère à 10°/frame." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
     detail: "Le pied droit claque à plat, jambe gauche tendue derrière, bras déployés, le shinai touche le men au même instant." },
-  { name: "Hikitsuke", startFrame: 82, endFrame: 88,
-    detail: "Le pied gauche est ramené immédiatement sous le corps." },
-  { name: "Zanshin", startFrame: 88, endFrame: 116,
-    detail: "Traversée en suriashi, bras et vigilance maintenus." },
+  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
+    detail: "Le pied gauche revient sous le corps en 4 frames : 52 cm, près de 8 m/s." },
+  { name: "Zanshin", startFrame: 86, endFrame: 116,
+    detail: "Traversée en suriashi, bras et vigilance maintenus, le motodachi rompt." },
   { name: "Retour kamae", startFrame: 116, endFrame: 150,
     detail: "Redescente en chūdan, reprise de la garde." }
 ];
@@ -1016,26 +1068,6 @@ function drawFloor(pose) {
   context.stroke();
 }
 
-function drawTargetMen(frame) {
-  const fadeStartFrame = 96;
-  const opacity = frame <= fadeStartFrame ? 1 : Math.max(0, 1 - (frame - fadeStartFrame) / 16);
-  if (opacity === 0) return;
-  context.save();
-  context.globalAlpha = opacity;
-  context.setLineDash([2.5, 2.5]);
-  context.strokeStyle = "#9a9a9a";
-  context.lineWidth = 0.6;
-  context.beginPath();
-  context.arc(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y, TARGET_MEN_RADIUS, 0, Math.PI * 2);
-  context.stroke();
-  context.beginPath();
-  context.moveTo(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y + TARGET_MEN_RADIUS);
-  context.lineTo(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y - TARGET_MEN_RADIUS - 18);
-  context.stroke();
-  context.restore();
-  context.setLineDash([]);
-}
-
 function drawKissakiTrail(frame) {
   const trailLength = 14;
   for (let step = trailLength; step >= 1; step--) {
@@ -1054,7 +1086,7 @@ function drawKissakiTrail(frame) {
   }
 }
 
-function drawImpactEffects(frame, skeleton) {
+function drawImpactEffects(frame, skeleton, contactPoint) {
   const framesSinceImpact = frame - IMPACT_FRAME;
   if (framesSinceImpact < 0 || framesSinceImpact > 24) return;
   const life = framesSinceImpact / 24;
@@ -1084,8 +1116,8 @@ function drawImpactEffects(frame, skeleton) {
       const inner = 4 + (1 - flash) * 6;
       const outer = inner + 6 * flash + 3;
       context.beginPath();
-      context.moveTo(TARGET_MEN_CENTER.x + Math.cos(angle) * inner, TARGET_MEN_CENTER.y + Math.sin(angle) * inner);
-      context.lineTo(TARGET_MEN_CENTER.x + Math.cos(angle) * outer, TARGET_MEN_CENTER.y + Math.sin(angle) * outer);
+      context.moveTo(contactPoint.x + Math.cos(angle) * inner, contactPoint.y + Math.sin(angle) * inner);
+      context.lineTo(contactPoint.x + Math.cos(angle) * outer, contactPoint.y + Math.sin(angle) * outer);
       context.stroke();
     }
     context.globalAlpha = 1;
@@ -1148,6 +1180,78 @@ function collectJoints(skeleton) {
   ];
 }
 
+/* Du plus lointain au plus proche : en vue normale chaque volume est
+   opaque, donc cet ordre suffit à masquer ce qui est derrière. */
+/** Regroupe les membres d'un côté, pour pouvoir dessiner indifféremment
+    le côté droit ou le côté gauche au premier plan. */
+function limbSet(skeleton, side) {
+  const isLeft = side === "left";
+  return {
+    hip: isLeft ? skeleton.leftHip : skeleton.rightHip,
+    knee: isLeft ? skeleton.leftKnee : skeleton.rightKnee,
+    foot: isLeft ? skeleton.leftFoot : skeleton.rightFoot,
+    shoulder: isLeft ? skeleton.leftShoulder : skeleton.rightShoulder,
+    elbow: isLeft ? skeleton.leftElbow : skeleton.rightElbow,
+    wrist: isLeft ? skeleton.leftWrist : skeleton.rightWrist,
+    grip: isLeft ? skeleton.leftGrip : skeleton.rightGrip,
+    koteColor: isLeft ? partColor.koteLeft : partColor.koteRight
+  };
+}
+
+/* Du plus lointain au plus proche : en vue normale chaque volume est
+   opaque, donc cet ordre suffit à masquer ce qui est derrière. Le côté
+   présenté à la caméra dépend du sens dans lequel le personnage regarde :
+   le frappeur est vu de sa droite, le motodachi, tourné vers lui, de sa
+   gauche. */
+function drawCharacter(skeleton, nearSideName) {
+  const solid = isSolidView();
+  const showArmour = viewState.showArmour;
+  const near = limbSet(skeleton, nearSideName);
+  const far = limbSet(skeleton, nearSideName === "left" ? "right" : "left");
+
+  if (solid) {
+    drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], BODY_VOLUME_FAR);
+    drawFootVolume(far.foot, BODY_VOLUME_FAR);
+  }
+  if (showArmour) drawHakamaLeg(far.hip, far.knee, far.foot.ankle, 90);
+  drawLeg(far.hip, far.knee, far.foot, FAR_INK, 10);
+
+  if (solid) {
+    drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6], BODY_VOLUME_FAR);
+  }
+  if (showArmour) {
+    drawKeikogiSleeve(far.shoulder, far.elbow, 94);
+    drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96);
+  }
+  drawArm(far.shoulder, far.elbow, far.wrist, far.grip, FAR_INK, 14);
+
+  if (solid) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
+  if (showArmour) drawDo(skeleton);
+  drawTorsoAndHead(skeleton);
+
+  if (solid) {
+    drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], BODY_VOLUME_NEAR);
+    drawFootVolume(near.foot, BODY_VOLUME_NEAR);
+  }
+  if (showArmour) drawHakamaLeg(near.hip, near.knee, near.foot.ankle, 100);
+  drawLeg(near.hip, near.knee, near.foot, NEAR_INK, 18);
+
+  /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
+  if (showArmour) drawTare(skeleton);
+  if (showArmour) drawMen(skeleton);
+
+  drawShinai(skeleton);
+
+  if (solid) {
+    drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], BODY_VOLUME_NEAR);
+  }
+  if (showArmour) {
+    drawKeikogiSleeve(near.shoulder, near.elbow, 104);
+    drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
+  }
+  drawArm(near.shoulder, near.elbow, near.wrist, near.grip, NEAR_INK, 22);
+}
+
 /* ============================================================
    7. Boucle de rendu
    ============================================================ */
@@ -1162,7 +1266,7 @@ const viewState = {
   showArmour: true,
   showArmourLabels: false,
   showTrail: true,
-  showTarget: true,
+  showMotodachi: true,
   showConstruction: false
 };
 
@@ -1176,12 +1280,14 @@ function render() {
   context.fillStyle = "#f4f1e8";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  camera.scale = (canvas.height / 310);
+  camera.scale = (canvas.height / 330);
   const framesSinceImpact = frame - IMPACT_FRAME;
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
   const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
-  camera.originX = canvas.width * 0.40 - pose.rootX * camera.scale;
+  /* Le frappeur est placé au quart gauche : il reste de la place devant
+     lui pour le motodachi, qui se tient 273 cm plus loin en garde. */
+  camera.originX = canvas.width * 0.21 - pose.rootX * camera.scale;
   camera.originY = canvas.height - 42 * ratio + shakeY;
 
   context.setTransform(camera.scale, 0, 0, -camera.scale, camera.originX, camera.originY);
@@ -1189,7 +1295,17 @@ function render() {
   context.lineJoin = "round";
 
   drawFloor(pose);
-  if (viewState.showTarget) drawTargetMen(frame);
+
+  /* Le motodachi est dessiné en premier : il est derrière, si bien que
+     le shinai du frappeur passe devant lui à la traversée. */
+  if (viewState.showMotodachi) {
+    context.save();
+    context.translate(MOTODACHI_BASE_X, 0);
+    context.scale(-1, 1);
+    drawCharacter(solveSkeleton(buildMotodachiPose(frame)), "left");
+    context.restore();
+  }
+
   if (viewState.showTrail) drawKissakiTrail(frame);
 
   if (viewState.showConstruction) {
@@ -1202,56 +1318,9 @@ function render() {
     context.setLineDash([]);
   }
 
-  /* Du plus lointain au plus proche : en vue normale chaque volume est
-     opaque, donc cet ordre suffit à masquer ce qui est derrière. */
-  const solid = isSolidView();
-  const showArmour = viewState.showArmour;
+  drawCharacter(skeleton, "right");
 
-  if (solid) {
-    drawLimbVolume([skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_FAR);
-    drawFootVolume(skeleton.leftFoot, BODY_VOLUME_FAR);
-  }
-  if (showArmour) drawHakamaLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle, 90);
-  drawLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot, FAR_INK, 10);
-
-  if (solid) {
-    drawLimbVolume([skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip],
-      [5.5, 4, 3.2, 3.6], BODY_VOLUME_FAR);
-  }
-  if (showArmour) {
-    drawKeikogiSleeve(skeleton.leftShoulder, skeleton.leftElbow, 94);
-    drawKote(skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip, partColor.koteLeft, 96);
-  }
-  drawArm(skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip, FAR_INK, 14);
-
-  if (solid) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
-  if (showArmour) drawDo(skeleton);
-  drawTorsoAndHead(skeleton);
-
-  if (solid) {
-    drawLimbVolume([skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_NEAR);
-    drawFootVolume(skeleton.rightFoot, BODY_VOLUME_NEAR);
-  }
-  if (showArmour) drawHakamaLeg(skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot.ankle, 100);
-  drawLeg(skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot, NEAR_INK, 18);
-
-  /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
-  if (showArmour) drawTare(skeleton);
-  if (showArmour) drawMen(skeleton);
-
-  drawShinai(skeleton);
-
-  if (solid) {
-    drawLimbVolume([skeleton.rightShoulder, skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip],
-      [5.5, 4, 3.2, 3.6], BODY_VOLUME_NEAR);
-  }
-  if (showArmour) {
-    drawKeikogiSleeve(skeleton.rightShoulder, skeleton.rightElbow, 104);
-    drawKote(skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip, partColor.koteRight, 106);
-  }
-  drawArm(skeleton.rightShoulder, skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip, NEAR_INK, 22);
-
-  drawImpactEffects(frame, skeleton);
+  drawImpactEffects(frame, skeleton, motodachiMenPoint(IMPACT_FRAME));
 
   if (viewState.showJoints) {
     collectJoints(skeleton).forEach(joint => {
@@ -1403,7 +1472,7 @@ function bindControls() {
     showArmour: "showArmour",
     showArmourLabels: "showArmourLabels",
     showTrail: "showTrail",
-    showTarget: "showTarget",
+    showMotodachi: "showMotodachi",
     showConstruction: "showConstruction"
   };
   Object.keys(toggleMap).forEach(elementId => {
