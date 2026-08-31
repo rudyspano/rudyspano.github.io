@@ -267,48 +267,51 @@ partCatalogue.forEach(part => { partColor[part.id] = part.color; });
    ============================================================ */
 
 const keyframeList = [
+  /* Garde haute : bassin à 90,5 cm, la limite au-delà de laquelle le pied
+     avant ne toucherait plus le sol. La jambe gauche y est tendue à 95,6 %,
+     prête à propulser. */
   { frame: 0, easing: "linear", pose: {
-      rootX: 0, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -14, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 24, gripY: 100, shinaiDegrees: 16,
+      rootX: 4, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -11, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 26, gripY: 104, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 20, easing: "easeInOutSine", pose: {
-      rootX: 0, rootY: 85.4, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
-      rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -14, leftAnkleY: 9, leftFootDegrees: -13,
-      gripX: 24, gripY: 99.5, shinaiDegrees: 16,
+      rootX: 4, rootY: 90, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
+      rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -11, leftAnkleY: 9.4, leftFootDegrees: -15,
+      gripX: 26, gripY: 103.5, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 44, easing: "easeOutCubic", pose: {
-      rootX: 6, rootY: 86, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 28, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -9, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 30, gripY: 101, shinaiDegrees: 12,
+      rootX: 10, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
+      rightAnkleX: 23, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -5, leftAnkleY: 9.4, leftFootDegrees: -15,
+      gripX: 32, gripY: 104, shinaiDegrees: 12,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 62, easing: "easeInQuad", pose: {
-      rootX: 12, rootY: 87, torsoLeanDegrees: 4, headTiltDegrees: -2,
-      rightAnkleX: 32, rightAnkleY: 8, rightFootDegrees: 4,
-      leftAnkleX: -3.2, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 22, gripY: 177, shinaiDegrees: 135,
+      rootX: 16, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
+      rightAnkleX: 27, rightAnkleY: 8, rightFootDegrees: 4,
+      leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
+      gripX: 26, gripY: 177, shinaiDegrees: 135,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
-  /* Le talon gauche monte, l'orteil reste planté en x = 12 : c'est lui
+  /* Le talon gauche monte, l'orteil reste planté en x = 16,2 : c'est lui
      le point d'appui de toute la poussée. Le genou droit part devant. */
   { frame: 68, easing: "linear", pose: {
-      rootX: 24, rootY: 89, torsoLeanDegrees: 6, headTiltDegrees: -1,
-      rightAnkleX: 44, rightAnkleY: 24, rightFootDegrees: 12,
-      leftAnkleX: -1.4, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 34, gripY: 179, shinaiDegrees: 140,
+      rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
+      rightAnkleX: 48, rightAnkleY: 24, rightFootDegrees: 12,
+      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
+      gripX: 36, gripY: 179, shinaiDegrees: 140,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
   /* Extension maximale : jambe gauche tendue à 98 %, sur la pointe. */
   { frame: 72, easing: "linear", pose: {
-      rootX: 42, rootY: 88, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rootX: 42, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
-      leftAnkleX: 1.6, leftAnkleY: 14.1, leftFootDegrees: -44,
+      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
       gripX: 54, gripY: 178, shinaiDegrees: 132,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
@@ -327,45 +330,45 @@ const keyframeList = [
       leftElbowBias: -3, rightElbowBias: -3 } },
 
   { frame: 88, easing: "easeOutSine", pose: {
-      rootX: 122, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 2,
+      rootX: 122, rootY: 85, torsoLeanDegrees: 10, headTiltDegrees: 2,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 116, leftAnkleY: 10.2, leftFootDegrees: -18,
       gripX: 170, gripY: 138, shinaiDegrees: 4,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 130, rootY: 85, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rootX: 130, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 154, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 116, leftAnkleY: 9.2, leftFootDegrees: -14,
       gripX: 176, gripY: 134, shinaiDegrees: 6,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 140, rootY: 86, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rootX: 140, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 164, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 126, leftAnkleY: 9.2, leftFootDegrees: -14,
       gripX: 186, gripY: 132, shinaiDegrees: 8,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 154, rootY: 86, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rootX: 154, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 140, leftAnkleY: 9.2, leftFootDegrees: -14,
       gripX: 200, gripY: 132, shinaiDegrees: 8,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 134, easing: "linear", pose: {
-      rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 184, gripY: 100, shinaiDegrees: 16,
+      rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 187, gripY: 104, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 150, easing: "linear", pose: {
-      rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
-      gripX: 184, gripY: 100, shinaiDegrees: 16,
+      rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 187, gripY: 104, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15 } }
 ];
 
@@ -374,7 +377,7 @@ const IMPACT_FRAME = 82;
 
 const phaseList = [
   { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. Poing gauche à un poing du corps, pied droit devant, talon gauche décollé." },
+    detail: "Garde. Poing gauche à un poing du corps, pied droit devant, jambe gauche quasiment tendue : c'est elle qui propulsera." },
   { name: "Seme", startFrame: 20, endFrame: 44,
     detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
   { name: "Furikaburi", startFrame: 44, endFrame: 62,
@@ -382,7 +385,7 @@ const phaseList = [
   { name: "Tame (sommet)", startFrame: 62, endFrame: 68,
     detail: "Instant suspendu, le talon gauche monte, le genou droit s'arme." },
   { name: "Poussée sur les orteils", startFrame: 68, endFrame: 72,
-    detail: "Appui sur la pointe du pied gauche, jambe tendue à 98 % : le genou droit est lancé loin devant." },
+    detail: "Appui sur la pointe du pied gauche, jambe tendue à 97 % : le genou droit est lancé loin devant." },
   { name: "Envol", startFrame: 72, endFrame: 76,
     detail: "Plus aucun appui au sol, le bassin file à 4,4 m/s, la coupe s'enclenche." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
@@ -555,8 +558,8 @@ function solveSkeleton(pose) {
   const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -1), {
     x: forwardDirection.x * RIGHT_SHOULDER_FORWARD_OFFSET, y: forwardDirection.y * RIGHT_SHOULDER_FORWARD_OFFSET
   });
-  const leftHip = addPoints(root, 0, -1.5);
-  const rightHip = addPointOffset(root, {
+  const leftHip = addPoints(root, 0, -0.5);
+  const rightHip = addPointOffset(addPoints(root, 0, -2), {
     x: forwardDirection.x * 3, y: forwardDirection.y * 3
   });
 
