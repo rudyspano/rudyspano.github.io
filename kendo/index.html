@@ -195,7 +195,7 @@
     <aside id="quickControls">
       <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi</small></button>
       <button id="koteButton">KOTE<small>avant-bras droit adverse</small></button>
-      <button id="returnButton" class="secondary">Revenir à distance<small>deux grands pas arrière</small></button>
+      <button id="returnButton" class="secondary">Revenir à distance<small>un grand pas, des deux côtés</small></button>
       <button id="counterStrikeButton" class="secondary">Attaque adverse<small>le motodachi porte le même coup</small></button>
 
       <div class="frameReadout">
@@ -357,6 +357,9 @@ function motodachiShinaiDegrees(frame) {
 }
 
 function buildDefenderPose(frame) {
+  if (sceneState.sequence === "return") {
+    return interpolatePose(frame, currentAttack().defenderReturnSequence);
+  }
   const retreat = motodachiRetreat(frame);
   const shock = motodachiShock(frame);
   const openness = (16 - motodachiShinaiDegrees(frame)) / 41;
@@ -592,91 +595,81 @@ const koteKeyframeList = [
   { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
   { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
   { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
-
-  /* Armé court : les poings ne dépassent pas le menton. */
-  { frame: 50, easing: "easeInOutSine", pose: {
-      rootX: 13, rootY: 91, torsoLeanDegrees: 7, headTiltDegrees: -1,
-      rightAnkleX: 26, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -2, leftAnkleY: 9.8, leftFootDegrees: -17,
-      gripX: 46, gripY: 126, shinaiDegrees: 48,
-      leftElbowBias: -8, rightElbowBias: -11 } },
-
-  { frame: 58, easing: "easeInQuad", pose: {
-      rootX: 18, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -1,
-      rightAnkleX: 30, rightAnkleY: 8, rightFootDegrees: 4,
-      leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 36, gripY: 148, shinaiDegrees: 85,
-      leftElbowBias: -7, rightElbowBias: -8 } },
+  /* Armé identique au men : même passage devant le corps, mêmes poings
+     un poing au-dessus du crâne. Seule la descente diffère. */
+  { frame: 50, easing: "easeInOutSine", pose: menKeyframeList[3].pose },
+  { frame: 58, easing: "easeInQuad", pose: menKeyframeList[4].pose },
 
   { frame: 66, easing: "linear", pose: {
       rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 44, rightAnkleY: 20, rightFootDegrees: 10,
       leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 52, gripY: 146, shinaiDegrees: 72,
+      gripX: 58, gripY: 168, shinaiDegrees: 110,
       leftElbowBias: -6.5, rightElbowBias: -8 } },
 
   { frame: 72, easing: "linear", pose: {
       rootX: 36, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 54, rightAnkleY: 26, rightFootDegrees: 8,
       leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 70, gripY: 140, shinaiDegrees: 58,
+      gripX: 78, gripY: 152, shinaiDegrees: 85,
       leftElbowBias: -6, rightElbowBias: -7 } },
 
   { frame: 76, easing: "linear", pose: {
-      rootX: 52, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rootX: 50, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 74, rightAnkleY: 22, rightFootDegrees: 4,
       leftAnkleX: 20, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 96, gripY: 134, shinaiDegrees: 40,
+      gripX: 100, gripY: 130, shinaiDegrees: 50,
       leftElbowBias: -5, rightElbowBias: -6 } },
 
   { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 68, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rootX: 66, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
       rightAnkleX: 92, rightAnkleY: 12, rightFootDegrees: 2,
       leftAnkleX: 32, leftAnkleY: 16, leftFootDegrees: -36,
-      gripX: 118, gripY: 127, shinaiDegrees: 12,
+      gripX: 116, gripY: 112, shinaiDegrees: 18,
       leftElbowBias: -2, rightElbowBias: -3 } },
 
-  /* Frappe : la lame arrive légèrement descendante sur le kote. */
+  /* Frappe : les deux bras sont bas, le poing gauche revenu à sa hauteur
+     de chūdan, et la lame arrive presque à plat sur l'avant-bras. */
   { frame: 82, easing: "easeOutCubic", pose: {
       rootX: 77, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
       rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 35, leftAnkleY: 14, leftFootDegrees: -34,
-      gripX: 130, gripY: 124, shinaiDegrees: -9,
+      gripX: 127, gripY: 104, shinaiDegrees: 3,
       leftElbowBias: -1, rightElbowBias: -2 } },
 
   { frame: 84, easing: "easeOutSine", pose: {
       rootX: 79, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
       rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 50, leftAnkleY: 12, leftFootDegrees: -26,
-      gripX: 130.5, gripY: 124, shinaiDegrees: -2,
+      gripX: 127.5, gripY: 105, shinaiDegrees: 10,
       leftElbowBias: -1, rightElbowBias: -2.5 } },
 
   { frame: 86, easing: "easeOutSine", pose: {
       rootX: 82, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
       rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 67, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 131, gripY: 124, shinaiDegrees: -4,
+      gripX: 128, gripY: 105, shinaiDegrees: 8,
       leftElbowBias: -2, rightElbowBias: -3 } },
 
   { frame: 92, easing: "easeInOutSine", pose: {
       rootX: 88, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
       rightAnkleX: 112, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 74, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 134, gripY: 122, shinaiDegrees: -2,
+      gripX: 132, gripY: 106, shinaiDegrees: 8,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 104, easing: "easeInOutSine", pose: {
       rootX: 98, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 122, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 84, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 144, gripY: 120, shinaiDegrees: 0,
+      gripX: 142, gripY: 105, shinaiDegrees: 10,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
       rootX: 108, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 94, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 154, gripY: 120, shinaiDegrees: 2,
+      gripX: 152, gripY: 105, shinaiDegrees: 12,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 134, easing: "linear", pose: {
@@ -699,14 +692,14 @@ const kotePhaseList = [
     detail: "Garde. Le kote visé est l'avant-bras droit adverse, 28 cm plus près et 63 cm plus bas que son men." },
   { name: "Seme", startFrame: 20, endFrame: 44,
     detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
-  { name: "Furikaburi court", startFrame: 44, endFrame: 58,
-    detail: "Armé réduit : les poings ne dépassent pas le menton, la lame monte à 85° au lieu de 142°." },
+  { name: "Furikaburi", startFrame: 44, endFrame: 58,
+    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne." },
   { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
     detail: "Même poussée que pour le men, sur la pointe du pied gauche, mais pour une avance plus courte." },
   { name: "Envol", startFrame: 72, endFrame: 76,
     detail: "La lame reste armée sur le poignet pendant que l'avant-bras descend." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Le poignet se déroule, la lame arrive légèrement descendante sur l'avant-bras droit adverse." },
+    detail: "Les deux bras descendent, le poing gauche retrouve sa hauteur de chūdan et la lame arrive presque à plat sur l'avant-bras adverse." },
   { name: "Hikitsuke", startFrame: 82, endFrame: 86,
     detail: "Le pied gauche revient sous le corps." },
   { name: "Zanshin", startFrame: 86, endFrame: 116,
@@ -731,70 +724,61 @@ const attackCatalogue = {
   }
 };
 
-/* Retour à distance en grands pas : le pied gauche part loin en arrière,
-   le droit le rejoint. Deux allers suffisent à couvrir les 101 cm, contre
-   quatre petits glissés auparavant. Le bassin descend à 82 cm pendant que
-   le pied est en l'air — sans cela l'appui restant serait hors de portée :
-   à 90 cm de hanche, une jambe ne dépasse pas 34 cm d'écartement, à 82 cm
-   elle en admet 48. */
-const RETURN_STEP_COUNT = 2;
-const RETURN_FRAMES_PER_HALF_STEP = 18;
+/* Retour à distance en un seul pas, de chaque côté. Rouvrir 101 cm en un
+   pas est impossible pour un seul homme : il faudrait que chaque pied
+   parcoure 101 cm, ce qui laisserait l'appui à 66 cm du bassin alors
+   qu'une jambe de 86 cm n'en admet que 48, même bassin bas. Les deux
+   partenaires rompent donc ensemble, d'un pas chacun, ce qui est aussi
+   ce qui se fait après une frappe. Le bassin descend à 82 cm pendant que
+   le pied est en l'air, sans quoi l'appui restant serait hors de portée. */
+const RETURN_FRAMES_PER_HALF_STEP = 20;
+const RETURN_SETTLE_FRAMES = 14;
 const RETURN_LOW_HIP = 82;
 const RETURN_MID_HIP = 88;
 const KAMAE_HIP_HEIGHT = 90.5;
 
-function buildReturnSequence(attack) {
-  const list = [];
-  const endPose = attack.keyframes[attack.keyframes.length - 1].pose;
-  const targetRootX = menKeyframeList[0].pose.rootX + attack.defenderRetreat;
-  const stepLength = (endPose.rootX - targetRootX) / RETURN_STEP_COUNT;
-  let rootX = endPose.rootX;
-  let rightAnkleX = endPose.rightAnkleX;
-  let leftAnkleX = endPose.leftAnkleX;
-  let frame = 0;
-
-  function pushKeyframe(hipHeight) {
-    list.push({ frame: frame, easing: "easeInOutSine", pose: {
-      rootX: rootX, rootY: hipHeight, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: rightAnkleX, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: leftAnkleX, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: rootX + 22, gripY: hipHeight + 13.5, shinaiDegrees: 16,
-      leftElbowBias: -8, rightElbowBias: -15 } });
-  }
-
-  pushKeyframe(KAMAE_HIP_HEIGHT);
-  for (let step = 0; step < RETURN_STEP_COUNT; step++) {
-    /* Le pied gauche s'envoie en arrière, le bassin le suit de moitié. */
-    leftAnkleX -= stepLength;
-    rootX -= stepLength / 2;
-    frame += RETURN_FRAMES_PER_HALF_STEP;
-    pushKeyframe(RETURN_LOW_HIP);
-
-    /* Le pied droit rejoint, le bassin se relève. */
-    rightAnkleX -= stepLength;
-    rootX -= stepLength / 2;
-    frame += RETURN_FRAMES_PER_HALF_STEP;
-    pushKeyframe(RETURN_MID_HIP);
-  }
-  /* Reprise de la garde, hanches remontées. */
-  frame += 12;
-  list.push({ frame: frame, easing: "linear", pose: {
-    rootX: rootX, rootY: KAMAE_HIP_HEIGHT, torsoLeanDegrees: 6, headTiltDegrees: 0,
-    rightAnkleX: rootX + 13, rightAnkleY: 6, rightFootDegrees: 0,
-    leftAnkleX: rootX - 15, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: rootX + 22, gripY: 104, shinaiDegrees: 16,
-    leftElbowBias: -8, rightElbowBias: -15 } });
-  return list;
+/** Pose de garde, utilisée pour fabriquer les deux séquences de recul. */
+function guardPose(rootX, rightAnkleX, leftAnkleX, hipHeight) {
+  return {
+    rootX: rootX, rootY: hipHeight, torsoLeanDegrees: 6, headTiltDegrees: 0,
+    rightAnkleX: rightAnkleX, rightAnkleY: 6, rightFootDegrees: 0,
+    leftAnkleX: leftAnkleX, leftAnkleY: 9.2, leftFootDegrees: -14,
+    gripX: rootX + 22, gripY: hipHeight + 13.5, shinaiDegrees: 16,
+    leftElbowBias: -8, rightElbowBias: -15
+  };
 }
 
-/* Le recul ramène l'attaquant à 4 + recul du défenseur : c'est la seule
-   position qui rende au couple son maai de départ, quelle que soit
-   l'attaque jouée. Le nombre de pas s'en déduit. */
+/** Un pas arrière : le pied arrière part, le bassin le suit de moitié,
+    puis le pied avant rejoint et le bassin se relève. */
+function buildBackwardStep(startRootX, startRightAnkleX, startLeftAnkleX, stepLength) {
+  const half = RETURN_FRAMES_PER_HALF_STEP;
+  return [
+    { frame: 0, easing: "easeInOutSine",
+      pose: guardPose(startRootX, startRightAnkleX, startLeftAnkleX, KAMAE_HIP_HEIGHT) },
+    { frame: half, easing: "easeInOutSine",
+      pose: guardPose(startRootX - stepLength / 2, startRightAnkleX, startLeftAnkleX - stepLength, RETURN_LOW_HIP) },
+    { frame: half * 2, easing: "easeInOutSine",
+      pose: guardPose(startRootX - stepLength, startRightAnkleX - stepLength, startLeftAnkleX - stepLength, RETURN_MID_HIP) },
+    { frame: half * 2 + RETURN_SETTLE_FRAMES, easing: "linear",
+      pose: guardPose(startRootX - stepLength, startRightAnkleX - stepLength, startLeftAnkleX - stepLength, KAMAE_HIP_HEIGHT) }
+  ];
+}
+
+/* Chaque attaque connaît l'écart qu'elle a refermé, donc la longueur du
+   pas qui le rouvre : la moitié pour chacun des deux partenaires. */
 Object.keys(attackCatalogue).forEach(id => {
   const attack = attackCatalogue[id];
-  attack.returnSequence = buildReturnSequence(attack);
+  const endPose = attack.keyframes[attack.keyframes.length - 1].pose;
+  const kamaeRootX = menKeyframeList[0].pose.rootX;
+  const gapToReopen = endPose.rootX - attack.defenderRetreat - kamaeRootX;
+  attack.returnStepLength = gapToReopen / 2;
+  attack.returnOffsetShift = attack.defenderRetreat + attack.returnStepLength;
+  attack.returnSequence = buildBackwardStep(
+    endPose.rootX, endPose.rightAnkleX, endPose.leftAnkleX, attack.returnStepLength);
+  attack.defenderReturnSequence = buildBackwardStep(
+    -attack.defenderRetreat, -attack.defenderRetreat + 13, -attack.defenderRetreat - 15,
+    attack.returnStepLength);
 });
-
 
 /* ============================================================
    4. Interpolation
@@ -1682,9 +1666,8 @@ function render() {
   const placement = actorPlacement();
 
   const attackerPose = interpolatePose(frame, currentSequence());
-  const defenderFrame = isAttackSequence ? frame : attackLastFrame();
-  const defenderPose = buildDefenderPose(defenderFrame);
-  const menLocal = defenderTargetPoint(defenderFrame);
+  const defenderPose = buildDefenderPose(frame);
+  const menLocal = defenderTargetPoint(frame);
   const menWorld = toWorld(placement.defender, menLocal);
   if (viewState.showMotodachi) {
     clampBladeOnMen(attackerPose, toLocalX(placement.attacker, menWorld.x), menWorld.y);
@@ -1832,8 +1815,8 @@ function animationTick(timestamp) {
    décalage de la scène, si bien que la garde retrouvée est, au centimètre
    près, la frame 0 de l'attaque. */
 function finishReturn() {
-  const retreat = currentAttack().defenderRetreat;
-  const shift = sceneState.attackerFacesRight ? retreat : -retreat;
+  const shift = sceneState.attackerFacesRight
+    ? currentAttack().returnOffsetShift : -currentAttack().returnOffsetShift;
   sceneState.offsetX += shift;
   sceneState.sequence = "attack";
   viewState.currentFrame = 0;
