@@ -439,6 +439,16 @@ const keyframeList = [
       gripX: 32, gripY: 104, shinaiDegrees: 12,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
+  /* Mi-armé : les poings passent devant le corps, pas contre l'épaule.
+     Sans ce point, la trajectoire rectiligne les fait frôler l'épaule et
+     le bras gauche se replie brutalement au lieu de se dérouler. */
+  { frame: 50, easing: "easeInOutSine", pose: {
+      rootX: 13, rootY: 91, torsoLeanDegrees: 7, headTiltDegrees: -1,
+      rightAnkleX: 26, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -2, leftAnkleY: 9.8, leftFootDegrees: -17,
+      gripX: 48, gripY: 140, shinaiDegrees: 75,
+      leftElbowBias: -8, rightElbowBias: -11 } },
+
   /* Sommet de l'armé : keyframe de passage, jamais tenue. Le shinai
      repart vers le bas dès la frame suivante. */
   { frame: 58, easing: "easeInQuad", pose: {
@@ -455,30 +465,30 @@ const keyframeList = [
       rootX: 30, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
       rightAnkleX: 52, rightAnkleY: 26, rightFootDegrees: 12,
       leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 44, gripY: 172, shinaiDegrees: 120,
-      leftElbowBias: -7, rightElbowBias: -8 } },
+      gripX: 60, gripY: 172, shinaiDegrees: 120,
+      leftElbowBias: -6.5, rightElbowBias: -8 } },
 
   /* Décollage : jambe gauche tendue à 98 %, sur la pointe. */
   { frame: 72, easing: "linear", pose: {
       rootX: 42, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
       leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 62, gripY: 165, shinaiDegrees: 95,
-      leftElbowBias: -7, rightElbowBias: -8 } },
+      gripX: 80, gripY: 166, shinaiDegrees: 95,
+      leftElbowBias: -6, rightElbowBias: -7 } },
 
   { frame: 76, easing: "linear", pose: {
       rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
       leftAnkleX: 26, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 96, gripY: 158, shinaiDegrees: 55,
-      leftElbowBias: -6, rightElbowBias: -7 } },
+      gripX: 116, gripY: 155, shinaiDegrees: 55,
+      leftElbowBias: -5, rightElbowBias: -6 } },
 
   { frame: 80, easing: "easeOutSine", pose: {
       rootX: 101, rootY: 83, torsoLeanDegrees: 10, headTiltDegrees: 2,
       rightAnkleX: 130, rightAnkleY: 14, rightFootDegrees: 2,
       leftAnkleX: 52, leftAnkleY: 18, leftFootDegrees: -36,
       gripX: 150, gripY: 144, shinaiDegrees: 25,
-      leftElbowBias: -4, rightElbowBias: -4 } },
+      leftElbowBias: -4, rightElbowBias: -4.5 } },
 
   /* Frappe : le shinai freine sur les deux dernières frames, c'est le
      tenouchi qui arrête la lame sur le men. */
