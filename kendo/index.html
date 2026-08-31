@@ -1256,7 +1256,12 @@ let stageImageReady = false;
 stageImage.addEventListener("load", () => { stageImageReady = true; });
 stageImage.src = "assets/dojo-stage.png";
 
-const STAGE_PARALLAX = 0.18;
+/* Le plancher est au ras des combattants, il doit défiler presque avec
+   eux ; les murs et le plafond sont loin et bougent peu. L'image est donc
+   dessinée en deux bandes, séparées à la ligne où le sol rejoint le fond. */
+const STAGE_FLOOR_LINE = 0.72;
+const STAGE_ROOM_PARALLAX = 0.30;
+const STAGE_FLOOR_PARALLAX = 0.85;
 
 const canvas = document.getElementById("scene");
 const context = canvas.getContext("2d");
@@ -1689,6 +1694,7 @@ function drawShinai(skeleton) {
 /** Le décor est dessiné en espace écran, avant la transformation monde :
     il ne suit la caméra qu'en partie, d'où l'effet de profondeur. */
 function drawStage() {
+  context.setTransform(1, 0, 0, 1, 0, 0);
   if (!stageImageReady) {
     context.fillStyle = "#2a1d12";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -1697,10 +1703,34 @@ function drawStage() {
   const scale = canvas.height / stageImage.height;
   const drawnWidth = stageImage.width * scale;
   const slack = Math.max(0, drawnWidth - canvas.width);
-  const wandering = camera.originX * STAGE_PARALLAX;
-  const left = Math.max(canvas.width - drawnWidth, Math.min(0, -slack / 2 + wandering));
-  context.setTransform(1, 0, 0, 1, 0, 0);
-  context.drawImage(stageImage, left, 0, drawnWidth, canvas.height);
+
+  /* La bande est répétée en miroir de part et d'autre : le dojo est plus
+     large que l'image, et la salle est symétrique. */
+  function drawBand(sourceTop, sourceHeight, parallax) {
+    const offset = -slack / 2 + camera.originX * parallax;
+    const destinationTop = sourceTop * scale;
+    const destinationHeight = sourceHeight * scale;
+    for (let repeat = -1; repeat <= 1; repeat++) {
+      const left = offset + repeat * drawnWidth;
+      if (left > canvas.width || left + drawnWidth < 0) continue;
+      context.save();
+      if (repeat !== 0) {
+        context.translate(left + drawnWidth / 2, 0);
+        context.scale(-1, 1);
+        context.translate(-drawnWidth / 2, 0);
+        context.drawImage(stageImage, 0, sourceTop, stageImage.width, sourceHeight,
+          0, destinationTop, drawnWidth, destinationHeight);
+      } else {
+        context.drawImage(stageImage, 0, sourceTop, stageImage.width, sourceHeight,
+          left, destinationTop, drawnWidth, destinationHeight);
+      }
+      context.restore();
+    }
+  }
+
+  const floorTop = Math.round(stageImage.height * STAGE_FLOOR_LINE);
+  drawBand(0, floorTop, STAGE_ROOM_PARALLAX);
+  drawBand(floorTop, stageImage.height - floorTop, STAGE_FLOOR_PARALLAX);
 }
 
 function drawFloor() {
@@ -2042,9 +2072,17 @@ function render() {
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
   const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
-  /* L'attaquant est placé au quart de l'écran, du côté d'où il vient. */
-  const framing = placement.attacker.facesRight ? 0.21 : 0.79;
-  camera.originX = canvas.width * framing - attackerRootWorldX * camera.scale;
+  /* En vue jeu la caméra cadre les deux combattants, comme dans un jeu de
+     combat : c'est ce qui rend l'avance de l'attaquant lisible. Verrouillée
+     sur lui, il resterait immobile à l'écran et l'adversaire semblerait
+     foncer. Les vues d'analyse, elles, le gardent au quart de l'écran pour
+     qu'il reste grand et stable. */
+  const defenderRootWorldX = toWorld(placement.defender, { x: defenderPose.rootX, y: 0 }).x;
+  const focusWorldX = isGameView()
+    ? (attackerRootWorldX + defenderRootWorldX) / 2
+    : attackerRootWorldX;
+  const framing = isGameView() ? 0.5 : (placement.attacker.facesRight ? 0.21 : 0.79);
+  camera.originX = canvas.width * framing - focusWorldX * camera.scale;
   /* La marge sous le sol est comptée en centimètres, pas en pixels : le
      pas en diagonale fait descendre le frappeur jusqu'à 15 cm sous la
      ligne de sol, et une marge fixe en pixels le tronquerait sur les
