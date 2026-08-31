@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kendo — maquette : men avec fumikomi</title>
+<style>
+  :root {
+    --paper: #f4f1e8;
+    --ink: #2b2b2b;
+    --panel: #1c1f26;
+    --panel-soft: #262a33;
+    --accent: #d9542b;
+    --text: #e8e6e1;
+    --muted: #9aa0ac;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--panel);
+    color: var(--text);
+    overflow: hidden;
+  }
+  #stage { flex: 1; position: relative; background: var(--paper); }
+  #scene { width: 100%; height: 100%; display: block; }
+  #panel {
+    width: 320px;
+    flex: none;
+    padding: 16px;
+    overflow-y: auto;
+    border-left: 2px solid #000;
+    background: var(--panel);
+  }
+  h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: .04em; }
+  h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin: 18px 0 8px;
+    border-bottom: 1px solid #3a3f4a;
+    padding-bottom: 4px;
+  }
+  .subtitle { font-size: 11px; color: var(--muted); margin: 0 0 14px; }
+  button {
+    font-family: inherit;
+    color: var(--text);
+    background: var(--panel-soft);
+    border: 1px solid #3a3f4a;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  button:hover { background: #323844; }
+  #strikeButton {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    background: var(--accent);
+    border-color: #b03d1a;
+    color: #fff;
+  }
+  #strikeButton:hover { background: #e85f33; }
+  #strikeButton small { display: block; font-size: 10px; font-weight: 400; opacity: .85; letter-spacing: .04em; margin-top: 3px; }
+  .row { display: flex; gap: 6px; margin-top: 8px; }
+  .row button { flex: 1; }
+  .row button.selected { background: var(--accent); border-color: #b03d1a; color: #fff; }
+  .frameReadout {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-variant-numeric: tabular-nums;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .frameReadout strong { font-size: 22px; color: var(--text); }
+  input[type=range] { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  td { padding: 4px 3px; border-bottom: 1px solid #2c313b; vertical-align: top; }
+  tr.active { background: #33261f; color: #ffb693; }
+  tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+  td.frames { color: var(--muted); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.active td.frames { color: #ffb693; }
+  label.toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 3px 0;
+    cursor: pointer;
+  }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: 11px; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #0006; flex: none; }
+  .hint { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
+  kbd { background: #333944; border-radius: 3px; padding: 1px 4px; font-size: 10px; }
+
+  /* Téléphone : la scène passe au-dessus, le panneau devient scrollable en dessous. */
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #stage { flex: none; height: 46vh; }
+    #panel {
+      width: 100%;
+      flex: 1;
+      border-left: none;
+      border-top: 2px solid #000;
+      -webkit-overflow-scrolling: touch;
+    }
+    #strikeButton { padding: 20px; font-size: 18px; }
+    .row button { padding: 12px 6px; }
+    label.toggle { padding: 7px 0; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"><canvas id="scene"></canvas></div>
+
+<aside id="panel">
+  <h1>KENDO — maquette d'animation</h1>
+  <p class="subtitle">Rig articulé, tracé crayon. Chaque pièce est une fonction de dessin isolée.</p>
+
+  <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi — 150 frames</small></button>
+
+  <div class="row">
+    <button id="playButton">Lecture</button>
+    <button id="previousFrameButton">◀ frame</button>
+    <button id="nextFrameButton">frame ▶</button>
+  </div>
+
+  <div class="frameReadout">
+    <span>frame <strong id="frameNumber">0</strong> / 150</span>
+    <span id="phaseName">Kamae</span>
+  </div>
+  <input type="range" id="frameSlider" min="0" max="150" step="1" value="0">
+  <div class="frameReadout">
+    <span>avance du bassin</span>
+    <span><strong id="advanceReadout">0</strong> cm</span>
+  </div>
+
+  <h2>Vitesse</h2>
+  <div class="row" id="speedRow">
+    <button data-speed="1">1×</button>
+    <button data-speed="0.35">0,35×</button>
+    <button data-speed="0.15">0,15×</button>
+    <button data-speed="0.05">0,05×</button>
+  </div>
+
+  <h2>Vue</h2>
+  <div class="row" id="viewModeRow">
+    <button data-view-mode="calque">Calque</button>
+    <button data-view-mode="occlusion">Occlusion</button>
+  </div>
+
+  <h2>Décomposition du mouvement</h2>
+  <table id="phaseTable"></table>
+
+  <h2>Affichage</h2>
+  <label class="toggle"><input type="checkbox" id="showJoints" checked> Articulations</label>
+  <label class="toggle"><input type="checkbox" id="showJointLabels"> Noms des articulations</label>
+  <label class="toggle"><input type="checkbox" id="showArmour" checked> Armure (bōgu)</label>
+  <label class="toggle"><input type="checkbox" id="showArmourLabels"> Noms des pièces d'armure</label>
+  <label class="toggle"><input type="checkbox" id="showTrail" checked> Trace du kissaki</label>
+  <label class="toggle"><input type="checkbox" id="showTarget" checked> Cible (men adverse)</label>
+  <label class="toggle"><input type="checkbox" id="showConstruction"> Lignes de construction</label>
+
+  <h2>Pièces découpées</h2>
+  <div class="legend" id="legend"></div>
+
+  <p class="hint">
+    <kbd>Entrée</kbd> lance le men · <kbd>Espace</kbd> lecture/pause · <kbd>←</kbd> <kbd>→</kbd> frame par frame.
+  </p>
+</aside>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. Repère et proportions
+   Monde en centimètres, sol à y = 0, y vers le haut, kendoka
+   tourné vers +x. Toutes les longueurs d'os sont fixes : une pose
+   ne décrit que des angles et des cibles, jamais des longueurs.
+   ============================================================ */
+
+const FRAMES_PER_SECOND = 60;
+
+const TORSO_LENGTH = 48;
+const NECK_LENGTH = 8;
+const HEAD_RADIUS_HORIZONTAL = 9.5;
+const HEAD_RADIUS_VERTICAL = 12;
+
+const UPPER_ARM_LENGTH = 30;
+const FOREARM_LENGTH = 27;
+const WRIST_TO_GRIP_LENGTH = 7;
+
+const THIGH_LENGTH = 44;
+const SHIN_LENGTH = 42;
+const FOOT_HEEL_OFFSET = { x: -7, y: -6 };
+const FOOT_BALL_OFFSET = { x: 11, y: -6 };
+const TOE_LENGTH = 7;
+
+const SHINAI_BUTT_OVERHANG = 5;
+const SHINAI_LENGTH_FROM_LEFT_GRIP = 115;
+const GRIP_SPACING = 24;
+const TSUBA_DISTANCE_FROM_LEFT_GRIP = 36;
+const MONOUCHI_START_FROM_LEFT_GRIP = 88;
+
+/* Le genou n'a que deux solutions possibles en 2D : on fige le côté
+   vers lequel il plie (toujours vers l'avant). */
+const KNEE_BEND_SIGN = 1;
+
+/* Vu de profil, un coude s'écarte surtout sur le côté : la projection
+   raccourcit les os au lieu de sortir le coude du corps. On place donc
+   le coude sur le segment épaule-poignet, décalé de `elbowBias`
+   centimètres (positif = vers l'avant), valeur animable et continue. */
+const ELBOW_RATIO_ALONG_ARM = 0.52;
+
+/* On regarde le kendoka depuis sa droite : le côté droit est donc le
+   côté proche, celui qui porte la main haute du shinai et le pied avant.
+   L'épaule et la hanche droites sont en outre légèrement avancées, le
+   corps étant de trois quarts. */
+const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
+
+const TARGET_MEN_CENTER = { x: 275, y: 155 };
+const TARGET_MEN_RADIUS = 13;
+
+/* ============================================================
+   2. Découpage des pièces (le "catalogue" à remplacer par des
+   assets Gemini plus tard : une entrée = un dessin autonome)
+   ============================================================ */
+
+const partCatalogue = [
+  { id: "men", label: "Men (masque)", color: "#3b4a8c", group: "armour" },
+  { id: "mendare", label: "Mendare (épaulières)", color: "#4a5aa0", group: "armour" },
+  { id: "do", label: "Dō (plastron)", color: "#7a4a24", group: "armour" },
+  { id: "tare", label: "Tare (ceinture)", color: "#41508f", group: "armour" },
+  { id: "sagari", label: "Sagari (pans)", color: "#4a5aa0", group: "armour" },
+  { id: "koteLeft", label: "Kote gauche (éloigné)", color: "#5566ad", group: "armour" },
+  { id: "koteRight", label: "Kote droit (proche)", color: "#3b4a8c", group: "armour" },
+  { id: "keikogi", label: "Keikogi (veste)", color: "#5a6bb5", group: "clothing" },
+  { id: "hakama", label: "Hakama", color: "#2f3a6b", group: "clothing" },
+  { id: "shinai", label: "Shinai", color: "#a9793f", group: "weapon" },
+  { id: "tsuba", label: "Tsuba", color: "#8a6a3a", group: "weapon" },
+  { id: "skeleton", label: "Corps / os", color: "#2b2b2b", group: "body" },
+  { id: "footLeft", label: "Pied gauche (arrière)", color: "#6e6e6e", group: "body" },
+  { id: "footRight", label: "Pied droit (avant)", color: "#2b2b2b", group: "body" }
+];
+
+const partColor = {};
+partCatalogue.forEach(part => { partColor[part.id] = part.color; });
+
+/* ============================================================
+   3. Poses clés
+   Tout est en coordonnées monde : un pied posé garde sa position
+   pendant que le bassin avance, ce qui donne le glissé correct.
+   ============================================================ */
+
+const keyframeList = [
+  { frame: 0, easing: "linear", pose: {
+      rootX: 0, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -14, leftAnkleY: 8.8, leftFootDegrees: -12,
+      gripX: 16, gripY: 98, shinaiDegrees: 16,
+      leftElbowBias: 5, rightElbowBias: 6 } },
+
+  { frame: 20, easing: "easeInOutSine", pose: {
+      rootX: 0, rootY: 85.4, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
+      rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -14, leftAnkleY: 9, leftFootDegrees: -13,
+      gripX: 16, gripY: 97.5, shinaiDegrees: 16,
+      leftElbowBias: 5, rightElbowBias: 6 } },
+
+  { frame: 44, easing: "easeOutCubic", pose: {
+      rootX: 6, rootY: 86, torsoLeanDegrees: 9, headTiltDegrees: 0,
+      rightAnkleX: 28, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: -9, leftAnkleY: 9.4, leftFootDegrees: -15,
+      gripX: 22, gripY: 99, shinaiDegrees: 12,
+      leftElbowBias: 5, rightElbowBias: 6 } },
+
+  { frame: 62, easing: "easeInQuad", pose: {
+      rootX: 12, rootY: 87, torsoLeanDegrees: 4, headTiltDegrees: -2,
+      rightAnkleX: 32, rightAnkleY: 8, rightFootDegrees: 4,
+      leftAnkleX: -3.2, leftAnkleY: 10.4, leftFootDegrees: -20,
+      gripX: 22, gripY: 168, shinaiDegrees: 198,
+      leftElbowBias: -9, rightElbowBias: -10 } },
+
+  /* Le talon gauche monte, l'orteil reste planté en x = 12 : c'est lui
+     le point d'appui de toute la poussée. Le genou droit part devant. */
+  { frame: 68, easing: "linear", pose: {
+      rootX: 24, rootY: 89, torsoLeanDegrees: 6, headTiltDegrees: -1,
+      rightAnkleX: 44, rightAnkleY: 24, rightFootDegrees: 12,
+      leftAnkleX: -1.4, leftAnkleY: 12.2, leftFootDegrees: -30,
+      gripX: 34, gripY: 170, shinaiDegrees: 202,
+      leftElbowBias: -9, rightElbowBias: -10 } },
+
+  /* Extension maximale : jambe gauche tendue à 98 %, sur la pointe. */
+  { frame: 72, easing: "linear", pose: {
+      rootX: 42, rootY: 88, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
+      leftAnkleX: 1.6, leftAnkleY: 14.1, leftFootDegrees: -44,
+      gripX: 54, gripY: 172, shinaiDegrees: 196,
+      leftElbowBias: -9, rightElbowBias: -10 } },
+
+  { frame: 76, easing: "linear", pose: {
+      rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
+      leftAnkleX: 30, leftAnkleY: 24, leftFootDegrees: -40,
+      gripX: 96, gripY: 164, shinaiDegrees: 130,
+      leftElbowBias: -8, rightElbowBias: -9 } },
+
+  { frame: 82, easing: "easeOutCubic", pose: {
+      rootX: 116, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 3,
+      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 71, leftAnkleY: 20, leftFootDegrees: -34,
+      gripX: 164, gripY: 138, shinaiDegrees: 6,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 88, easing: "easeOutSine", pose: {
+      rootX: 122, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 2,
+      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 116, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 170, gripY: 138, shinaiDegrees: 4,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 92, easing: "easeInOutSine", pose: {
+      rootX: 130, rootY: 85, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rightAnkleX: 154, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 116, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 176, gripY: 134, shinaiDegrees: 6,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 104, easing: "easeInOutSine", pose: {
+      rootX: 140, rootY: 86, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 164, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 126, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 186, gripY: 132, shinaiDegrees: 8,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 116, easing: "easeInOutCubic", pose: {
+      rootX: 154, rootY: 86, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 140, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 200, gripY: 132, shinaiDegrees: 8,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 134, easing: "linear", pose: {
+      rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
+      gripX: 176, gripY: 98, shinaiDegrees: 16,
+      leftElbowBias: 5, rightElbowBias: 6 } },
+
+  { frame: 150, easing: "linear", pose: {
+      rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
+      gripX: 176, gripY: 98, shinaiDegrees: 16,
+      leftElbowBias: 5, rightElbowBias: 6 } }
+];
+
+const LAST_FRAME = keyframeList[keyframeList.length - 1].frame;
+const IMPACT_FRAME = 82;
+
+const phaseList = [
+  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
+    detail: "Garde. Pointe à la gorge, pied droit devant, talon gauche décollé." },
+  { name: "Seme", startFrame: 20, endFrame: 44,
+    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
+  { name: "Furikaburi", startFrame: 44, endFrame: 62,
+    detail: "Armé grande amplitude : mains au-dessus du front, kissaki derrière." },
+  { name: "Tame (sommet)", startFrame: 62, endFrame: 68,
+    detail: "Instant suspendu, le talon gauche monte, le genou droit s'arme." },
+  { name: "Poussée sur les orteils", startFrame: 68, endFrame: 72,
+    detail: "Appui sur la pointe du pied gauche, jambe tendue à 98 % : le genou droit est lancé loin devant." },
+  { name: "Envol", startFrame: 72, endFrame: 76,
+    detail: "Plus aucun appui au sol, le bassin file à 4,4 m/s, la coupe s'enclenche." },
+  { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
+    detail: "Le pied droit claque à plat, le shinai touche le men au même instant." },
+  { name: "Hikitsuke", startFrame: 82, endFrame: 88,
+    detail: "Le pied gauche est ramené immédiatement sous le corps." },
+  { name: "Zanshin", startFrame: 88, endFrame: 116,
+    detail: "Traversée en suriashi, bras et vigilance maintenus." },
+  { name: "Retour kamae", startFrame: 116, endFrame: 150,
+    detail: "Redescente en chūdan, reprise de la garde." }
+];
+
+/* ============================================================
+   4. Interpolation
+   ============================================================ */
+
+const easingFunctions = {
+  linear: t => t,
+  easeInOutSine: t => 0.5 - Math.cos(Math.PI * t) / 2,
+  easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  easeOutCubic: t => 1 - Math.pow(1 - t, 3),
+  easeOutSine: t => Math.sin((Math.PI / 2) * t),
+  easeInQuad: t => t * t,
+  easeInCubic: t => t * t * t
+};
+
+function interpolatePose(frame) {
+  const clampedFrame = Math.max(0, Math.min(LAST_FRAME, frame));
+  let previousKeyframe = keyframeList[0];
+  let nextKeyframe = keyframeList[keyframeList.length - 1];
+  for (let index = 0; index < keyframeList.length - 1; index++) {
+    if (clampedFrame >= keyframeList[index].frame && clampedFrame <= keyframeList[index + 1].frame) {
+      previousKeyframe = keyframeList[index];
+      nextKeyframe = keyframeList[index + 1];
+      break;
+    }
+  }
+  const span = nextKeyframe.frame - previousKeyframe.frame;
+  const rawProgress = span === 0 ? 0 : (clampedFrame - previousKeyframe.frame) / span;
+  const easing = easingFunctions[previousKeyframe.easing] || easingFunctions.linear;
+  const progress = easing(rawProgress);
+
+  const pose = {};
+  for (const fieldName in previousKeyframe.pose) {
+    const start = previousKeyframe.pose[fieldName];
+    const end = nextKeyframe.pose[fieldName];
+    pose[fieldName] = start + (end - start) * progress;
+  }
+  return pose;
+}
+
+/* Une frame frontière appartient à la phase qui s'y termine : la frame
+   82 est l'instant de la frappe, pas le début du hikitsuke. */
+function findPhase(frame) {
+  for (let index = 0; index < phaseList.length; index++) {
+    if (frame <= phaseList[index].endFrame) return phaseList[index];
+  }
+  return phaseList[phaseList.length - 1];
+}
+
+/* ============================================================
+   5. Résolution du squelette (FK torse/tête + IK 2 os bras/jambes)
+   ============================================================ */
+
+function toRadians(degrees) { return degrees * Math.PI / 180; }
+function addPoints(point, dx, dy) { return { x: point.x + dx, y: point.y + dy }; }
+function pointAlong(from, to, ratio) {
+  return { x: from.x + (to.x - from.x) * ratio, y: from.y + (to.y - from.y) * ratio };
+}
+function directionBetween(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return { x: dx / length, y: dy / length };
+}
+function perpendicular(direction) { return { x: -direction.y, y: direction.x }; }
+
+function rotateOffset(offset, radians) {
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  return { x: offset.x * cosine - offset.y * sine, y: offset.x * sine + offset.y * cosine };
+}
+
+/** Place l'articulation intermédiaire d'une chaîne à deux os. */
+function solveTwoBoneJoint(origin, target, firstBoneLength, secondBoneLength, bendSign) {
+  let deltaX = target.x - origin.x;
+  let deltaY = target.y - origin.y;
+  let distance = Math.hypot(deltaX, deltaY);
+  const maximumReach = firstBoneLength + secondBoneLength - 0.01;
+  const minimumReach = Math.abs(firstBoneLength - secondBoneLength) + 0.01;
+  if (distance > maximumReach) distance = maximumReach;
+  if (distance < minimumReach) distance = minimumReach;
+  const baseAngle = Math.atan2(deltaY, deltaX);
+  const cosineInterior = (distance * distance + firstBoneLength * firstBoneLength - secondBoneLength * secondBoneLength)
+    / (2 * distance * firstBoneLength);
+  const interiorAngle = Math.acos(Math.max(-1, Math.min(1, cosineInterior)));
+  const jointAngle = baseAngle + bendSign * interiorAngle;
+  return {
+    x: origin.x + firstBoneLength * Math.cos(jointAngle),
+    y: origin.y + firstBoneLength * Math.sin(jointAngle)
+  };
+}
+
+function solveElbow(shoulder, wrist, elbowBias) {
+  const midpoint = pointAlong(shoulder, wrist, ELBOW_RATIO_ALONG_ARM);
+  const normal = perpendicular(directionBetween(shoulder, wrist));
+  return addPointOffset(midpoint, { x: normal.x * elbowBias, y: normal.y * elbowBias });
+}
+
+function solveFoot(ankle, footDegrees) {
+  const radians = toRadians(footDegrees);
+  const heel = addPointOffset(ankle, rotateOffset(FOOT_HEEL_OFFSET, radians));
+  const ball = addPointOffset(ankle, rotateOffset(FOOT_BALL_OFFSET, radians));
+  /* Talon levé : les orteils se replient au lieu de traverser le sol. */
+  const toeFlexRadians = Math.max(0, -footDegrees) * 0.6 * Math.PI / 180;
+  const toe = addPointOffset(ball, rotateOffset({ x: TOE_LENGTH, y: 0 }, radians + toeFlexRadians));
+  return { ankle, heel, ball, toe };
+}
+
+function addPointOffset(point, offset) { return { x: point.x + offset.x, y: point.y + offset.y }; }
+
+function solveSkeleton(pose) {
+  const root = { x: pose.rootX, y: pose.rootY };
+  const leanRadians = toRadians(pose.torsoLeanDegrees);
+  const torsoDirection = { x: Math.sin(leanRadians), y: Math.cos(leanRadians) };
+
+  const shoulderCenter = {
+    x: root.x + torsoDirection.x * TORSO_LENGTH,
+    y: root.y + torsoDirection.y * TORSO_LENGTH
+  };
+  const neckRadians = toRadians(pose.torsoLeanDegrees + pose.headTiltDegrees);
+  const neckDirection = { x: Math.sin(neckRadians), y: Math.cos(neckRadians) };
+  const neckTop = {
+    x: shoulderCenter.x + neckDirection.x * NECK_LENGTH,
+    y: shoulderCenter.y + neckDirection.y * NECK_LENGTH
+  };
+  const headCenter = {
+    x: neckTop.x + neckDirection.x * HEAD_RADIUS_VERTICAL,
+    y: neckTop.y + neckDirection.y * HEAD_RADIUS_VERTICAL
+  };
+
+  const shinaiRadians = toRadians(pose.shinaiDegrees);
+  const shinaiDirection = { x: Math.cos(shinaiRadians), y: Math.sin(shinaiRadians) };
+  const leftGrip = { x: pose.gripX, y: pose.gripY };
+  const rightGrip = addPointOffset(leftGrip, {
+    x: shinaiDirection.x * GRIP_SPACING, y: shinaiDirection.y * GRIP_SPACING
+  });
+  const shinaiButt = addPointOffset(leftGrip, {
+    x: -shinaiDirection.x * SHINAI_BUTT_OVERHANG, y: -shinaiDirection.y * SHINAI_BUTT_OVERHANG
+  });
+  const shinaiTip = addPointOffset(leftGrip, {
+    x: shinaiDirection.x * SHINAI_LENGTH_FROM_LEFT_GRIP, y: shinaiDirection.y * SHINAI_LENGTH_FROM_LEFT_GRIP
+  });
+  const tsuba = addPointOffset(leftGrip, {
+    x: shinaiDirection.x * TSUBA_DISTANCE_FROM_LEFT_GRIP, y: shinaiDirection.y * TSUBA_DISTANCE_FROM_LEFT_GRIP
+  });
+  const monouchiStart = addPointOffset(leftGrip, {
+    x: shinaiDirection.x * MONOUCHI_START_FROM_LEFT_GRIP, y: shinaiDirection.y * MONOUCHI_START_FROM_LEFT_GRIP
+  });
+
+  const leftWrist = addPointOffset(leftGrip, {
+    x: -shinaiDirection.x * WRIST_TO_GRIP_LENGTH, y: -shinaiDirection.y * WRIST_TO_GRIP_LENGTH
+  });
+  const rightWrist = addPointOffset(rightGrip, {
+    x: -shinaiDirection.x * WRIST_TO_GRIP_LENGTH, y: -shinaiDirection.y * WRIST_TO_GRIP_LENGTH
+  });
+
+  const forwardDirection = { x: torsoDirection.y, y: -torsoDirection.x };
+  const leftShoulder = addPoints(shoulderCenter, 0, -3.5);
+  const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -1), {
+    x: forwardDirection.x * RIGHT_SHOULDER_FORWARD_OFFSET, y: forwardDirection.y * RIGHT_SHOULDER_FORWARD_OFFSET
+  });
+  const leftHip = addPoints(root, 0, -1.5);
+  const rightHip = addPointOffset(root, {
+    x: forwardDirection.x * 3, y: forwardDirection.y * 3
+  });
+
+  const leftElbow = solveElbow(leftShoulder, leftWrist, pose.leftElbowBias);
+  const rightElbow = solveElbow(rightShoulder, rightWrist, pose.rightElbowBias);
+
+  const leftAnkle = { x: pose.leftAnkleX, y: pose.leftAnkleY };
+  const rightAnkle = { x: pose.rightAnkleX, y: pose.rightAnkleY };
+  const leftKnee = solveTwoBoneJoint(leftHip, leftAnkle, THIGH_LENGTH, SHIN_LENGTH, KNEE_BEND_SIGN);
+  const rightKnee = solveTwoBoneJoint(rightHip, rightAnkle, THIGH_LENGTH, SHIN_LENGTH, KNEE_BEND_SIGN);
+
+  return {
+    root, shoulderCenter, neckTop, headCenter, torsoDirection, neckDirection, forwardDirection,
+    leftShoulder, leftElbow, leftWrist, leftGrip,
+    rightShoulder, rightElbow, rightWrist, rightGrip,
+    leftHip, leftKnee, leftFoot: solveFoot(leftAnkle, pose.leftFootDegrees),
+    rightHip, rightKnee, rightFoot: solveFoot(rightAnkle, pose.rightFootDegrees),
+    shinaiDirection, shinaiButt, shinaiTip, tsuba, monouchiStart
+  };
+}
+
+/* ============================================================
+   6. Rendu — style crayon
+   ============================================================ */
+
+const canvas = document.getElementById("scene");
+const context = canvas.getContext("2d");
+const camera = { scale: 3, originX: 0, originY: 0 };
+
+const NEAR_INK = "#232323";
+const FAR_INK = "#7b7b7b";
+
+function resizeCanvas() {
+  const ratio = window.devicePixelRatio || 1;
+  const stage = document.getElementById("stage");
+  canvas.width = Math.floor(stage.clientWidth * ratio);
+  canvas.height = Math.floor(stage.clientHeight * ratio);
+  camera.pixelRatio = ratio;
+}
+window.addEventListener("resize", () => { resizeCanvas(); render(); });
+
+function worldToScreen(point) {
+  return { x: camera.originX + point.x * camera.scale, y: camera.originY - point.y * camera.scale };
+}
+
+/* Décalage pseudo-aléatoire stable : le trait tremble comme un crayon
+   mais ne "bout" pas d'une frame à l'autre. */
+function sketchJitter(seed) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return (value - Math.floor(value) - 0.5) * 0.9;
+}
+
+function strokePath(pointList, options) {
+  const settings = options || {};
+  const width = settings.width || 0.7;
+  context.strokeStyle = settings.color || NEAR_INK;
+  context.lineWidth = width;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  const passCount = settings.single ? 1 : 2;
+  for (let pass = 0; pass < passCount; pass++) {
+    context.globalAlpha = (settings.alpha || 1) * (pass === 0 ? 1 : 0.45);
+    context.beginPath();
+    pointList.forEach((point, index) => {
+      const seed = (settings.seed || 1) * 7.31 + index * 3.17 + pass * 19.7;
+      const x = point.x + sketchJitter(seed);
+      const y = point.y + sketchJitter(seed + 101);
+      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    if (settings.closed) context.closePath();
+    context.stroke();
+  }
+  context.globalAlpha = 1;
+}
+
+const PAPER_RED = 244, PAPER_GREEN = 241, PAPER_BLUE = 232;
+
+/** Même teinte apparente qu'un aplat translucide, mais opaque : le mode
+    occlusion garde le rendu crayon tout en masquant ce qui est derrière. */
+function blendOverPaper(hexColor, ratio) {
+  const red = parseInt(hexColor.slice(1, 3), 16);
+  const green = parseInt(hexColor.slice(3, 5), 16);
+  const blue = parseInt(hexColor.slice(5, 7), 16);
+  return "rgb(" + Math.round(red * ratio + PAPER_RED * (1 - ratio)) + ","
+    + Math.round(green * ratio + PAPER_GREEN * (1 - ratio)) + ","
+    + Math.round(blue * ratio + PAPER_BLUE * (1 - ratio)) + ")";
+}
+
+function isOcclusionMode() { return viewState.viewMode === "occlusion"; }
+
+function fillPath(pointList, color, alpha) {
+  const requestedAlpha = alpha === undefined ? 0.16 : alpha;
+  if (isOcclusionMode() && color.charAt(0) === "#") {
+    context.globalAlpha = 1;
+    context.fillStyle = blendOverPaper(color, requestedAlpha);
+  } else {
+    context.globalAlpha = requestedAlpha;
+    context.fillStyle = color;
+  }
+  context.beginPath();
+  pointList.forEach((point, index) => {
+    if (index === 0) context.moveTo(point.x, point.y); else context.lineTo(point.x, point.y);
+  });
+  context.closePath();
+  context.fill();
+  context.globalAlpha = 1;
+}
+
+/** Quadrilatère autour d'un segment : sert à épaissir un membre. */
+function segmentQuad(from, to, widthAtStart, widthAtEnd) {
+  const direction = directionBetween(from, to);
+  const normal = perpendicular(direction);
+  return [
+    addPointOffset(from, { x: normal.x * widthAtStart, y: normal.y * widthAtStart }),
+    addPointOffset(to, { x: normal.x * widthAtEnd, y: normal.y * widthAtEnd }),
+    addPointOffset(to, { x: -normal.x * widthAtEnd, y: -normal.y * widthAtEnd }),
+    addPointOffset(from, { x: -normal.x * widthAtStart, y: -normal.y * widthAtStart })
+  ];
+}
+
+function drawSleeve(from, to, widthAtStart, widthAtEnd, color, ink, seed) {
+  const quad = segmentQuad(from, to, widthAtStart, widthAtEnd);
+  fillPath(quad, color, 0.2);
+  strokePath([quad[0], quad[1]], { color: ink, width: 0.55, seed: seed });
+  strokePath([quad[2], quad[3]], { color: ink, width: 0.55, seed: seed + 5 });
+  strokePath([quad[1], quad[2]], { color: ink, width: 0.55, seed: seed + 9 });
+  return quad;
+}
+
+/* ---------- pièces du corps ---------- */
+
+const BODY_VOLUME_NEAR = "#f1ecde";
+const BODY_VOLUME_FAR = "#ddd7c6";
+
+/** Contour d'un membre : une demi-largeur par articulation, normales
+    moyennées pour que le coude ou le genou ne casse pas la silhouette. */
+function limbOutline(pointList, halfWidthList) {
+  const frontSide = [];
+  const backSide = [];
+  for (let index = 0; index < pointList.length; index++) {
+    let normal;
+    if (index === 0) {
+      normal = perpendicular(directionBetween(pointList[0], pointList[1]));
+    } else if (index === pointList.length - 1) {
+      normal = perpendicular(directionBetween(pointList[index - 1], pointList[index]));
+    } else {
+      normal = jointNormal(pointList[index - 1], pointList[index], pointList[index + 1]);
+    }
+    frontSide.push(offsetAlongNormal(pointList[index], normal, halfWidthList[index]));
+    backSide.unshift(offsetAlongNormal(pointList[index], normal, -halfWidthList[index]));
+  }
+  return frontSide.concat(backSide);
+}
+
+function drawLimbVolume(pointList, halfWidthList, fillColor) {
+  context.fillStyle = fillColor;
+  context.globalAlpha = 1;
+  const outline = limbOutline(pointList, halfWidthList);
+  context.beginPath();
+  outline.forEach((point, index) => {
+    if (index === 0) context.moveTo(point.x, point.y); else context.lineTo(point.x, point.y);
+  });
+  context.closePath();
+  context.fill();
+  /* Articulations arrondies, sinon la silhouette se casse aux angles vifs. */
+  pointList.forEach((point, index) => {
+    context.beginPath();
+    context.arc(point.x, point.y, halfWidthList[index], 0, Math.PI * 2);
+    context.fill();
+  });
+}
+
+function drawFootVolume(foot, fillColor) {
+  context.fillStyle = fillColor;
+  context.globalAlpha = 1;
+  context.beginPath();
+  context.moveTo(foot.ankle.x, foot.ankle.y);
+  context.lineTo(foot.heel.x, foot.heel.y);
+  context.lineTo(foot.ball.x, foot.ball.y);
+  context.lineTo(foot.toe.x, foot.toe.y);
+  context.closePath();
+  context.fill();
+}
+
+function drawTorsoVolume(skeleton, fillColor) {
+  const forward = skeleton.forwardDirection;
+  const shoulder = skeleton.shoulderCenter;
+  const hip = skeleton.root;
+  const outline = [
+    offsetAlongNormal(shoulder, forward, 11),
+    offsetAlongNormal(hip, forward, 9),
+    offsetAlongNormal(hip, forward, -8),
+    offsetAlongNormal(shoulder, forward, -9)
+  ];
+  context.fillStyle = fillColor;
+  context.globalAlpha = 1;
+  context.beginPath();
+  outline.forEach((point, index) => {
+    if (index === 0) context.moveTo(point.x, point.y); else context.lineTo(point.x, point.y);
+  });
+  context.closePath();
+  context.fill();
+  drawLimbVolume([shoulder, skeleton.neckTop], [7, 4.5], fillColor);
+}
+
+function drawLeg(hip, knee, foot, ink, seed) {
+  strokePath([hip, knee], { color: ink, width: 0.9, seed: seed });
+  strokePath([knee, foot.ankle], { color: ink, width: 0.9, seed: seed + 3 });
+  strokePath([foot.heel, foot.ankle, foot.ball, foot.toe], { color: ink, width: 0.9, seed: seed + 6 });
+  strokePath([foot.heel, foot.ball], { color: ink, width: 0.7, seed: seed + 8 });
+}
+
+function drawArm(shoulder, elbow, wrist, grip, ink, seed) {
+  strokePath([shoulder, elbow], { color: ink, width: 0.9, seed: seed });
+  strokePath([elbow, wrist], { color: ink, width: 0.9, seed: seed + 3 });
+  strokePath([wrist, grip], { color: ink, width: 0.9, seed: seed + 6 });
+}
+
+function drawTorsoAndHead(skeleton) {
+  strokePath([skeleton.root, skeleton.shoulderCenter], { color: NEAR_INK, width: 1, seed: 30 });
+  strokePath([skeleton.shoulderCenter, skeleton.neckTop], { color: NEAR_INK, width: 0.8, seed: 33 });
+  strokePath([skeleton.leftShoulder, skeleton.rightShoulder], { color: NEAR_INK, width: 0.7, seed: 35 });
+  strokePath([skeleton.leftHip, skeleton.rightHip], { color: NEAR_INK, width: 0.7, seed: 36 });
+
+  const headAngle = Math.atan2(skeleton.neckDirection.x, skeleton.neckDirection.y);
+  context.save();
+  context.translate(skeleton.headCenter.x, skeleton.headCenter.y);
+  context.rotate(-headAngle);
+  if (isOcclusionMode()) {
+    context.fillStyle = BODY_VOLUME_NEAR;
+    context.beginPath();
+    context.ellipse(0, 0, HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, 0, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.strokeStyle = NEAR_INK;
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.ellipse(0, 0, HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.restore();
+}
+
+/* ---------- pièces d'armure ---------- */
+
+function drawMen(skeleton) {
+  const forward = { x: skeleton.neckDirection.y, y: -skeleton.neckDirection.x };
+  const up = skeleton.neckDirection;
+  const center = skeleton.headCenter;
+  const headAngle = Math.atan2(up.x, up.y);
+
+  context.save();
+  context.translate(center.x, center.y);
+  context.rotate(-headAngle);
+
+  /* Coque du men, un peu plus large que la tête. */
+  context.globalAlpha = 0.18;
+  context.fillStyle = partColor.men;
+  context.beginPath();
+  context.ellipse(1, 1, HEAD_RADIUS_HORIZONTAL + 3.5, HEAD_RADIUS_VERTICAL + 3, 0, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+  context.strokeStyle = partColor.men;
+  context.lineWidth = 0.7;
+  context.beginPath();
+  context.ellipse(1, 1, HEAD_RADIUS_HORIZONTAL + 3.5, HEAD_RADIUS_VERTICAL + 3, 0, 0, Math.PI * 2);
+  context.stroke();
+
+  /* Men-gane : les barreaux de la grille, vus de profil. */
+  context.lineWidth = 0.45;
+  for (let barIndex = 0; barIndex < 6; barIndex++) {
+    const heightOffset = 9 - barIndex * 3.6;
+    context.beginPath();
+    context.moveTo(3, heightOffset);
+    context.lineTo(HEAD_RADIUS_HORIZONTAL + 4.5, heightOffset - 1);
+    context.stroke();
+  }
+  context.restore();
+
+  /* Mendare : les rabats qui couvrent les épaules. */
+  const sideAnchor = addPointOffset(center, { x: -up.x * 4, y: -up.y * 4 });
+  const mendareFront = [
+    addPointOffset(sideAnchor, { x: forward.x * 9, y: forward.y * 9 }),
+    addPointOffset(skeleton.shoulderCenter, { x: forward.x * 15, y: forward.y * 15 + 2 }),
+    addPointOffset(skeleton.shoulderCenter, { x: -forward.x * 12, y: -forward.y * 12 + 2 }),
+    addPointOffset(sideAnchor, { x: -forward.x * 9, y: -forward.y * 9 })
+  ];
+  fillPath(mendareFront, partColor.mendare, 0.14);
+  strokePath(mendareFront, { color: partColor.mendare, width: 0.55, closed: true, seed: 44 });
+}
+
+function drawDo(skeleton) {
+  const up = skeleton.torsoDirection;
+  const forward = { x: up.y, y: -up.x };
+  const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.78);
+  const belly = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.12);
+  const outline = [
+    addPointOffset(chest, { x: forward.x * 13 - up.x * 0, y: forward.y * 13 }),
+    addPointOffset(belly, { x: forward.x * 11, y: forward.y * 11 }),
+    addPointOffset(belly, { x: -forward.x * 8, y: -forward.y * 8 }),
+    addPointOffset(chest, { x: -forward.x * 10, y: -forward.y * 10 })
+  ];
+  fillPath(outline, partColor.do, 0.2);
+  strokePath(outline, { color: partColor.do, width: 0.7, closed: true, seed: 50 });
+  /* Nervures horizontales du dō. */
+  for (let ribIndex = 1; ribIndex <= 3; ribIndex++) {
+    const ratio = ribIndex / 4;
+    const inner = pointAlong(outline[3], outline[2], ratio);
+    const outer = pointAlong(outline[0], outline[1], ratio);
+    strokePath([inner, outer], { color: partColor.do, width: 0.35, single: true, alpha: 0.7, seed: 50 + ribIndex });
+  }
+}
+
+function drawTare(skeleton) {
+  const up = skeleton.torsoDirection;
+  const forward = { x: up.y, y: -up.x };
+  const waist = addPointOffset(skeleton.root, { x: up.x * 4, y: up.y * 4 });
+  const beltLeft = addPointOffset(waist, { x: -forward.x * 9, y: -forward.y * 9 });
+  const beltRight = addPointOffset(waist, { x: forward.x * 12, y: forward.y * 12 });
+  const belt = segmentQuad(beltLeft, beltRight, 3.5, 3.5);
+  fillPath(belt, partColor.tare, 0.2);
+  strokePath(belt, { color: partColor.tare, width: 0.6, closed: true, seed: 60 });
+
+  /* Sagari : trois pans, celui du centre plus large. */
+  const sagariWidths = [4, 6.5, 4];
+  const sagariLengths = [24, 28, 22];
+  for (let index = 0; index < 3; index++) {
+    const anchor = pointAlong(beltLeft, beltRight, 0.2 + index * 0.3);
+    const bottom = addPointOffset(anchor, { x: -up.x * sagariLengths[index], y: -up.y * sagariLengths[index] });
+    const flap = segmentQuad(anchor, bottom, sagariWidths[index], sagariWidths[index] * 0.9);
+    fillPath(flap, partColor.sagari, 0.16);
+    strokePath(flap, { color: partColor.sagari, width: 0.5, closed: true, seed: 63 + index });
+  }
+}
+
+function drawKote(elbow, wrist, grip, color, seed) {
+  const cuff = pointAlong(elbow, wrist, -0.12);
+  drawSleeve(cuff, wrist, 4.6, 3.4, color, color, seed);
+  /* Poing rembourré du kote. */
+  const fistCenter = pointAlong(wrist, grip, 0.55);
+  context.globalAlpha = 0.22;
+  context.fillStyle = color;
+  context.beginPath();
+  context.arc(fistCenter.x, fistCenter.y, 4.2, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+  context.strokeStyle = color;
+  context.lineWidth = 0.6;
+  context.beginPath();
+  context.arc(fistCenter.x, fistCenter.y, 4.2, 0, Math.PI * 2);
+  context.stroke();
+}
+
+function drawKeikogiSleeve(shoulder, elbow, seed) {
+  drawSleeve(shoulder, pointAlong(shoulder, elbow, 0.85), 6.5, 5, partColor.keikogi, partColor.keikogi, seed);
+}
+
+/** Normale moyenne au niveau d'une articulation, pour un contour sans cassure. */
+function jointNormal(previousPoint, jointPoint, nextPoint) {
+  const incoming = perpendicular(directionBetween(previousPoint, jointPoint));
+  const outgoing = perpendicular(directionBetween(jointPoint, nextPoint));
+  const sumX = incoming.x + outgoing.x;
+  const sumY = incoming.y + outgoing.y;
+  const length = Math.hypot(sumX, sumY) || 1;
+  return { x: sumX / length, y: sumY / length };
+}
+
+function offsetAlongNormal(point, normal, amount) {
+  return { x: point.x + normal.x * amount, y: point.y + normal.y * amount };
+}
+
+function drawHakamaLeg(hip, knee, ankle, seed) {
+  const hemPoint = pointAlong(knee, ankle, 0.68);
+  const hipNormal = perpendicular(directionBetween(hip, knee));
+  const kneeNormal = jointNormal(hip, knee, hemPoint);
+  const hemNormal = perpendicular(directionBetween(knee, hemPoint));
+  const frontSide = [
+    offsetAlongNormal(hip, hipNormal, 8),
+    offsetAlongNormal(knee, kneeNormal, 7.5),
+    offsetAlongNormal(hemPoint, hemNormal, 5.5)
+  ];
+  const backSide = [
+    offsetAlongNormal(hemPoint, hemNormal, -5.5),
+    offsetAlongNormal(knee, kneeNormal, -7.5),
+    offsetAlongNormal(hip, hipNormal, -8)
+  ];
+  const outline = frontSide.concat(backSide);
+  fillPath(outline, partColor.hakama, 0.16);
+  strokePath(frontSide, { color: partColor.hakama, width: 0.5, seed: seed });
+  strokePath(backSide, { color: partColor.hakama, width: 0.5, seed: seed + 4 });
+  strokePath([frontSide[2], backSide[0]], { color: partColor.hakama, width: 0.5, seed: seed + 7 });
+  /* Un pli central, pour suggérer les hida. */
+  strokePath([pointAlong(frontSide[0], backSide[2], 0.5), pointAlong(frontSide[2], backSide[0], 0.5)],
+    { color: partColor.hakama, width: 0.35, single: true, alpha: 0.6, seed: seed + 11 });
+}
+
+function drawShinai(skeleton) {
+  const direction = skeleton.shinaiDirection;
+  const normal = perpendicular(direction);
+  const halfWidth = 1.5;
+  const body = [
+    addPointOffset(skeleton.shinaiButt, { x: normal.x * halfWidth, y: normal.y * halfWidth }),
+    addPointOffset(skeleton.shinaiTip, { x: normal.x * 0.8, y: normal.y * 0.8 }),
+    addPointOffset(skeleton.shinaiTip, { x: -normal.x * 0.8, y: -normal.y * 0.8 }),
+    addPointOffset(skeleton.shinaiButt, { x: -normal.x * halfWidth, y: -normal.y * halfWidth })
+  ];
+  fillPath(body, partColor.shinai, 0.35);
+  strokePath(body, { color: "#6d4a1f", width: 0.6, closed: true, seed: 80 });
+
+  /* Tsuka : le cuir de la poignée, jusqu'à la tsuba. */
+  const tsukaEnd = skeleton.tsuba;
+  strokePath(segmentQuad(skeleton.shinaiButt, tsukaEnd, 1.7, 1.7),
+    { color: "#4a3316", width: 0.5, closed: true, seed: 82 });
+
+  /* Tsuba. */
+  context.strokeStyle = partColor.tsuba;
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.moveTo(tsukaEnd.x + normal.x * 4.5, tsukaEnd.y + normal.y * 4.5);
+  context.lineTo(tsukaEnd.x - normal.x * 4.5, tsukaEnd.y - normal.y * 4.5);
+  context.stroke();
+
+  /* Monouchi : la zone valide de frappe, marquée en pointillés. */
+  context.save();
+  context.setLineDash([2, 2]);
+  strokePath([skeleton.monouchiStart, skeleton.shinaiTip],
+    { color: "#c2452a", width: 1.1, single: true, alpha: 0.8, seed: 85 });
+  context.restore();
+  context.setLineDash([]);
+}
+
+/* ---------- décor ---------- */
+
+function drawFloor(pose) {
+  const leftEdge = (0 - camera.originX) / camera.scale;
+  const rightEdge = (canvas.width - camera.originX) / camera.scale;
+  strokePath([{ x: leftEdge, y: 0 }, { x: rightEdge, y: 0 }],
+    { color: "#c9c0aa", width: 0.5, single: true, seed: 1 });
+  context.strokeStyle = "#b5ab93";
+  context.lineWidth = 0.35;
+  const firstTick = Math.floor(leftEdge / 20) * 20;
+  for (let x = firstTick; x < rightEdge; x += 20) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x - 4, -4);
+    context.stroke();
+  }
+  context.strokeStyle = "#6f6553";
+  context.lineWidth = 0.6;
+  context.beginPath();
+  context.moveTo(leftEdge, 0);
+  context.lineTo(rightEdge, 0);
+  context.stroke();
+}
+
+function drawTargetMen(frame) {
+  const fadeStartFrame = 96;
+  const opacity = frame <= fadeStartFrame ? 1 : Math.max(0, 1 - (frame - fadeStartFrame) / 16);
+  if (opacity === 0) return;
+  context.save();
+  context.globalAlpha = opacity;
+  context.setLineDash([2.5, 2.5]);
+  context.strokeStyle = "#9a9a9a";
+  context.lineWidth = 0.6;
+  context.beginPath();
+  context.arc(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y, TARGET_MEN_RADIUS, 0, Math.PI * 2);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y + TARGET_MEN_RADIUS);
+  context.lineTo(TARGET_MEN_CENTER.x, TARGET_MEN_CENTER.y - TARGET_MEN_RADIUS - 18);
+  context.stroke();
+  context.restore();
+  context.setLineDash([]);
+}
+
+function drawKissakiTrail(frame) {
+  const trailLength = 14;
+  for (let step = trailLength; step >= 1; step--) {
+    const sampleFrame = frame - step;
+    if (sampleFrame < 44) continue;
+    const previous = solveSkeleton(interpolatePose(sampleFrame));
+    const current = solveSkeleton(interpolatePose(sampleFrame + 1));
+    context.globalAlpha = 0.5 * (1 - step / trailLength);
+    context.strokeStyle = "#c2452a";
+    context.lineWidth = 1.2;
+    context.beginPath();
+    context.moveTo(previous.shinaiTip.x, previous.shinaiTip.y);
+    context.lineTo(current.shinaiTip.x, current.shinaiTip.y);
+    context.stroke();
+    context.globalAlpha = 1;
+  }
+}
+
+function drawImpactEffects(frame, skeleton) {
+  const framesSinceImpact = frame - IMPACT_FRAME;
+  if (framesSinceImpact < 0 || framesSinceImpact > 24) return;
+  const life = framesSinceImpact / 24;
+
+  /* Poussière sous le pied qui claque. */
+  const foot = skeleton.rightFoot.ball;
+  for (let puffIndex = 0; puffIndex < 7; puffIndex++) {
+    const spread = (puffIndex - 3) * 5;
+    const radius = 2 + life * 12 + puffIndex % 3;
+    context.globalAlpha = 0.30 * (1 - life);
+    context.strokeStyle = "#8b7f66";
+    context.lineWidth = 0.5;
+    context.beginPath();
+    context.arc(foot.x + spread * (0.4 + life), 2 + life * 8 + Math.abs(spread) * 0.15, radius, 0, Math.PI * 2);
+    context.stroke();
+    context.globalAlpha = 1;
+  }
+
+  /* Éclat au point de frappe. */
+  if (framesSinceImpact < 10) {
+    const flash = 1 - framesSinceImpact / 10;
+    context.globalAlpha = flash;
+    context.strokeStyle = "#c2452a";
+    context.lineWidth = 0.9;
+    for (let rayIndex = 0; rayIndex < 8; rayIndex++) {
+      const angle = (rayIndex / 8) * Math.PI * 2;
+      const inner = 4 + (1 - flash) * 6;
+      const outer = inner + 6 * flash + 3;
+      context.beginPath();
+      context.moveTo(TARGET_MEN_CENTER.x + Math.cos(angle) * inner, TARGET_MEN_CENTER.y + Math.sin(angle) * inner);
+      context.lineTo(TARGET_MEN_CENTER.x + Math.cos(angle) * outer, TARGET_MEN_CENTER.y + Math.sin(angle) * outer);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+  }
+}
+
+/* ---------- annotations en espace écran ---------- */
+
+function drawScreenLabel(worldPoint, text, color, offsetX, offsetY) {
+  const screenPoint = worldToScreen(worldPoint);
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.font = `${11 * (camera.pixelRatio || 1)}px -apple-system, "Segoe UI", sans-serif`;
+  context.fillStyle = color;
+  context.textBaseline = "middle";
+  const ratio = camera.pixelRatio || 1;
+  const textX = screenPoint.x + offsetX * ratio;
+  const textY = screenPoint.y + offsetY * ratio;
+  context.globalAlpha = 0.35;
+  context.strokeStyle = "#f4f1e8";
+  context.lineWidth = 3 * ratio;
+  context.strokeText(text, textX, textY);
+  context.globalAlpha = 1;
+  context.fillText(text, textX, textY);
+  context.restore();
+}
+
+function drawJointMarker(point, color) {
+  context.fillStyle = "#f4f1e8";
+  context.strokeStyle = color;
+  context.lineWidth = 0.6;
+  context.beginPath();
+  context.arc(point.x, point.y, 1.9, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+}
+
+/** Chaque articulation porte son propre décalage d'étiquette, sinon les
+    noms des pieds se superposent. */
+function collectJoints(skeleton) {
+  return [
+    { point: skeleton.neckTop, name: "cou", near: true, offsetX: 6, offsetY: -6 },
+    { point: skeleton.leftShoulder, name: "épaule G", near: false, offsetX: 8, offsetY: 10 },
+    { point: skeleton.leftElbow, name: "coude G", near: false, offsetX: 10, offsetY: 12 },
+    { point: skeleton.leftWrist, name: "poignet G", near: false, offsetX: 6, offsetY: 14 },
+    { point: skeleton.rightShoulder, name: "épaule D", near: true, offsetX: 6, offsetY: -8 },
+    { point: skeleton.rightElbow, name: "coude D", near: true, offsetX: 8, offsetY: 0 },
+    { point: skeleton.rightWrist, name: "poignet D", near: true, offsetX: 4, offsetY: -12 },
+    { point: skeleton.root, name: "taille", near: true, offsetX: -46, offsetY: -4 },
+    { point: skeleton.leftHip, name: "hanche G", near: false, offsetX: 10, offsetY: 22 },
+    { point: skeleton.leftKnee, name: "genou G", near: false, offsetX: 10, offsetY: 12 },
+    { point: skeleton.leftFoot.ankle, name: "cheville G", near: false, offsetX: -66, offsetY: -4 },
+    { point: skeleton.leftFoot.ball, name: "plante G", near: false, offsetX: -8, offsetY: -14 },
+    { point: skeleton.leftFoot.toe, name: "orteils G", near: false, offsetX: 6, offsetY: 12 },
+    { point: skeleton.rightHip, name: "hanche D", near: true, offsetX: 8, offsetY: 10 },
+    { point: skeleton.rightKnee, name: "genou D", near: true, offsetX: 8, offsetY: 0 },
+    { point: skeleton.rightFoot.ankle, name: "cheville D", near: true, offsetX: 6, offsetY: -12 },
+    { point: skeleton.rightFoot.ball, name: "plante D", near: true, offsetX: -4, offsetY: 16 },
+    { point: skeleton.rightFoot.toe, name: "orteils D", near: true, offsetX: 8, offsetY: 28 }
+  ];
+}
+
+/* ============================================================
+   7. Boucle de rendu
+   ============================================================ */
+
+const viewState = {
+  viewMode: "calque",
+  currentFrame: 0,
+  isPlaying: false,
+  playbackSpeed: 0.35,
+  showJoints: true,
+  showJointLabels: false,
+  showArmour: true,
+  showArmourLabels: false,
+  showTrail: true,
+  showTarget: true,
+  showConstruction: false
+};
+
+function render() {
+  const frame = viewState.currentFrame;
+  const pose = interpolatePose(frame);
+  const skeleton = solveSkeleton(pose);
+
+  const ratio = camera.pixelRatio || 1;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.fillStyle = "#f4f1e8";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  camera.scale = (canvas.height / 250);
+  const framesSinceImpact = frame - IMPACT_FRAME;
+  const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
+    ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
+  const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
+  camera.originX = canvas.width * 0.40 - pose.rootX * camera.scale;
+  camera.originY = canvas.height - 42 * ratio + shakeY;
+
+  context.setTransform(camera.scale, 0, 0, -camera.scale, camera.originX, camera.originY);
+  context.lineCap = "round";
+  context.lineJoin = "round";
+
+  drawFloor(pose);
+  if (viewState.showTarget) drawTargetMen(frame);
+  if (viewState.showTrail) drawKissakiTrail(frame);
+
+  if (viewState.showConstruction) {
+    context.setLineDash([1.5, 1.5]);
+    strokePath([skeleton.leftShoulder, skeleton.leftWrist], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 2 });
+    strokePath([skeleton.rightShoulder, skeleton.rightWrist], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 3 });
+    strokePath([skeleton.leftHip, skeleton.leftFoot.ankle], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 4 });
+    strokePath([skeleton.rightHip, skeleton.rightFoot.ankle], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 5 });
+    strokePath([{ x: pose.rootX, y: 0 }, { x: pose.rootX, y: 175 }], { color: "#999", width: 0.3, single: true, alpha: 0.6, seed: 6 });
+    context.setLineDash([]);
+  }
+
+  /* Du plus lointain au plus proche : en mode occlusion chaque volume
+     est opaque, donc cet ordre suffit à masquer ce qui est derrière. */
+  const occlusion = isOcclusionMode();
+  const showArmour = viewState.showArmour;
+
+  if (occlusion) {
+    drawLimbVolume([skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_FAR);
+    drawFootVolume(skeleton.leftFoot, BODY_VOLUME_FAR);
+  }
+  if (showArmour) drawHakamaLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot.ankle, 90);
+  drawLeg(skeleton.leftHip, skeleton.leftKnee, skeleton.leftFoot, FAR_INK, 10);
+
+  if (occlusion) {
+    drawLimbVolume([skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip],
+      [5.5, 4, 3.2, 3.6], BODY_VOLUME_FAR);
+  }
+  if (showArmour) {
+    drawKeikogiSleeve(skeleton.leftShoulder, skeleton.leftElbow, 94);
+    drawKote(skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip, partColor.koteLeft, 96);
+  }
+  drawArm(skeleton.leftShoulder, skeleton.leftElbow, skeleton.leftWrist, skeleton.leftGrip, FAR_INK, 14);
+
+  if (occlusion) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
+  if (showArmour) drawDo(skeleton);
+  drawTorsoAndHead(skeleton);
+
+  if (occlusion) {
+    drawLimbVolume([skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot.ankle], [7.5, 5.5, 4], BODY_VOLUME_NEAR);
+    drawFootVolume(skeleton.rightFoot, BODY_VOLUME_NEAR);
+  }
+  if (showArmour) drawHakamaLeg(skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot.ankle, 100);
+  drawLeg(skeleton.rightHip, skeleton.rightKnee, skeleton.rightFoot, NEAR_INK, 18);
+
+  /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
+  if (showArmour) drawTare(skeleton);
+  if (showArmour) drawMen(skeleton);
+
+  drawShinai(skeleton);
+
+  if (occlusion) {
+    drawLimbVolume([skeleton.rightShoulder, skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip],
+      [5.5, 4, 3.2, 3.6], BODY_VOLUME_NEAR);
+  }
+  if (showArmour) {
+    drawKeikogiSleeve(skeleton.rightShoulder, skeleton.rightElbow, 104);
+    drawKote(skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip, partColor.koteRight, 106);
+  }
+  drawArm(skeleton.rightShoulder, skeleton.rightElbow, skeleton.rightWrist, skeleton.rightGrip, NEAR_INK, 22);
+
+  drawImpactEffects(frame, skeleton);
+
+  if (viewState.showJoints) {
+    collectJoints(skeleton).forEach(joint => {
+      drawJointMarker(joint.point, joint.near ? "#c2452a" : "#9b9b9b");
+    });
+  }
+  if (viewState.showJointLabels) {
+    collectJoints(skeleton).forEach(joint => {
+      drawScreenLabel(joint.point, joint.name, joint.near ? "#8a2f19" : "#7b7b7b", joint.offsetX, joint.offsetY);
+    });
+  }
+  if (viewState.showArmourLabels) {
+    drawScreenLabel(skeleton.headCenter, "men", partColor.men, -14, -34);
+    drawScreenLabel(skeleton.shoulderCenter, "mendare", partColor.mendare, -50, -4);
+    drawScreenLabel(pointAlong(skeleton.root, skeleton.shoulderCenter, 0.5), "dō", partColor.do, 22, 0);
+    drawScreenLabel(skeleton.root, "tare + sagari", partColor.tare, -78, 22);
+    drawScreenLabel(skeleton.rightWrist, "kote", partColor.koteRight, 10, 26);
+    drawScreenLabel(skeleton.rightKnee, "hakama", partColor.hakama, -56, 0);
+    drawScreenLabel(skeleton.rightElbow, "keikogi", partColor.keikogi, -50, -10);
+    drawScreenLabel(skeleton.tsuba, "tsuba", "#6d4a1f", -6, 20);
+    drawScreenLabel(pointAlong(skeleton.monouchiStart, skeleton.shinaiTip, 0.5), "monouchi", "#c2452a", -22, -14);
+  }
+
+  /* Kiai à l'impact, en espace écran pour rester lisible. */
+  if (framesSinceImpact >= 0 && framesSinceImpact < 20) {
+    const fade = 1 - framesSinceImpact / 20;
+    const anchor = addPointOffset(skeleton.headCenter, { x: -6, y: 26 });
+    const screenPoint = worldToScreen(anchor);
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.globalAlpha = fade;
+    context.fillStyle = "#c2452a";
+    context.font = `700 ${(26 + (1 - fade) * 8) * ratio}px -apple-system, sans-serif`;
+    context.fillText("MEN !", screenPoint.x, screenPoint.y - (1 - fade) * 20 * ratio);
+    context.restore();
+  }
+
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  updateReadout(frame, pose);
+}
+
+function updateReadout(frame, pose) {
+  const roundedFrame = Math.round(frame);
+  document.getElementById("frameNumber").textContent = roundedFrame;
+  document.getElementById("frameSlider").value = roundedFrame;
+  document.getElementById("advanceReadout").textContent = Math.round(pose.rootX - keyframeList[0].pose.rootX);
+  const phase = findPhase(roundedFrame);
+  document.getElementById("phaseName").textContent = phase.name;
+  document.querySelectorAll("#phaseTable tr").forEach(row => {
+    row.classList.toggle("active", row.dataset.phaseName === phase.name);
+  });
+}
+
+/* ============================================================
+   8. Boucle temporelle et contrôles
+   ============================================================ */
+
+let lastTimestamp = null;
+
+function animationTick(timestamp) {
+  if (lastTimestamp === null) lastTimestamp = timestamp;
+  const elapsedSeconds = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+  if (viewState.isPlaying) {
+    viewState.currentFrame += elapsedSeconds * FRAMES_PER_SECOND * viewState.playbackSpeed;
+    if (viewState.currentFrame >= LAST_FRAME) {
+      viewState.currentFrame = LAST_FRAME;
+      viewState.isPlaying = false;
+      document.getElementById("playButton").textContent = "Rejouer";
+    }
+  }
+  render();
+  requestAnimationFrame(animationTick);
+}
+
+function startStrike() {
+  viewState.currentFrame = 0;
+  viewState.isPlaying = true;
+  document.getElementById("playButton").textContent = "Pause";
+}
+
+function buildPhaseTable() {
+  const table = document.getElementById("phaseTable");
+  phaseList.forEach(phase => {
+    const row = document.createElement("tr");
+    row.dataset.phaseName = phase.name;
+    const frameCount = phase.endFrame - phase.startFrame;
+    row.innerHTML =
+      `<td><strong>${phase.name}</strong><br><span style="color:#8b93a1">${phase.detail}</span></td>` +
+      `<td class="frames">${phase.startFrame}–${phase.endFrame}<br>${frameCount} f<br>${Math.round(frameCount / FRAMES_PER_SECOND * 1000)} ms</td>`;
+    row.addEventListener("click", () => {
+      viewState.currentFrame = phase.startFrame;
+      viewState.isPlaying = false;
+      document.getElementById("playButton").textContent = "Lecture";
+    });
+    table.appendChild(row);
+  });
+}
+
+function buildLegend() {
+  const legend = document.getElementById("legend");
+  partCatalogue.forEach(part => {
+    const entry = document.createElement("span");
+    entry.innerHTML = `<i class="swatch" style="background:${part.color}"></i>${part.label}`;
+    legend.appendChild(entry);
+  });
+}
+
+function bindControls() {
+  document.getElementById("strikeButton").addEventListener("click", startStrike);
+
+  const playButton = document.getElementById("playButton");
+  playButton.addEventListener("click", () => {
+    if (viewState.currentFrame >= LAST_FRAME) viewState.currentFrame = 0;
+    viewState.isPlaying = !viewState.isPlaying;
+    playButton.textContent = viewState.isPlaying ? "Pause" : "Lecture";
+  });
+
+  document.getElementById("previousFrameButton").addEventListener("click", () => stepFrame(-1));
+  document.getElementById("nextFrameButton").addEventListener("click", () => stepFrame(1));
+
+  document.getElementById("frameSlider").addEventListener("input", event => {
+    viewState.isPlaying = false;
+    playButton.textContent = "Lecture";
+    viewState.currentFrame = Number(event.target.value);
+  });
+
+  document.querySelectorAll("#speedRow button").forEach(button => {
+    button.addEventListener("click", () => {
+      viewState.playbackSpeed = Number(button.dataset.speed);
+      document.querySelectorAll("#speedRow button").forEach(other => other.classList.remove("selected"));
+      button.classList.add("selected");
+    });
+    if (Number(button.dataset.speed) === viewState.playbackSpeed) button.classList.add("selected");
+  });
+
+  document.querySelectorAll("#viewModeRow button").forEach(button => {
+    button.addEventListener("click", () => {
+      viewState.viewMode = button.dataset.viewMode;
+      document.querySelectorAll("#viewModeRow button").forEach(other => other.classList.remove("selected"));
+      button.classList.add("selected");
+    });
+    if (button.dataset.viewMode === viewState.viewMode) button.classList.add("selected");
+  });
+
+  const toggleMap = {
+    showJoints: "showJoints",
+    showJointLabels: "showJointLabels",
+    showArmour: "showArmour",
+    showArmourLabels: "showArmourLabels",
+    showTrail: "showTrail",
+    showTarget: "showTarget",
+    showConstruction: "showConstruction"
+  };
+  Object.keys(toggleMap).forEach(elementId => {
+    const checkbox = document.getElementById(elementId);
+    checkbox.checked = viewState[toggleMap[elementId]];
+    checkbox.addEventListener("change", () => { viewState[toggleMap[elementId]] = checkbox.checked; });
+  });
+
+  window.addEventListener("keydown", event => {
+    if (event.key === "Enter") { startStrike(); event.preventDefault(); }
+    if (event.key === " ") { playButton.click(); event.preventDefault(); }
+    if (event.key === "ArrowLeft") { stepFrame(-1); event.preventDefault(); }
+    if (event.key === "ArrowRight") { stepFrame(1); event.preventDefault(); }
+  });
+}
+
+function stepFrame(delta) {
+  viewState.isPlaying = false;
+  document.getElementById("playButton").textContent = "Lecture";
+  viewState.currentFrame = Math.max(0, Math.min(LAST_FRAME, Math.round(viewState.currentFrame) + delta));
+}
+
+/* ?frame=82 ouvre directement sur une frame precise (mise au point des poses). */
+function applyFrameFromQueryString() {
+  const requestedFrame = new URLSearchParams(window.location.search).get("frame");
+  if (requestedFrame === null) return;
+  viewState.currentFrame = Math.max(0, Math.min(LAST_FRAME, Number(requestedFrame)));
+  viewState.isPlaying = false;
+  document.getElementById("playButton").textContent = "Lecture";
+}
+
+buildPhaseTable();
+buildLegend();
+bindControls();
+applyFrameFromQueryString();
+resizeCanvas();
+requestAnimationFrame(animationTick);
+</script>
+</body>
+</html>
