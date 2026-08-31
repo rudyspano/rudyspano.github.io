@@ -1514,30 +1514,62 @@ function drawMen(skeleton) {
   context.rotate(-headAngle);
 
   /* Coque du men, un peu plus large que la tête. */
-  context.globalAlpha = 0.18;
-  context.fillStyle = partColor.men;
+  const shellWidth = HEAD_RADIUS_HORIZONTAL + 3.5;
+  const shellHeight = HEAD_RADIUS_VERTICAL + 3;
+  context.globalAlpha = isGameView() ? 1 : 0.18;
+  context.fillStyle = isGameView() ? "#2c3566" : partColor.men;
   context.beginPath();
-  context.ellipse(1, 1, HEAD_RADIUS_HORIZONTAL + 3.5, HEAD_RADIUS_VERTICAL + 3, 0, 0, Math.PI * 2);
+  context.ellipse(1, 1, shellWidth, shellHeight, 0, 0, Math.PI * 2);
   context.fill();
   context.globalAlpha = 1;
-  context.strokeStyle = partColor.men;
+  context.strokeStyle = isGameView() ? "#161c38" : partColor.men;
   context.lineWidth = 0.7;
   context.beginPath();
-  context.ellipse(1, 1, HEAD_RADIUS_HORIZONTAL + 3.5, HEAD_RADIUS_VERTICAL + 3, 0, 0, Math.PI * 2);
+  context.ellipse(1, 1, shellWidth, shellHeight, 0, 0, Math.PI * 2);
   context.stroke();
 
-  /* Men-gane : les barreaux de la grille, vus de profil. */
-  context.lineWidth = 0.45;
-  for (let barIndex = 0; barIndex < 6; barIndex++) {
-    const heightOffset = 9 - barIndex * 3.6;
+  /* Futon du men : le bourrelet matelassé qui coiffe le crâne. */
+  context.strokeStyle = isGameView() ? "#3d4a86" : partColor.men;
+  context.lineWidth = 0.4;
+  for (let quilt = 0; quilt < 3; quilt++) {
     context.beginPath();
-    context.moveTo(3, heightOffset);
-    context.lineTo(HEAD_RADIUS_HORIZONTAL + 4.5, heightOffset - 1);
+    context.ellipse(1, 1, shellWidth - 1.4 - quilt * 1.6, shellHeight - 1.2 - quilt * 1.5,
+      0, Math.PI * 0.05, Math.PI * 0.95);
     context.stroke();
   }
+
+  /* Men-gane : les barreaux de la grille, vus de profil. */
+  context.strokeStyle = isGameView() ? "#c9cdd8" : partColor.men;
+  context.lineWidth = 0.45;
+  for (let barIndex = 0; barIndex < 9; barIndex++) {
+    const heightOffset = 10 - barIndex * 2.5;
+    const reach = shellWidth + 1 - Math.abs(heightOffset) * 0.06;
+    context.beginPath();
+    context.moveTo(2.5, heightOffset);
+    context.lineTo(reach, heightOffset - 0.8);
+    context.stroke();
+  }
+  /* Les deux montants verticaux qui tiennent la grille. */
+  context.lineWidth = 0.6;
+  context.beginPath();
+  context.moveTo(shellWidth + 0.4, 9);
+  context.lineTo(shellWidth - 0.4, -11);
+  context.stroke();
+
+  /* Tsuki-dare : le rabat de gorge, sous le menton. */
+  context.fillStyle = isGameView() ? "#232b52" : partColor.mendare;
+  context.globalAlpha = isGameView() ? 1 : 0.25;
+  context.beginPath();
+  context.moveTo(3, -shellHeight + 2);
+  context.lineTo(shellWidth + 1, -shellHeight + 3.5);
+  context.lineTo(shellWidth - 1, -shellHeight - 3);
+  context.lineTo(2, -shellHeight - 2);
+  context.closePath();
+  context.fill();
+  context.globalAlpha = 1;
   context.restore();
 
-  /* Mendare : les rabats qui couvrent les épaules. */
+  /* Mendare : les rabats qui couvrent les épaules, en trois segments. */
   const sideAnchor = addPointOffset(center, { x: -up.x * 4, y: -up.y * 4 });
   const mendareFront = [
     addPointOffset(sideAnchor, { x: forward.x * 9, y: forward.y * 9 }),
@@ -1547,6 +1579,12 @@ function drawMen(skeleton) {
   ];
   fillPath(mendareFront, partColor.mendare, 0.14);
   strokePath(mendareFront, { color: partColor.mendare, width: 0.55, closed: true, seed: 44 });
+  for (let segment = 1; segment <= 2; segment++) {
+    const ratio = segment / 3;
+    strokePath([pointAlong(mendareFront[0], mendareFront[1], ratio),
+                pointAlong(mendareFront[3], mendareFront[2], ratio)],
+      { color: partColor.mendare, width: 0.35, single: true, alpha: 0.7, seed: 45 + segment });
+  }
 }
 
 function drawDo(skeleton) {
@@ -1555,19 +1593,32 @@ function drawDo(skeleton) {
   const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.78);
   const belly = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.12);
   const outline = [
-    addPointOffset(chest, { x: forward.x * 13 - up.x * 0, y: forward.y * 13 }),
+    addPointOffset(chest, { x: forward.x * 13, y: forward.y * 13 }),
     addPointOffset(belly, { x: forward.x * 11, y: forward.y * 11 }),
     addPointOffset(belly, { x: -forward.x * 8, y: -forward.y * 8 }),
     addPointOffset(chest, { x: -forward.x * 10, y: -forward.y * 10 })
   ];
   fillPath(outline, partColor.do, 0.2);
-  strokePath(outline, { color: partColor.do, width: 0.7, closed: true, seed: 50 });
-  /* Nervures horizontales du dō. */
-  for (let ribIndex = 1; ribIndex <= 3; ribIndex++) {
-    const ratio = ribIndex / 4;
-    const inner = pointAlong(outline[3], outline[2], ratio);
-    const outer = pointAlong(outline[0], outline[1], ratio);
-    strokePath([inner, outer], { color: partColor.do, width: 0.35, single: true, alpha: 0.7, seed: 50 + ribIndex });
+  strokePath(outline, { color: "#3f2412", width: 0.7, closed: true, seed: 50 });
+
+  /* Les lattes verticales du dō, serrées, qui en font toute la texture. */
+  for (let stave = 1; stave <= 7; stave++) {
+    const ratio = stave / 8;
+    const front = pointAlong(outline[0], outline[3], ratio);
+    const back = pointAlong(outline[1], outline[2], ratio);
+    strokePath([front, back], { color: "#5c3a1c", width: 0.3, single: true, alpha: 0.55, seed: 50 + stave });
+  }
+
+  /* Mune : le cuir du haut, et ses trois boucles de laçage. */
+  const muneFront = pointAlong(outline[0], outline[1], 0.12);
+  const muneBack = pointAlong(outline[3], outline[2], 0.12);
+  const mune = [outline[0], muneFront, muneBack, outline[3]];
+  fillPath(mune, "#4a2c14", isGameView() ? 0.85 : 0.3);
+  strokePath(mune, { color: "#2e1a0a", width: 0.5, closed: true, seed: 58 });
+  for (let loop = 1; loop <= 3; loop++) {
+    const point = pointAlong(outline[0], outline[3], loop / 4);
+    const inner = pointAlong(muneFront, muneBack, loop / 4);
+    strokePath([point, inner], { color: "#d8b978", width: 0.45, single: true, alpha: 0.9, seed: 60 + loop });
   }
 }
 
@@ -1579,17 +1630,24 @@ function drawTare(skeleton) {
   const beltRight = addPointOffset(waist, { x: forward.x * 12, y: forward.y * 12 });
   const belt = segmentQuad(beltLeft, beltRight, 3.5, 3.5);
   fillPath(belt, partColor.tare, 0.2);
-  strokePath(belt, { color: partColor.tare, width: 0.6, closed: true, seed: 60 });
+  strokePath(belt, { color: "#1e2547", width: 0.6, closed: true, seed: 60 });
 
-  /* Sagari : trois pans, celui du centre plus large. */
-  const sagariWidths = [4, 6.5, 4];
-  const sagariLengths = [24, 28, 22];
-  for (let index = 0; index < 3; index++) {
-    const anchor = pointAlong(beltLeft, beltRight, 0.2 + index * 0.3);
-    const bottom = addPointOffset(anchor, { x: -up.x * sagariLengths[index], y: -up.y * sagariLengths[index] });
-    const flap = segmentQuad(anchor, bottom, sagariWidths[index], sagariWidths[index] * 0.9);
+  /* Cinq sagari : le grand au centre, deux moyens, deux petits. Ils
+     s'écartent légèrement, chacun selon sa place. */
+  const sagariWidths = [3.2, 5, 6.5, 5, 3.2];
+  const sagariLengths = [20, 25, 29, 25, 20];
+  const sagariSpread = [-2.5, -1, 0, 1, 2.5];
+  for (let index = 0; index < 5; index++) {
+    const anchor = pointAlong(beltLeft, beltRight, 0.12 + index * 0.19);
+    const bottom = addPointOffset(anchor, {
+      x: -up.x * sagariLengths[index] + forward.x * sagariSpread[index],
+      y: -up.y * sagariLengths[index] + forward.y * sagariSpread[index]
+    });
+    const flap = segmentQuad(anchor, bottom, sagariWidths[index], sagariWidths[index] * 0.92);
     fillPath(flap, partColor.sagari, 0.16);
-    strokePath(flap, { color: partColor.sagari, width: 0.5, closed: true, seed: 63 + index });
+    strokePath(flap, { color: "#20284d", width: 0.45, closed: true, seed: 63 + index });
+    strokePath([pointAlong(flap[0], flap[3], 0.5), pointAlong(flap[1], flap[2], 0.5)],
+      { color: partColor.sagari, width: 0.25, single: true, alpha: 0.5, seed: 70 + index });
   }
 }
 
@@ -1629,8 +1687,99 @@ function offsetAlongNormal(point, normal, amount) {
   return { x: point.x + normal.x * amount, y: point.y + normal.y * amount };
 }
 
-function drawHakamaLeg(hip, knee, ankle, seed) {
-  const hemPoint = pointAlong(knee, ankle, 0.68);
+/* ============================================================
+   Physique du hakama
+   Le tissu ne suit pas le corps, il traîne. Quatre points libres
+   suffisent à le raconter : le pan avant, le pan arrière et l'ourlet de
+   chaque jambe. Chacun pend au bout d'une longueur fixe et n'est mû que
+   par la gravité et le déplacement de son ancrage — un pendule, intégré
+   en Verlet. La simulation est mise en cache image par image, sinon
+   revenir en arrière dans le curseur donnerait un tissu différent.
+   ============================================================ */
+
+const HAKAMA_GRAVITY = -980;
+const HAKAMA_DAMPING = 0.90;
+/* Sans rappel, le pendule prend 47 cm de retard sur un fumikomi : un
+   hakama n'en prend pas la moitié. Le rappel tient lieu de raideur du
+   tissu et de poids réparti sur toute sa hauteur. */
+const HAKAMA_STIFFNESS = 0.022;
+const HAKAMA_SUBSTEPS = 3;
+const HAKAMA_PANELS = [
+  { anchor: "waistFront", length: 63, restForward: 0.35 },
+  { anchor: "waistBack", length: 61, restForward: -0.3 },
+  { anchor: "leftKnee", length: 31, restForward: 0 },
+  { anchor: "rightKnee", length: 31, restForward: 0 }
+];
+
+function hakamaAnchors(skeleton) {
+  const forward = skeleton.forwardDirection;
+  const waist = addPoints(skeleton.root, 0, 4);
+  return {
+    waistFront: addPointOffset(waist, { x: forward.x * 11, y: forward.y * 11 }),
+    waistBack: addPointOffset(waist, { x: -forward.x * 10, y: -forward.y * 10 }),
+    leftKnee: skeleton.leftKnee,
+    rightKnee: skeleton.rightKnee
+  };
+}
+
+function restingHakama(skeleton) {
+  const anchors = hakamaAnchors(skeleton);
+  const forward = skeleton.forwardDirection;
+  return HAKAMA_PANELS.map(panel => {
+    const anchor = anchors[panel.anchor];
+    const point = {
+      x: anchor.x + forward.x * panel.length * panel.restForward,
+      y: anchor.y - panel.length * Math.sqrt(1 - panel.restForward * panel.restForward)
+    };
+    return { x: point.x, y: point.y, previousX: point.x, previousY: point.y };
+  });
+}
+
+function stepHakama(state, skeleton) {
+  const anchors = hakamaAnchors(skeleton);
+  const stepSeconds = 1 / (FRAMES_PER_SECOND * HAKAMA_SUBSTEPS);
+  const fall = HAKAMA_GRAVITY * stepSeconds * stepSeconds;
+  return state.map((point, index) => {
+    const panel = HAKAMA_PANELS[index];
+    const anchor = anchors[panel.anchor];
+    const forward = skeleton.forwardDirection;
+    const restX = anchor.x + forward.x * panel.length * panel.restForward;
+    const restY = anchor.y - panel.length * Math.sqrt(1 - panel.restForward * panel.restForward);
+    let x = point.x, y = point.y, previousX = point.previousX, previousY = point.previousY;
+    for (let substep = 0; substep < HAKAMA_SUBSTEPS; substep++) {
+      const nextX = x + (x - previousX) * HAKAMA_DAMPING + (restX - x) * HAKAMA_STIFFNESS;
+      const nextY = y + (y - previousY) * HAKAMA_DAMPING + (restY - y) * HAKAMA_STIFFNESS + fall;
+      previousX = x; previousY = y;
+      /* Le tissu a une longueur : on ramène le point sur le cercle. */
+      const deltaX = nextX - anchor.x, deltaY = nextY - anchor.y;
+      const distance = Math.hypot(deltaX, deltaY) || 1;
+      x = anchor.x + deltaX / distance * panel.length;
+      y = anchor.y + deltaY / distance * panel.length;
+      /* Il ne traverse pas le sol. */
+      if (y < 4) { y = 4; }
+    }
+    return { x: x, y: y, previousX: previousX, previousY: previousY };
+  });
+}
+
+const hakamaCache = { key: "", states: [] };
+
+function hakamaState(frame) {
+  const key = sceneState.attackId + "/" + sceneState.sequence;
+  if (hakamaCache.key !== key) {
+    hakamaCache.key = key;
+    hakamaCache.states = [restingHakama(solveSkeleton(interpolatePose(0, currentSequence())))];
+  }
+  const wanted = Math.max(0, Math.min(currentLastFrame(), Math.round(frame)));
+  for (let index = hakamaCache.states.length; index <= wanted; index++) {
+    hakamaCache.states[index] = stepHakama(hakamaCache.states[index - 1],
+      solveSkeleton(interpolatePose(index, currentSequence())));
+  }
+  return hakamaCache.states[wanted];
+}
+
+function drawHakamaLeg(hip, knee, hemTarget, seed) {
+  const hemPoint = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
   const hipNormal = perpendicular(directionBetween(hip, knee));
   const kneeNormal = jointNormal(hip, knee, hemPoint);
   const hemNormal = perpendicular(directionBetween(knee, hemPoint));
@@ -1654,39 +1803,149 @@ function drawHakamaLeg(hip, knee, ankle, seed) {
     { color: partColor.hakama, width: 0.35, single: true, alpha: 0.6, seed: seed + 11 });
 }
 
-function drawShinai(skeleton) {
+/* Un shinai n'est pas un bâton : quatre lattes de bambou liées par le
+   cuir de la poignée, la tsuba, le nakayui au tiers de la lame et le
+   sakigawa au bout. La corde (tsuru) court sur le dos, à l'opposé du
+   tranchant : c'est elle qui dit de quel côté on frappe. */
+const SHINAI_SLAT_COUNT = 3;
+const NAKAYUI_FROM_LEFT_GRIP = 88;
+
+/** Flèche de la lame, en centimètres, comptée perpendiculairement.
+    Deux causes : le retard de la pointe quand la lame accélère, et le
+    choc qui la fait vibrer quand elle touche. */
+function bladeFlexAmount(frame) {
+  const sequence = currentSequence();
+  const angleAt = f => interpolatePose(f, sequence).shinaiDegrees;
+  /* Vitesse angulaire lissée sur six frames. La dérivée brute saute à
+     chaque pose clé, et la lame se mettait à vibrer sans raison. */
+  const angularSpeed = (angleAt(frame + 3) - angleAt(frame - 3)) / 6;
+  let flex = -angularSpeed * 0.22;
+  if (sceneState.sequence === "attack") {
+    /* Au contact la pointe est bloquée et les mains continuent : la lame
+       s'arque, puis vibre en s'amortissant. */
+    const sinceImpact = frame - currentAttack().impactFrame;
+    if (sinceImpact >= 0 && sinceImpact < 20) {
+      flex -= 8 * Math.exp(-sinceImpact / 3.2) * Math.cos(sinceImpact * 0.8);
+    }
+  }
+  return Math.max(-11, Math.min(11, flex));
+}
+
+/** Ligne médiane de la lame, du talon à la pointe. La flèche ne prend
+    qu'au-delà de la tsuba et croît vers la pointe : le manche ne plie pas. */
+function shinaiCentreLine(skeleton, flex) {
   const direction = skeleton.shinaiDirection;
   const normal = perpendicular(direction);
-  const halfWidth = 1.5;
-  const body = [
-    addPointOffset(skeleton.shinaiButt, { x: normal.x * halfWidth, y: normal.y * halfWidth }),
-    addPointOffset(skeleton.shinaiTip, { x: normal.x * 0.8, y: normal.y * 0.8 }),
-    addPointOffset(skeleton.shinaiTip, { x: -normal.x * 0.8, y: -normal.y * 0.8 }),
-    addPointOffset(skeleton.shinaiButt, { x: -normal.x * halfWidth, y: -normal.y * halfWidth })
-  ];
-  fillPath(body, partColor.shinai, 0.35);
-  strokePath(body, { color: "#6d4a1f", width: 0.6, closed: true, seed: 80 });
+  const points = [];
+  const steps = 12;
+  for (let step = 0; step <= steps; step++) {
+    const along = -SHINAI_BUTT_OVERHANG
+      + (step / steps) * (SHINAI_BUTT_OVERHANG + SHINAI_LENGTH_FROM_LEFT_GRIP);
+    const beyondGuard = Math.max(0, (along - TSUBA_DISTANCE_FROM_LEFT_GRIP)
+      / (SHINAI_LENGTH_FROM_LEFT_GRIP - TSUBA_DISTANCE_FROM_LEFT_GRIP));
+    const bend = flex * beyondGuard * beyondGuard;
+    points.push({
+      x: skeleton.leftGrip.x + direction.x * along + normal.x * bend,
+      y: skeleton.leftGrip.y + direction.y * along + normal.y * bend
+    });
+  }
+  return points;
+}
 
-  /* Tsuka : le cuir de la poignée, jusqu'à la tsuba. */
-  const tsukaEnd = skeleton.tsuba;
-  strokePath(segmentQuad(skeleton.shinaiButt, tsukaEnd, 1.7, 1.7),
-    { color: "#4a3316", width: 0.5, closed: true, seed: 82 });
+/** Point de la ligne médiane à une distance donnée du poing gauche. */
+function pointAlongBlade(centreLine, distanceFromGrip) {
+  const total = SHINAI_BUTT_OVERHANG + SHINAI_LENGTH_FROM_LEFT_GRIP;
+  const ratio = (distanceFromGrip + SHINAI_BUTT_OVERHANG) / total * (centreLine.length - 1);
+  const index = Math.max(0, Math.min(centreLine.length - 2, Math.floor(ratio)));
+  return pointAlong(centreLine[index], centreLine[index + 1], ratio - index);
+}
 
-  /* Tsuba. */
+function drawShinai(skeleton, flex) {
+  const centreLine = shinaiCentreLine(skeleton, flex);
+  const tip = centreLine[centreLine.length - 1];
+  const tsuba = pointAlongBlade(centreLine, TSUBA_DISTANCE_FROM_LEFT_GRIP);
+  const nakayui = pointAlongBlade(centreLine, NAKAYUI_FROM_LEFT_GRIP);
+
+  /* Corps de la lame : un fuseau qui s'affine vers la pointe. */
+  const halfWidths = centreLine.map((point, index) => 1.6 - 0.8 * (index / (centreLine.length - 1)));
+  const outline = limbOutline(centreLine, halfWidths);
+  fillPath(outline, partColor.shinai, 0.35);
+  strokePath(outline, { color: "#6d4a1f", width: 0.55, closed: true, seed: 80 });
+
+  /* Les lattes, marquées par des lignes fines le long de la lame. */
+  for (let slat = 1; slat < SHINAI_SLAT_COUNT; slat++) {
+    const shift = (slat / SHINAI_SLAT_COUNT - 0.5) * 2;
+    const line = centreLine.map((point, index) => {
+      const previous = centreLine[Math.max(0, index - 1)];
+      const next = centreLine[Math.min(centreLine.length - 1, index + 1)];
+      const normal = perpendicular(directionBetween(previous, next));
+      return addPointOffset(point, { x: normal.x * shift * halfWidths[index], y: normal.y * shift * halfWidths[index] });
+    });
+    strokePath(line.slice(2), { color: "#8a6231", width: 0.25, single: true, alpha: 0.6, seed: 81 + slat });
+  }
+
+  /* Tsuru : la corde du dos, côté opposé au tranchant. */
+  const cord = centreLine.slice(3).map((point, index, list) => {
+    const previous = list[Math.max(0, index - 1)];
+    const next = list[Math.min(list.length - 1, index + 1)];
+    const normal = perpendicular(directionBetween(previous, next));
+    return addPointOffset(point, { x: -normal.x * 1.3, y: -normal.y * 1.3 });
+  });
+  strokePath(cord, { color: "#e8dcc0", width: 0.4, single: true, alpha: 0.85, seed: 86 });
+
+  /* Tsuka : le cuir de la poignée, du talon à la tsuba. */
+  const grip = [centreLine[0], tsuba];
+  fillPath(segmentQuad(grip[0], grip[1], 1.8, 1.8), "#4a3316", 0.9);
+  strokePath(segmentQuad(grip[0], grip[1], 1.8, 1.8), { color: "#2e1f0d", width: 0.5, closed: true, seed: 82 });
+
+  /* Tsuba et son collier de cuir. */
+  const guardNormal = perpendicular(directionBetween(centreLine[0], tsuba));
   context.strokeStyle = partColor.tsuba;
-  context.lineWidth = 0.8;
+  context.lineWidth = 1.1;
   context.beginPath();
-  context.moveTo(tsukaEnd.x + normal.x * 4.5, tsukaEnd.y + normal.y * 4.5);
-  context.lineTo(tsukaEnd.x - normal.x * 4.5, tsukaEnd.y - normal.y * 4.5);
+  context.moveTo(tsuba.x + guardNormal.x * 4.5, tsuba.y + guardNormal.y * 4.5);
+  context.lineTo(tsuba.x - guardNormal.x * 4.5, tsuba.y - guardNormal.y * 4.5);
   context.stroke();
 
-  /* Monouchi : la zone valide de frappe, marquée en pointillés. */
-  context.save();
-  context.setLineDash([2, 2]);
-  strokePath([skeleton.monouchiStart, skeleton.shinaiTip],
-    { color: "#c2452a", width: 1.1, single: true, alpha: 0.8, seed: 85 });
-  context.restore();
-  context.setLineDash([]);
+  /* Nakayui : la bride de cuir qui marque le début du monouchi. */
+  const tieNormal = perpendicular(directionBetween(nakayui, tip));
+  strokePath([addPointOffset(nakayui, { x: tieNormal.x * 1.5, y: tieNormal.y * 1.5 }),
+              addPointOffset(nakayui, { x: -tieNormal.x * 1.5, y: -tieNormal.y * 1.5 })],
+    { color: "#6b4a22", width: 1.6, single: true, seed: 87 });
+
+  /* Sakigawa : le capuchon de cuir au bout. */
+  const capStart = pointAlongBlade(centreLine, SHINAI_LENGTH_FROM_LEFT_GRIP - 4);
+  strokePath([capStart, tip], { color: "#d8c9a8", width: 1.7, single: true, seed: 88 });
+
+  if (!isGameView()) {
+    context.save();
+    context.setLineDash([2, 2]);
+    strokePath([nakayui, tip], { color: "#c2452a", width: 1.1, single: true, alpha: 0.8, seed: 85 });
+    context.restore();
+    context.setLineDash([]);
+  }
+}
+
+/** Les deux pans qui pendent de la ceinture, dessinés par-dessus les
+    jambes : ce sont eux qui donnent son ampleur au hakama. */
+function drawHakamaPanels(skeleton, cloth) {
+  const anchors = hakamaAnchors(skeleton);
+  [[anchors.waistFront, cloth.frontHem, 9, 110], [anchors.waistBack, cloth.backHem, 8, 114]].forEach(panel => {
+    const [anchor, hem, halfWidth, seed] = panel;
+    const middle = pointAlong(anchor, hem, 0.55);
+    const outline = limbOutline([anchor, middle, hem], [halfWidth, halfWidth * 1.15, halfWidth * 1.25]);
+    fillPath(outline, partColor.hakama, 0.16);
+    strokePath(outline, { color: partColor.hakama, width: 0.5, closed: true, seed: seed });
+    /* Les plis : trois lignes qui suivent la chute du tissu. */
+    for (let pleat = -1; pleat <= 1; pleat++) {
+      const shift = pleat * halfWidth * 0.55;
+      const direction = directionBetween(anchor, hem);
+      const normal = perpendicular(direction);
+      strokePath([addPointOffset(anchor, { x: normal.x * shift * 0.8, y: normal.y * shift * 0.8 }),
+                  addPointOffset(hem, { x: normal.x * shift * 1.2, y: normal.y * shift * 1.2 })],
+        { color: partColor.hakama, width: 0.3, single: true, alpha: 0.55, seed: seed + pleat + 4 });
+    }
+  });
 }
 
 /* ---------- décor ---------- */
@@ -1890,17 +2149,19 @@ function limbSet(skeleton, side) {
    présenté à la caméra dépend du sens dans lequel le personnage regarde :
    le frappeur est vu de sa droite, le motodachi, tourné vers lui, de sa
    gauche. */
-function drawCharacter(skeleton, nearSideName) {
+function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   const solid = isSolidView();
   const showArmour = viewState.showArmour;
   const near = limbSet(skeleton, nearSideName);
   const far = limbSet(skeleton, nearSideName === "left" ? "right" : "left");
+  const nearHem = cloth && (nearSideName === "left" ? cloth.leftHem : cloth.rightHem);
+  const farHem = cloth && (nearSideName === "left" ? cloth.rightHem : cloth.leftHem);
 
   if (solid) {
     drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
     drawFootVolume(far.foot, farVolume());
   }
-  if (showArmour) drawHakamaLeg(far.hip, far.knee, far.foot.ankle, 90);
+  if (showArmour) drawHakamaLeg(far.hip, far.knee, farHem || far.foot.ankle, 90);
   drawLeg(far.hip, far.knee, far.foot, farInk(), 10);
 
   if (solid) {
@@ -1920,14 +2181,15 @@ function drawCharacter(skeleton, nearSideName) {
     drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
     drawFootVolume(near.foot, nearVolume());
   }
-  if (showArmour) drawHakamaLeg(near.hip, near.knee, near.foot.ankle, 100);
+  if (showArmour) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
+  if (showArmour && cloth) drawHakamaPanels(skeleton, cloth);
   drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
 
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawMen(skeleton);
 
-  drawShinai(skeleton);
+  drawShinai(skeleton, bladeFlex);
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], nearVolume());
@@ -2030,12 +2292,26 @@ function toLocal(actor, worldPoint) {
   };
 }
 
+/** Range les quatre points du tissu selon le côté présenté à la caméra. */
+function clothOf(state, unused) {
+  return {
+    frontHem: markSimulated(state[0]),
+    backHem: markSimulated(state[1]),
+    leftHem: markSimulated(state[2]),
+    rightHem: markSimulated(state[3])
+  };
+}
+
+function markSimulated(point) {
+  return { x: point.x, y: point.y, simulated: true };
+}
+
 function drawActor(actor, skeleton) {
   const scale = actorScale(actor);
   context.save();
   context.translate(actor.originX, -actorDrop(actor));
   context.scale(actor.facesRight ? scale : -scale, scale);
-  drawCharacter(skeleton, actor.facesRight ? "right" : "left");
+  drawCharacter(skeleton, actor.facesRight ? "right" : "left", actor.bladeFlex || 0, actor.cloth);
   context.restore();
 }
 
@@ -2051,6 +2327,8 @@ function render() {
   const attackerPose = interpolatePose(frame, currentSequence());
   const defenderPose = buildDefenderPose(frame);
   placement.attacker.lateral = attackerPose.lateralOffset || 0;
+  placement.attacker.bladeFlex = bladeFlexAmount(frame);
+  placement.attacker.cloth = clothOf(hakamaState(frame), placement.attacker.facesRight === sceneState.attackerFacesRight);
   const menLocal = defenderTargetPoint(frame);
   const menWorld = toWorld(placement.defender, menLocal);
   /* Le men et le kote arrêtent la lame ; le dō se coupe en traversant,
