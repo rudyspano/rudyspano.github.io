@@ -13,26 +13,84 @@
     --accent: #d9542b;
     --text: #e8e6e1;
     --muted: #9aa0ac;
+    --quick-width: 190px;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   body {
-    display: flex;
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
     background: var(--panel);
     color: var(--text);
-    overflow: hidden;
   }
-  #stage { flex: 1; position: relative; background: var(--paper); }
-  #scene { width: 100%; height: 100%; display: block; }
-  #panel {
-    width: 320px;
-    flex: none;
-    padding: 16px;
+
+  /* Le jeu est pensé en paysage. En portrait on fait pivoter toute
+     l'application d'un quart de tour plutôt que de laisser la scène
+     s'écraser : l'écran physique devient une fenêtre paysage. */
+  #app {
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
-    border-left: 2px solid #000;
-    background: var(--panel);
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
+  @media (orientation: portrait) {
+    #app {
+      position: fixed;
+      top: 0;
+      left: 100vw;
+      width: 100vh;
+      height: 100vw;
+      transform: rotate(90deg);
+      transform-origin: top left;
+    }
+  }
+
+  #main {
+    height: 100%;
+    display: flex;
+    background: var(--paper);
+  }
+  #stage { flex: 1; min-width: 0; position: relative; background: var(--paper); }
+  #scene { width: 100%; height: 100%; display: block; }
+
+  #quickControls {
+    width: var(--quick-width);
+    flex: none;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--panel);
+    border-left: 2px solid #000;
+  }
+  #quickControls .row { margin-top: 0; }
+  #phaseName {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    min-height: 16px;
+  }
+  .scrollHint {
+    margin-top: auto;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: .06em;
+    padding-bottom: 2px;
+  }
+
+  #panel {
+    min-height: 100%;
+    padding: 16px;
+    background: var(--panel);
+    border-top: 2px solid #000;
+  }
+
   h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: .04em; }
   h2 {
     font-size: 11px;
@@ -57,8 +115,8 @@
   button:hover { background: #323844; }
   #strikeButton {
     width: 100%;
-    padding: 16px;
-    font-size: 16px;
+    padding: 16px 8px;
+    font-size: 17px;
     font-weight: 700;
     letter-spacing: .08em;
     background: var(--accent);
@@ -75,12 +133,11 @@
     justify-content: space-between;
     align-items: baseline;
     font-variant-numeric: tabular-nums;
-    margin-top: 12px;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
   }
-  .frameReadout strong { font-size: 22px; color: var(--text); }
-  input[type=range] { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
+  .frameReadout strong { font-size: 18px; color: var(--text); }
+  input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
   table { width: 100%; border-collapse: collapse; font-size: 11px; }
   td { padding: 4px 3px; border-bottom: 1px solid #2c313b; vertical-align: top; }
   tr.active { background: #33261f; color: #ffb693; }
@@ -92,28 +149,21 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    padding: 3px 0;
+    padding: 4px 0;
     cursor: pointer;
   }
-  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: 11px; }
+  .toggleGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 3px 10px; font-size: 11px; }
   .legend span { display: flex; align-items: center; gap: 6px; }
   .swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #0006; flex: none; }
-  .hint { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
+  .hint { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 14px; }
   kbd { background: #333944; border-radius: 3px; padding: 1px 4px; font-size: 10px; }
 
-  /* Téléphone : la scène passe au-dessus, le panneau devient scrollable en dessous. */
-  @media (max-width: 900px) {
-    body { flex-direction: column; }
-    #stage { flex: none; height: 46vh; }
-    #panel {
-      width: 100%;
-      flex: 1;
-      border-left: none;
-      border-top: 2px solid #000;
-      -webkit-overflow-scrolling: touch;
-    }
-    #strikeButton { padding: 20px; font-size: 18px; }
-    .row button { padding: 12px 6px; }
+  /* Écran étroit : commandes rapides plus compactes, cibles tactiles plus grandes. */
+  @media (max-height: 480px), (max-width: 760px) {
+    :root { --quick-width: 150px; }
+    #strikeButton { font-size: 15px; padding: 13px 6px; }
+    .row button { padding: 10px 4px; }
     label.toggle { padding: 7px 0; }
     .hint { display: none; }
   }
@@ -121,63 +171,78 @@
 </head>
 <body>
 
-<div id="stage"><canvas id="scene"></canvas></div>
+<div id="app">
 
-<aside id="panel">
-  <h1>KENDO — maquette d'animation</h1>
-  <p class="subtitle">Rig articulé, tracé crayon. Chaque pièce est une fonction de dessin isolée.</p>
+  <!-- Premier écran : la scène et le bouton d'attaque. Les réglages sont
+       en dessous, on y accède en faisant défiler. -->
+  <section id="main">
+    <div id="stage"><canvas id="scene"></canvas></div>
 
-  <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi — 150 frames</small></button>
+    <aside id="quickControls">
+      <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi</small></button>
 
-  <div class="row">
-    <button id="playButton">Lecture</button>
-    <button id="previousFrameButton">◀ frame</button>
-    <button id="nextFrameButton">frame ▶</button>
-  </div>
+      <div class="frameReadout">
+        <span>frame <strong id="frameNumber">0</strong> / 150</span>
+      </div>
+      <div id="phaseName">Kamae</div>
+      <input type="range" id="frameSlider" min="0" max="150" step="1" value="0">
 
-  <div class="frameReadout">
-    <span>frame <strong id="frameNumber">0</strong> / 150</span>
-    <span id="phaseName">Kamae</span>
-  </div>
-  <input type="range" id="frameSlider" min="0" max="150" step="1" value="0">
-  <div class="frameReadout">
-    <span>avance du bassin</span>
-    <span><strong id="advanceReadout">0</strong> cm</span>
-  </div>
+      <div class="row">
+        <button id="previousFrameButton">◀</button>
+        <button id="playButton">Lecture</button>
+        <button id="nextFrameButton">▶</button>
+      </div>
 
-  <h2>Vitesse</h2>
-  <div class="row" id="speedRow">
-    <button data-speed="1">1×</button>
-    <button data-speed="0.35">0,35×</button>
-    <button data-speed="0.15">0,15×</button>
-    <button data-speed="0.05">0,05×</button>
-  </div>
+      <div class="frameReadout">
+        <span>avance du bassin</span>
+        <span><strong id="advanceReadout">0</strong> cm</span>
+      </div>
 
-  <h2>Vue</h2>
-  <div class="row" id="viewModeRow">
-    <button data-view-mode="normal">Normal</button>
-    <button data-view-mode="calque">Calque</button>
-  </div>
+      <div class="scrollHint">réglages ci-dessous ↓</div>
+    </aside>
+  </section>
 
-  <h2>Décomposition du mouvement</h2>
-  <table id="phaseTable"></table>
+  <section id="panel">
+    <h1>KENDO — maquette d'animation</h1>
+    <p class="subtitle">Rig articulé, tracé crayon. Chaque pièce est une fonction de dessin isolée.</p>
 
-  <h2>Affichage</h2>
-  <label class="toggle"><input type="checkbox" id="showJoints" checked> Articulations</label>
-  <label class="toggle"><input type="checkbox" id="showJointLabels"> Noms des articulations</label>
-  <label class="toggle"><input type="checkbox" id="showArmour" checked> Armure (bōgu)</label>
-  <label class="toggle"><input type="checkbox" id="showArmourLabels"> Noms des pièces d'armure</label>
-  <label class="toggle"><input type="checkbox" id="showTrail" checked> Trace du kissaki</label>
-  <label class="toggle"><input type="checkbox" id="showMotodachi" checked> Motodachi (partenaire)</label>
-  <label class="toggle"><input type="checkbox" id="showConstruction"> Lignes de construction</label>
+    <h2>Vitesse</h2>
+    <div class="row" id="speedRow">
+      <button data-speed="1">1×</button>
+      <button data-speed="0.35">0,35×</button>
+      <button data-speed="0.15">0,15×</button>
+      <button data-speed="0.05">0,05×</button>
+    </div>
 
-  <h2>Pièces découpées</h2>
-  <div class="legend" id="legend"></div>
+    <h2>Vue</h2>
+    <div class="row" id="viewModeRow">
+      <button data-view-mode="normal">Normal</button>
+      <button data-view-mode="calque">Calque</button>
+    </div>
 
-  <p class="hint">
-    <kbd>Entrée</kbd> lance le men · <kbd>Espace</kbd> lecture/pause · <kbd>←</kbd> <kbd>→</kbd> frame par frame.
-  </p>
-</aside>
+    <h2>Décomposition du mouvement</h2>
+    <table id="phaseTable"></table>
+
+    <h2>Affichage</h2>
+    <div class="toggleGrid">
+      <label class="toggle"><input type="checkbox" id="showJoints" checked> Articulations</label>
+      <label class="toggle"><input type="checkbox" id="showJointLabels"> Noms des articulations</label>
+      <label class="toggle"><input type="checkbox" id="showArmour" checked> Armure (bōgu)</label>
+      <label class="toggle"><input type="checkbox" id="showArmourLabels"> Noms des pièces d'armure</label>
+      <label class="toggle"><input type="checkbox" id="showTrail" checked> Trace du kissaki</label>
+      <label class="toggle"><input type="checkbox" id="showMotodachi" checked> Motodachi (partenaire)</label>
+      <label class="toggle"><input type="checkbox" id="showConstruction"> Lignes de construction</label>
+    </div>
+
+    <h2>Pièces découpées</h2>
+    <div class="legend" id="legend"></div>
+
+    <p class="hint">
+      <kbd>Entrée</kbd> lance le men · <kbd>Espace</kbd> lecture/pause · <kbd>←</kbd> <kbd>→</kbd> frame par frame.
+    </p>
+  </section>
+
+</div>
 
 <script>
 "use strict";
@@ -235,7 +300,9 @@ const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
 /* Motodachi : le partenaire qui reçoit le men. Il est construit avec le
    même squelette, résolu en coordonnées locales tourné vers +x, puis
    dessiné en miroir autour de cette abscisse — d'où `world = BASE - local`. */
-const MOTODACHI_BASE_X = 277;
+/* Distance choisie pour issoku-ittō-no-maai : les deux kissaki se
+   croisent d'une dizaine de centimètres en garde. */
+const MOTODACHI_BASE_X = 264;
 
 function motodachiToWorld(point) {
   return { x: MOTODACHI_BASE_X - point.x, y: point.y };
@@ -256,15 +323,25 @@ function motodachiShock(frame) {
   return Math.exp(-elapsed / 5) * Math.cos(elapsed * 0.8);
 }
 
+/** Il tient le chūdan, puis abaisse la pointe pour ouvrir son men
+    pendant que le frappeur arme, et la remonte après la traversée. */
+function motodachiShinaiDegrees(frame) {
+  if (frame <= 58) return 16;
+  if (frame < 76) return 16 - 41 * easingFunctions.easeInOutSine((frame - 58) / 18);
+  if (frame <= 110) return -25;
+  return -25 + 41 * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
+}
+
 function buildMotodachiPose(frame) {
   const retreat = motodachiRetreat(frame);
   const shock = motodachiShock(frame);
+  const openness = (16 - motodachiShinaiDegrees(frame)) / 41;
   return {
     rootX: -retreat, rootY: 89 - shock * 2.5,
     torsoLeanDegrees: 6 + shock * 4, headTiltDegrees: -shock * 8,
     rightAnkleX: 13 - retreat, rightAnkleY: 6, rightFootDegrees: 0,
     leftAnkleX: -15 - retreat, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: 26 - retreat, gripY: 104, shinaiDegrees: -20,
+    gripX: 26 - retreat, gripY: 104 - openness * 8, shinaiDegrees: motodachiShinaiDegrees(frame),
     leftElbowBias: -8, rightElbowBias: -15
   };
 }
@@ -378,7 +455,7 @@ const keyframeList = [
       rootX: 116, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 3,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 64, leftAnkleY: 16, leftFootDegrees: -34,
-      gripX: 169, gripY: 138, shinaiDegrees: 16,
+      gripX: 169, gripY: 138, shinaiDegrees: 18,
       leftElbowBias: -3, rightElbowBias: -3 } },
 
   /* Hikitsuke : le pied gauche revient sous le corps en 4 frames, soit
