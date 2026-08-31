@@ -221,7 +221,9 @@ const KNEE_BEND_SIGN = 1;
 /* Vu de profil, un coude s'écarte surtout sur le côté : la projection
    raccourcit les os au lieu de sortir le coude du corps. On place donc
    le coude sur le segment épaule-poignet, décalé de `elbowBias`
-   centimètres (positif = vers l'avant), valeur animable et continue. */
+   centimètres, valeur animable et continue. Le décalage se compte
+   perpendiculairement à ce segment : négatif = coude vers l'arrière-bas,
+   c'est-à-dire un bras qui pend, relâché, comme en chūdan. */
 const ELBOW_RATIO_ALONG_ARM = 0.52;
 
 /* On regarde le kendoka depuis sa droite : le côté droit est donc le
@@ -270,28 +272,28 @@ const keyframeList = [
       rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -14, leftAnkleY: 8.8, leftFootDegrees: -12,
       gripX: 24, gripY: 100, shinaiDegrees: 16,
-      leftElbowBias: 5, rightElbowBias: 6 } },
+      leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 20, easing: "easeInOutSine", pose: {
       rootX: 0, rootY: 85.4, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
       rightAnkleX: 24, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -14, leftAnkleY: 9, leftFootDegrees: -13,
       gripX: 24, gripY: 99.5, shinaiDegrees: 16,
-      leftElbowBias: 5, rightElbowBias: 6 } },
+      leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 44, easing: "easeOutCubic", pose: {
       rootX: 6, rootY: 86, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 28, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -9, leftAnkleY: 9.4, leftFootDegrees: -15,
       gripX: 30, gripY: 101, shinaiDegrees: 12,
-      leftElbowBias: 5, rightElbowBias: 6 } },
+      leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 62, easing: "easeInQuad", pose: {
       rootX: 12, rootY: 87, torsoLeanDegrees: 4, headTiltDegrees: -2,
       rightAnkleX: 32, rightAnkleY: 8, rightFootDegrees: 4,
       leftAnkleX: -3.2, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 22, gripY: 168, shinaiDegrees: 135,
-      leftElbowBias: -9, rightElbowBias: -10 } },
+      gripX: 22, gripY: 177, shinaiDegrees: 135,
+      leftElbowBias: -7, rightElbowBias: -8 } },
 
   /* Le talon gauche monte, l'orteil reste planté en x = 12 : c'est lui
      le point d'appui de toute la poussée. Le genou droit part devant. */
@@ -299,16 +301,16 @@ const keyframeList = [
       rootX: 24, rootY: 89, torsoLeanDegrees: 6, headTiltDegrees: -1,
       rightAnkleX: 44, rightAnkleY: 24, rightFootDegrees: 12,
       leftAnkleX: -1.4, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 34, gripY: 170, shinaiDegrees: 140,
-      leftElbowBias: -9, rightElbowBias: -10 } },
+      gripX: 34, gripY: 179, shinaiDegrees: 140,
+      leftElbowBias: -7, rightElbowBias: -8 } },
 
   /* Extension maximale : jambe gauche tendue à 98 %, sur la pointe. */
   { frame: 72, easing: "linear", pose: {
       rootX: 42, rootY: 88, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
       leftAnkleX: 1.6, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 54, gripY: 172, shinaiDegrees: 132,
-      leftElbowBias: -9, rightElbowBias: -10 } },
+      gripX: 54, gripY: 178, shinaiDegrees: 132,
+      leftElbowBias: -7, rightElbowBias: -8 } },
 
   { frame: 76, easing: "linear", pose: {
       rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
@@ -357,14 +359,14 @@ const keyframeList = [
       rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
       gripX: 184, gripY: 100, shinaiDegrees: 16,
-      leftElbowBias: 5, rightElbowBias: 6 } },
+      leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 160, rootY: 86, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 184, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 146, leftAnkleY: 8.8, leftFootDegrees: -12,
       gripX: 184, gripY: 100, shinaiDegrees: 16,
-      leftElbowBias: 5, rightElbowBias: 6 } }
+      leftElbowBias: -8, rightElbowBias: -15 } }
 ];
 
 const LAST_FRAME = keyframeList[keyframeList.length - 1].frame;
@@ -376,7 +378,7 @@ const phaseList = [
   { name: "Seme", startFrame: 20, endFrame: 44,
     detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
   { name: "Furikaburi", startFrame: 44, endFrame: 62,
-    detail: "Armé grande amplitude : les poings montent au-dessus du front, shinai dressé, pas rabattu dans le dos." },
+    detail: "Armé grande amplitude : les poings montent à un poing au-dessus du crâne, shinai dressé, pas rabattu dans le dos." },
   { name: "Tame (sommet)", startFrame: 62, endFrame: 68,
     detail: "Instant suspendu, le talon gauche monte, le genou droit s'arme." },
   { name: "Poussée sur les orteils", startFrame: 68, endFrame: 72,
