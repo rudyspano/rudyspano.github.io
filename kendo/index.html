@@ -455,7 +455,7 @@ const keyframeList = [
       rootX: 18, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
       rightAnkleX: 30, rightAnkleY: 8, rightFootDegrees: 4,
       leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 28, gripY: 179, shinaiDegrees: 140,
+      gripX: 28, gripY: 179, shinaiDegrees: 142,
       leftElbowBias: -7, rightElbowBias: -8 } },
 
   /* Le talon gauche monte, l'orteil reste planté en x = 16,2 : c'est lui
@@ -465,7 +465,7 @@ const keyframeList = [
       rootX: 30, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
       rightAnkleX: 52, rightAnkleY: 26, rightFootDegrees: 12,
       leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 60, gripY: 172, shinaiDegrees: 120,
+      gripX: 60, gripY: 172, shinaiDegrees: 115,
       leftElbowBias: -6.5, rightElbowBias: -8 } },
 
   /* Décollage : jambe gauche tendue à 98 %, sur la pointe. */
@@ -473,31 +473,32 @@ const keyframeList = [
       rootX: 42, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
       leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 80, gripY: 166, shinaiDegrees: 95,
+      gripX: 80, gripY: 166, shinaiDegrees: 103,
       leftElbowBias: -6, rightElbowBias: -7 } },
 
   { frame: 76, easing: "linear", pose: {
       rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
       leftAnkleX: 26, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 116, gripY: 155, shinaiDegrees: 55,
+      gripX: 116, gripY: 155, shinaiDegrees: 81,
       leftElbowBias: -5, rightElbowBias: -6 } },
 
   { frame: 80, easing: "easeOutSine", pose: {
       rootX: 101, rootY: 83, torsoLeanDegrees: 10, headTiltDegrees: 2,
       rightAnkleX: 130, rightAnkleY: 14, rightFootDegrees: 2,
       leftAnkleX: 52, leftAnkleY: 18, leftFootDegrees: -36,
-      gripX: 150, gripY: 144, shinaiDegrees: 25,
-      leftElbowBias: -4, rightElbowBias: -4.5 } },
+      gripX: 150, gripY: 144, shinaiDegrees: 49,
+      leftElbowBias: -2, rightElbowBias: -3 } },
 
-  /* Frappe : le shinai freine sur les deux dernières frames, c'est le
-     tenouchi qui arrête la lame sur le men. */
+  /* Frappe. Jusqu'ici la lame est restée armée sur le poignet pendant que
+     l'avant-bras descendait : elle rattrape son retard dans les six
+     dernières frames, à 15°/frame, et le tenouchi l'arrête sur le men. */
   { frame: 82, easing: "easeOutCubic", pose: {
       rootX: 116, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 3,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 64, leftAnkleY: 16, leftFootDegrees: -34,
       gripX: 169, gripY: 138, shinaiDegrees: 18,
-      leftElbowBias: -3, rightElbowBias: -3 } },
+      leftElbowBias: -1, rightElbowBias: -2 } },
 
   /* Hikitsuke : le pied gauche revient sous le corps en 4 frames, soit
      52 cm parcourus, presque 8 m/s. */
@@ -620,9 +621,9 @@ const phaseList = [
   { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
     detail: "Aucun temps d'arrêt en haut : le shinai redescend pendant que la jambe gauche se tend à 98 % sur la pointe." },
   { name: "Envol", startFrame: 72, endFrame: 76,
-    detail: "Plus aucun appui au sol, le bassin file à 4,5 m/s, la lame accélère à 10°/frame." },
+    detail: "Plus aucun appui au sol, le bassin file à 4,5 m/s. La lame reste armée sur le poignet, c'est l'avant-bras qui descend." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Le pied droit claque à plat, jambe gauche tendue derrière, bras déployés, le shinai touche le men au même instant." },
+    detail: "Le poignet se déroule enfin, à 15°/frame : la lame rattrape l'avant-bras juste avant de toucher, pendant que le pied droit claque à plat." },
   { name: "Hikitsuke", startFrame: 82, endFrame: 86,
     detail: "Le pied gauche revient sous le corps en 4 frames : 52 cm, près de 8 m/s." },
   { name: "Zanshin", startFrame: 86, endFrame: 116,
