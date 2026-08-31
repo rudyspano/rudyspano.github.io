@@ -722,109 +722,132 @@ const kotePhaseList = [
 const doKeyframeList = [
   { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
   { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
-  { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
-  { frame: 50, easing: "easeInOutSine", pose: menKeyframeList[3].pose },
-  { frame: 58, easing: "easeInQuad", pose: menKeyframeList[4].pose },
 
-  { frame: 66, easing: "linear", pose: {
-      rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 46, rightAnkleY: 22, rightFootDegrees: 10,
-      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 60, gripY: 168, shinaiDegrees: 108,
-      leftElbowBias: -6.5, rightElbowBias: -8 } },
-
-  { frame: 72, easing: "linear", pose: {
-      rootX: 40, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 60, rightAnkleY: 30, rightFootDegrees: 8,
-      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 82, gripY: 158, shinaiDegrees: 92,
-      leftElbowBias: -6, rightElbowBias: -7 } },
-
-  { frame: 76, easing: "linear", pose: {
-      rootX: 58, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 84, rightAnkleY: 26, rightFootDegrees: 4,
-      leftAnkleX: 24, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 108, gripY: 145, shinaiDegrees: 64,
-      leftElbowBias: -5, rightElbowBias: -6 } },
-
-  { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 82, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 108, rightAnkleY: 12, rightFootDegrees: 2,
-      leftAnkleX: 44, leftAnkleY: 17, leftFootDegrees: -36,
-      gripX: 135, gripY: 132, shinaiDegrees: 30,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  /* Frappe : main droite poussée devant, lame à -12° sur l'arête du dō. */
-  { frame: 82, easing: "easeOutCubic", pose: {
-      rootX: 99, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
-      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 52, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 152, gripY: 122, shinaiDegrees: -9.5,
-      leftElbowBias: -1, rightElbowBias: -2 } },
-
-  { frame: 84, easing: "easeOutSine", pose: {
-      rootX: 101, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 68, leftAnkleY: 12, leftFootDegrees: -26,
-      gripX: 152.5, gripY: 123, shinaiDegrees: -2,
-      leftElbowBias: -1, rightElbowBias: -2.5 } },
-
-  { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 103, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
-      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 88, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 153, gripY: 123, shinaiDegrees: -4,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 110, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 134, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 96, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 158, gripY: 128, shinaiDegrees: -4,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 122, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 146, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 108, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 168, gripY: 124, shinaiDegrees: 0,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 134, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 120, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 178, gripY: 120, shinaiDegrees: 4,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 134, easing: "linear", pose: {
-      rootX: 145, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 130, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 167, gripY: 104, shinaiDegrees: 16,
+  /* Seme long : on entre de 26 cm avant même d'armer. Le dō se coupe de
+     près, sinon le contact se fait trop loin sur la lame. */
+  { frame: 44, easing: "easeOutCubic", pose: {
+      rootX: 30, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
+      rightAnkleX: 43, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 15, leftAnkleY: 9.4, leftFootDegrees: -15,
+      gripX: 52, gripY: 104, shinaiDegrees: 12,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
+  { frame: 50, easing: "easeInOutSine", pose: {
+      rootX: 38, rootY: 91, torsoLeanDegrees: 7, headTiltDegrees: -1,
+      rightAnkleX: 51, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 23, leftAnkleY: 9.8, leftFootDegrees: -17,
+      gripX: 73, gripY: 140, shinaiDegrees: 75,
+      leftElbowBias: -8, rightElbowBias: -11 } },
+
+  { frame: 58, easing: "easeInQuad", pose: {
+      rootX: 44, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
+      rightAnkleX: 56, rightAnkleY: 8, rightFootDegrees: 4,
+      leftAnkleX: 27, leftAnkleY: 10.4, leftFootDegrees: -20,
+      gripX: 54, gripY: 179, shinaiDegrees: 142,
+      leftElbowBias: -7, rightElbowBias: -8 } },
+
+  { frame: 66, easing: "linear", pose: {
+      rootX: 52, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 70, rightAnkleY: 22, rightFootDegrees: 10,
+      leftAnkleX: 28.8, leftAnkleY: 12.2, leftFootDegrees: -30,
+      gripX: 84, gripY: 168, shinaiDegrees: 108,
+      leftElbowBias: -6.5, rightElbowBias: -8, lateralOffset: 3 } },
+
+  /* Le pas part en diagonale : on quitte la ligne vers sa droite pour
+     ouvrir le plastron et passer à côté, pas dedans. */
+  { frame: 72, easing: "linear", pose: {
+      rootX: 62, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 82, rightAnkleY: 30, rightFootDegrees: 8,
+      leftAnkleX: 31.8, leftAnkleY: 14.1, leftFootDegrees: -44,
+      gripX: 100, gripY: 158, shinaiDegrees: 92,
+      leftElbowBias: -6, rightElbowBias: -7, lateralOffset: 9 } },
+
+  { frame: 76, easing: "linear", pose: {
+      rootX: 74, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rightAnkleX: 100, rightAnkleY: 26, rightFootDegrees: 4,
+      leftAnkleX: 48, leftAnkleY: 20, leftFootDegrees: -40,
+      gripX: 120, gripY: 145, shinaiDegrees: 64,
+      leftElbowBias: -5, rightElbowBias: -6, lateralOffset: 16 } },
+
+  { frame: 80, easing: "easeOutSine", pose: {
+      rootX: 82.0, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 108.0, rightAnkleY: 12, rightFootDegrees: 2,
+      leftAnkleX: 52.0, leftAnkleY: 17, leftFootDegrees: -36,
+      gripX: 132.0, gripY: 132, shinaiDegrees: 30,
+      leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24 } },
+
+  /* Frappe : main droite poussée devant, lame à -12,5° sur le bas du
+     plastron. Plus inclinée, elle glisserait au lieu de mordre. */
+  { frame: 82, easing: "easeOutCubic", pose: {
+      rootX: 91.0, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
+      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 58.0, leftAnkleY: 15, leftFootDegrees: -34,
+      gripX: 144.0, gripY: 122, shinaiDegrees: -12.7,
+      leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28 } },
+
+  { frame: 84, easing: "easeOutSine", pose: {
+      rootX: 93.0, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 72.0, leftAnkleY: 12, leftFootDegrees: -26,
+      gripX: 144.5, gripY: 123, shinaiDegrees: -5,
+      leftElbowBias: -1, rightElbowBias: -2.5, lateralOffset: 31 } },
+
+  { frame: 86, easing: "easeOutSine", pose: {
+      rootX: 95.0, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
+      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 80.0, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 145.0, gripY: 123, shinaiDegrees: -7,
+      leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 34 } },
+
+  { frame: 92, easing: "easeInOutSine", pose: {
+      rootX: 102.0, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 126.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 88.0, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 150.0, gripY: 128, shinaiDegrees: -4,
+      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 40 } },
+
+  { frame: 104, easing: "easeInOutSine", pose: {
+      rootX: 114.0, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 138.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 100.0, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 160.0, gripY: 124, shinaiDegrees: 0,
+      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 46 } },
+
+  { frame: 116, easing: "easeInOutCubic", pose: {
+      rootX: 126.0, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 112.0, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 170.0, gripY: 120, shinaiDegrees: 4,
+      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 50 } },
+
+  { frame: 134, easing: "linear", pose: {
+      rootX: 137.0, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 122.0, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 159.0, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } },
+
   { frame: 150, easing: "linear", pose: {
-      rootX: 145, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 130, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 167, gripY: 104, shinaiDegrees: 16,
-      leftElbowBias: -8, rightElbowBias: -15 } }
+      rootX: 137.0, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 122.0, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 159.0, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } }
 ];
 
 const doPhaseList = [
   { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. La cible est l'arête avant du plastron adverse, entre 94 et 125 cm du sol." },
-  { name: "Seme", startFrame: 20, endFrame: 44,
-    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
+    detail: "Garde. La cible est le bas de l'arête avant du plastron, vers 100 cm du sol." },
+  { name: "Seme d'entrée", startFrame: 20, endFrame: 44,
+    detail: "On entre de 26 cm avant d'armer : le dō se coupe de près, sinon le contact se fait trop loin sur la lame." },
   { name: "Furikaburi", startFrame: 44, endFrame: 58,
     detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne." },
-  { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
-    detail: "Même poussée que sur les autres coupes, pour une avance de 95 cm." },
+  { name: "Poussée en diagonale", startFrame: 58, endFrame: 72,
+    detail: "Le pas quitte la ligne vers la droite : on ouvre le plastron et on passe à côté, pas dedans." },
   { name: "Envol", startFrame: 72, endFrame: 76,
     detail: "La lame reste armée sur le poignet pendant que l'avant-bras descend." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Main droite poussée devant, lame à -12° : trop inclinée, elle glisserait sur le plastron au lieu de le mordre." },
+    detail: "Main droite poussée devant, lame à -12,5° sur le bas du plastron. Plus inclinée, elle glisserait au lieu de mordre." },
   { name: "Hikitsuke", startFrame: 82, endFrame: 86,
     detail: "Le pied gauche revient sous le corps." },
   { name: "Zanshin", startFrame: 86, endFrame: 116,
@@ -965,8 +988,8 @@ const attackCatalogue = {
     /* Milieu de l'arête avant du plastron. */
     targetLocal: skeleton => {
       const forward = skeleton.forwardDirection;
-      const middle = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.45);
-      return { x: middle.x + forward.x * 12, y: middle.y + forward.y * 12 };
+      const lowerDo = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.25);
+      return { x: lowerDo.x + forward.x * 11.5, y: lowerDo.y + forward.y * 11.5 };
     }
   },
   tsuki: {
@@ -1897,19 +1920,47 @@ function actorPlacement() {
     : { attacker: facingLeftActor, defender: facingRightActor };
 }
 
+/* Un pas en diagonale ne se voit pas dans une vue de profil strict : le
+   déplacement latéral est donc rendu comme un rapprochement de la
+   caméra. On regarde le frappeur depuis sa droite, donc un pas vers sa
+   droite le fait descendre dans l'image et grossir légèrement, comme
+   tout ce qui passe devant. */
+const LATERAL_DROP_PER_CM = 0.16;
+const LATERAL_SCALE_PER_CM = 0.0008;
+
+/* On regarde chaque acteur depuis son propre côté droit. Un pas vers sa
+   droite rapproche donc celui qui va vers la droite de l'image, et
+   éloigne celui qui va vers la gauche : le signe suit son orientation. */
+function lateralTowardCamera(actor) {
+  return (actor.lateral || 0) * (actor.facesRight ? 1 : -1);
+}
+function actorScale(actor) { return 1 + lateralTowardCamera(actor) * LATERAL_SCALE_PER_CM; }
+function actorDrop(actor) { return lateralTowardCamera(actor) * LATERAL_DROP_PER_CM; }
+
 /** Passe un point du repère local d'un acteur au repère du dojo. */
 function toWorld(actor, point) {
-  return { x: actor.facesRight ? actor.originX + point.x : actor.originX - point.x, y: point.y };
+  const scale = actorScale(actor);
+  return {
+    x: actor.originX + (actor.facesRight ? point.x : -point.x) * scale,
+    y: point.y * scale - actorDrop(actor)
+  };
 }
 
-function toLocalX(actor, worldX) {
-  return actor.facesRight ? worldX - actor.originX : actor.originX - worldX;
+/** Chemin inverse, nécessaire pour comparer la lame à une cible portée
+    par l'autre acteur. */
+function toLocal(actor, worldPoint) {
+  const scale = actorScale(actor);
+  return {
+    x: (actor.facesRight ? worldPoint.x - actor.originX : actor.originX - worldPoint.x) / scale,
+    y: (worldPoint.y + actorDrop(actor)) / scale
+  };
 }
 
 function drawActor(actor, skeleton) {
+  const scale = actorScale(actor);
   context.save();
-  context.translate(actor.originX, 0);
-  if (!actor.facesRight) context.scale(-1, 1);
+  context.translate(actor.originX, -actorDrop(actor));
+  context.scale(actor.facesRight ? scale : -scale, scale);
   drawCharacter(skeleton, actor.facesRight ? "right" : "left");
   context.restore();
 }
@@ -1925,10 +1976,12 @@ function render() {
 
   const attackerPose = interpolatePose(frame, currentSequence());
   const defenderPose = buildDefenderPose(frame);
+  placement.attacker.lateral = attackerPose.lateralOffset || 0;
   const menLocal = defenderTargetPoint(frame);
   const menWorld = toWorld(placement.defender, menLocal);
   if (viewState.showMotodachi && !currentAttack().thrust) {
-    clampBladeOnMen(attackerPose, toLocalX(placement.attacker, menWorld.x), menWorld.y);
+    const targetInAttackerFrame = toLocal(placement.attacker, menWorld);
+    clampBladeOnMen(attackerPose, targetInAttackerFrame.x, targetInAttackerFrame.y);
   }
   const skeleton = solveSkeleton(attackerPose);
   const attackerRootWorldX = toWorld(placement.attacker, { x: attackerPose.rootX, y: 0 }).x;
@@ -1946,7 +1999,11 @@ function render() {
   /* L'attaquant est placé au quart de l'écran, du côté d'où il vient. */
   const framing = placement.attacker.facesRight ? 0.21 : 0.79;
   camera.originX = canvas.width * framing - attackerRootWorldX * camera.scale;
-  camera.originY = canvas.height - 42 * ratio + shakeY;
+  /* La marge sous le sol est comptée en centimètres, pas en pixels : le
+     pas en diagonale fait descendre le frappeur jusqu'à 15 cm sous la
+     ligne de sol, et une marge fixe en pixels le tronquerait sur les
+     grands écrans. */
+  camera.originY = canvas.height - 20 * camera.scale + shakeY;
 
   context.setTransform(camera.scale, 0, 0, -camera.scale, camera.originX, camera.originY);
   context.lineCap = "round";
