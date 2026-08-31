@@ -195,6 +195,10 @@
     <aside id="quickControls">
       <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi</small></button>
       <button id="koteButton">KOTE<small>avant-bras droit adverse</small></button>
+      <div class="row">
+        <button id="doButton">DŌ</button>
+        <button id="tsukiButton">TSUKI</button>
+      </div>
       <button id="returnButton" class="secondary">Revenir à distance<small>un grand pas, des deux côtés</small></button>
       <button id="counterStrikeButton" class="secondary">Attaque adverse<small>le motodachi porte le même coup</small></button>
 
@@ -708,6 +712,239 @@ const kotePhaseList = [
     detail: "Redescente en chūdan, reprise de la garde." }
 ];
 
+/* ------------------------------------------------------------
+   Dō : armé comme le men, mais la lame arrive sur l'arête avant du
+   plastron. Le « 45° » enseigné vient du sabre : avec un shinai une lame
+   trop inclinée glisse sur la cible au lieu de la mordre. On arrive donc
+   à -12°, main droite poussée vers l'avant au contact, et on traverse
+   vite après la touche.
+   ------------------------------------------------------------ */
+const doKeyframeList = [
+  { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
+  { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
+  { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
+  { frame: 50, easing: "easeInOutSine", pose: menKeyframeList[3].pose },
+  { frame: 58, easing: "easeInQuad", pose: menKeyframeList[4].pose },
+
+  { frame: 66, easing: "linear", pose: {
+      rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 46, rightAnkleY: 22, rightFootDegrees: 10,
+      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
+      gripX: 60, gripY: 168, shinaiDegrees: 108,
+      leftElbowBias: -6.5, rightElbowBias: -8 } },
+
+  { frame: 72, easing: "linear", pose: {
+      rootX: 40, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 60, rightAnkleY: 30, rightFootDegrees: 8,
+      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
+      gripX: 82, gripY: 158, shinaiDegrees: 92,
+      leftElbowBias: -6, rightElbowBias: -7 } },
+
+  { frame: 76, easing: "linear", pose: {
+      rootX: 58, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rightAnkleX: 84, rightAnkleY: 26, rightFootDegrees: 4,
+      leftAnkleX: 24, leftAnkleY: 20, leftFootDegrees: -40,
+      gripX: 108, gripY: 145, shinaiDegrees: 64,
+      leftElbowBias: -5, rightElbowBias: -6 } },
+
+  { frame: 80, easing: "easeOutSine", pose: {
+      rootX: 82, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 108, rightAnkleY: 12, rightFootDegrees: 2,
+      leftAnkleX: 44, leftAnkleY: 17, leftFootDegrees: -36,
+      gripX: 135, gripY: 132, shinaiDegrees: 30,
+      leftElbowBias: -2, rightElbowBias: -3 } },
+
+  /* Frappe : main droite poussée devant, lame à -12° sur l'arête du dō. */
+  { frame: 82, easing: "easeOutCubic", pose: {
+      rootX: 99, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
+      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 52, leftAnkleY: 15, leftFootDegrees: -34,
+      gripX: 152, gripY: 122, shinaiDegrees: -9.5,
+      leftElbowBias: -1, rightElbowBias: -2 } },
+
+  { frame: 84, easing: "easeOutSine", pose: {
+      rootX: 101, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 68, leftAnkleY: 12, leftFootDegrees: -26,
+      gripX: 152.5, gripY: 123, shinaiDegrees: -2,
+      leftElbowBias: -1, rightElbowBias: -2.5 } },
+
+  { frame: 86, easing: "easeOutSine", pose: {
+      rootX: 103, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
+      rightAnkleX: 123, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 88, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 153, gripY: 123, shinaiDegrees: -4,
+      leftElbowBias: -2, rightElbowBias: -3 } },
+
+  { frame: 92, easing: "easeInOutSine", pose: {
+      rootX: 110, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 134, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 96, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 158, gripY: 128, shinaiDegrees: -4,
+      leftElbowBias: -3, rightElbowBias: -4 } },
+
+  { frame: 104, easing: "easeInOutSine", pose: {
+      rootX: 122, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 146, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 108, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 168, gripY: 124, shinaiDegrees: 0,
+      leftElbowBias: -3, rightElbowBias: -4 } },
+
+  { frame: 116, easing: "easeInOutCubic", pose: {
+      rootX: 134, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 120, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 178, gripY: 120, shinaiDegrees: 4,
+      leftElbowBias: -3, rightElbowBias: -4 } },
+
+  { frame: 134, easing: "linear", pose: {
+      rootX: 145, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 130, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 167, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15 } },
+
+  { frame: 150, easing: "linear", pose: {
+      rootX: 145, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 130, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 167, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15 } }
+];
+
+const doPhaseList = [
+  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
+    detail: "Garde. La cible est l'arête avant du plastron adverse, entre 94 et 125 cm du sol." },
+  { name: "Seme", startFrame: 20, endFrame: 44,
+    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
+  { name: "Furikaburi", startFrame: 44, endFrame: 58,
+    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne." },
+  { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
+    detail: "Même poussée que sur les autres coupes, pour une avance de 95 cm." },
+  { name: "Envol", startFrame: 72, endFrame: 76,
+    detail: "La lame reste armée sur le poignet pendant que l'avant-bras descend." },
+  { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
+    detail: "Main droite poussée devant, lame à -12° : trop inclinée, elle glisserait sur le plastron au lieu de le mordre." },
+  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
+    detail: "Le pied gauche revient sous le corps." },
+  { name: "Zanshin", startFrame: 86, endFrame: 116,
+    detail: "On traverse vite après un dō, sans rester devant l'adversaire." },
+  { name: "Retour kamae", startFrame: 116, endFrame: 150,
+    detail: "Redescente en chūdan, reprise de la garde." }
+];
+
+/* ------------------------------------------------------------
+   Tsuki : aucun armé, la pointe reste sur le centre et part droit au
+   tsuki-dare. C'est la seule technique où l'on ne traverse pas : le
+   shinai est ramené en chūdan sur place, et le contact se fait avec la
+   pointe, pas avec le monouchi.
+   ------------------------------------------------------------ */
+const tsukiKeyframeList = [
+  { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
+  { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
+  { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
+
+  /* Aucun armé : les poings restent sur la ligne, la pointe descend
+     juste assez pour viser la gorge. */
+  { frame: 58, easing: "easeInQuad", pose: {
+      rootX: 18, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 30, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
+      gripX: 40, gripY: 106, shinaiDegrees: 14,
+      leftElbowBias: -8, rightElbowBias: -13 } },
+
+  { frame: 66, easing: "linear", pose: {
+      rootX: 26, rootY: 91, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 44, rightAnkleY: 20, rightFootDegrees: 10,
+      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
+      gripX: 52, gripY: 110, shinaiDegrees: 14,
+      leftElbowBias: -7, rightElbowBias: -11 } },
+
+  { frame: 72, easing: "linear", pose: {
+      rootX: 38, rootY: 90, torsoLeanDegrees: 9, headTiltDegrees: 0,
+      rightAnkleX: 56, rightAnkleY: 26, rightFootDegrees: 8,
+      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
+      gripX: 72, gripY: 116, shinaiDegrees: 12,
+      leftElbowBias: -6, rightElbowBias: -9 } },
+
+  { frame: 76, easing: "linear", pose: {
+      rootX: 54, rootY: 88, torsoLeanDegrees: 10, headTiltDegrees: 0,
+      rightAnkleX: 78, rightAnkleY: 22, rightFootDegrees: 4,
+      leftAnkleX: 22, leftAnkleY: 20, leftFootDegrees: -40,
+      gripX: 98, gripY: 120, shinaiDegrees: 10,
+      leftElbowBias: -4, rightElbowBias: -6 } },
+
+  { frame: 80, easing: "easeOutSine", pose: {
+      rootX: 72, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 1,
+      rightAnkleX: 98, rightAnkleY: 10, rightFootDegrees: 2,
+      leftAnkleX: 40, leftAnkleY: 16, leftFootDegrees: -36,
+      gripX: 124, gripY: 124, shinaiDegrees: 9,
+      leftElbowBias: -2, rightElbowBias: -3 } },
+
+  /* Touche : la pointe atteint le tsuki-dare, les deux bras tendus. */
+  { frame: 82, easing: "easeOutCubic", pose: {
+      rootX: 82, rootY: 80, torsoLeanDegrees: 10, headTiltDegrees: 0,
+      rightAnkleX: 106, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 46, leftAnkleY: 14, leftFootDegrees: -34,
+      gripX: 134, gripY: 124, shinaiDegrees: 6.5,
+      leftElbowBias: -1, rightElbowBias: -1 } },
+
+  { frame: 86, easing: "easeOutSine", pose: {
+      rootX: 84, rootY: 84, torsoLeanDegrees: 9, headTiltDegrees: 0,
+      rightAnkleX: 106, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 69, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 130, gripY: 122, shinaiDegrees: 11,
+      leftElbowBias: -2, rightElbowBias: -4 } },
+
+  /* On ne traverse pas : le shinai revient en chūdan sur place. */
+  { frame: 96, easing: "easeInOutSine", pose: {
+      rootX: 84, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 100, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 69, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 114, gripY: 112, shinaiDegrees: 14,
+      leftElbowBias: -5, rightElbowBias: -10 } },
+
+  { frame: 112, easing: "easeInOutSine", pose: {
+      rootX: 80, rootY: 90, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 93, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 65, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 102, gripY: 105, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -14 } },
+
+  { frame: 134, easing: "linear", pose: {
+      rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 98, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15 } },
+
+  { frame: 150, easing: "linear", pose: {
+      rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 98, gripY: 104, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15 } }
+];
+
+const tsukiPhaseList = [
+  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
+    detail: "Garde. La cible est le tsuki-dare, le rabat de gorge, à 141 cm du sol." },
+  { name: "Seme", startFrame: 20, endFrame: 44,
+    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
+  { name: "Aucun armé", startFrame: 44, endFrame: 66,
+    detail: "Le seul coup sans furikaburi : la pointe reste sur le centre et descend juste assez pour viser la gorge." },
+  { name: "Poussée sur les orteils", startFrame: 66, endFrame: 76,
+    detail: "Même poussée, mais c'est le bassin qui porte le coup : les bras ne font que se tendre." },
+  { name: "Tsuki (touche)", startFrame: 76, endFrame: 82,
+    detail: "La pointe atteint le tsuki-dare, les deux bras tendus. Contact avec la pointe, pas avec le monouchi." },
+  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
+    detail: "Le pied gauche revient sous le corps." },
+  { name: "Retrait en chūdan", startFrame: 86, endFrame: 112,
+    detail: "On ne traverse pas : le shinai est ramené en garde sur place, face à l'adversaire." },
+  { name: "Retour kamae", startFrame: 112, endFrame: 150,
+    detail: "Reprise de la garde, un pas en arrière pour rétablir la ligne." }
+];
+
 /* Catalogue des attaques : la logique de mouvement, le rig et le rendu
    sont communs, seules changent les poses clés, la cible sur le
    défenseur et l'ampleur du recul qu'elle provoque. */
@@ -721,6 +958,27 @@ const attackCatalogue = {
     label: "KOTE", keyframes: koteKeyframeList, phases: kotePhaseList,
     impactFrame: 82, defenderRetreat: 40, opensMen: false,
     targetLocal: skeleton => pointAlong(skeleton.rightWrist, skeleton.rightElbow, 0.3)
+  },
+  do: {
+    label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
+    impactFrame: 82, defenderRetreat: 55, opensMen: false,
+    /* Milieu de l'arête avant du plastron. */
+    targetLocal: skeleton => {
+      const forward = skeleton.forwardDirection;
+      const middle = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.45);
+      return { x: middle.x + forward.x * 12, y: middle.y + forward.y * 12 };
+    }
+  },
+  tsuki: {
+    label: "TSUKI", keyframes: tsukiKeyframeList, phases: tsukiPhaseList,
+    impactFrame: 82, defenderRetreat: 25, opensMen: false, thrust: true,
+    /* Rabat de gorge, sous le menton du men. */
+    targetLocal: skeleton => {
+      const forward = skeleton.forwardDirection;
+      const up = skeleton.torsoDirection;
+      return { x: skeleton.neckTop.x + forward.x * 8 - up.x * 3,
+               y: skeleton.neckTop.y + forward.y * 8 - up.y * 3 };
+    }
   }
 };
 
@@ -1669,7 +1927,7 @@ function render() {
   const defenderPose = buildDefenderPose(frame);
   const menLocal = defenderTargetPoint(frame);
   const menWorld = toWorld(placement.defender, menLocal);
-  if (viewState.showMotodachi) {
+  if (viewState.showMotodachi && !currentAttack().thrust) {
     clampBladeOnMen(attackerPose, toLocalX(placement.attacker, menWorld.x), menWorld.y);
   }
   const skeleton = solveSkeleton(attackerPose);
@@ -1881,6 +2139,8 @@ function buildLegend() {
 function bindControls() {
   document.getElementById("strikeButton").addEventListener("click", () => startAttack(true, "men"));
   document.getElementById("koteButton").addEventListener("click", () => startAttack(true, "kote"));
+  document.getElementById("doButton").addEventListener("click", () => startAttack(true, "do"));
+  document.getElementById("tsukiButton").addEventListener("click", () => startAttack(true, "tsuki"));
   document.getElementById("counterStrikeButton").addEventListener("click", () => startAttack(false));
   document.getElementById("returnButton").addEventListener("click", startReturn);
 
