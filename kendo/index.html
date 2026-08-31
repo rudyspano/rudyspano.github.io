@@ -240,7 +240,9 @@
     </div>
 
     <h2>Vue</h2>
+    <p class="subtitle">« Jeu » montre le dojo. « Normal » et « Calque » retirent le décor pour analyser le mouvement.</p>
     <div class="row" id="viewModeRow">
+      <button data-view-mode="jeu">Jeu</button>
       <button data-view-mode="normal">Normal</button>
       <button data-view-mode="calque">Calque</button>
     </div>
@@ -1247,12 +1249,26 @@ function solveSkeleton(pose) {
    6. Rendu — style crayon
    ============================================================ */
 
+/* Décor de scène, dans l'esprit des jeux de combat Neo Geo : il défile
+   moins vite que les combattants, ce qui donne la profondeur. */
+const stageImage = new Image();
+let stageImageReady = false;
+stageImage.addEventListener("load", () => { stageImageReady = true; });
+stageImage.src = "assets/dojo-stage.png";
+
+const STAGE_PARALLAX = 0.18;
+
 const canvas = document.getElementById("scene");
 const context = canvas.getContext("2d");
 const camera = { scale: 3, originX: 0, originY: 0 };
 
-const NEAR_INK = "#232323";
-const FAR_INK = "#7b7b7b";
+const PAPER_NEAR_INK = "#232323";
+const PAPER_FAR_INK = "#7b7b7b";
+const GAME_NEAR_INK = "#12151f";
+const GAME_FAR_INK = "#39405e";
+
+function nearInk() { return isGameView() ? GAME_NEAR_INK : PAPER_NEAR_INK; }
+function farInk() { return isGameView() ? GAME_FAR_INK : PAPER_FAR_INK; }
 
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
@@ -1310,15 +1326,23 @@ function blendOverPaper(hexColor, ratio) {
     + Math.round(blue * ratio + PAPER_BLUE * (1 - ratio)) + ")";
 }
 
-/** Vue normale : aplats opaques, ce qui est devant masque ce qui est derrière.
-    Vue calque : tout est translucide, on voit le côté éloigné à travers le corps. */
-function isSolidView() { return viewState.viewMode === "normal"; }
+/** Vue jeu et vue normale : aplats opaques, ce qui est devant masque ce
+    qui est derrière. Vue calque : tout est translucide, on voit le côté
+    éloigné à travers le corps. */
+function isSolidView() { return viewState.viewMode !== "calque"; }
+
+/** La vue jeu montre le dojo et cache les repères d'analyse. */
+function isGameView() { return viewState.viewMode === "jeu"; }
 
 function fillPath(pointList, color, alpha) {
   const requestedAlpha = alpha === undefined ? 0.16 : alpha;
   if (isSolidView() && color.charAt(0) === "#") {
+    /* En vue jeu les pièces prennent leur couleur pleine : les aplats
+       lavés avaient été réglés pour un fond de papier, ils disparaissent
+       sur le bois chaud du dojo. */
+    const ratio = isGameView() ? Math.min(1, requestedAlpha * 3.4) : requestedAlpha;
     context.globalAlpha = 1;
-    context.fillStyle = blendOverPaper(color, requestedAlpha);
+    context.fillStyle = blendOverPaper(color, ratio);
   } else {
     context.globalAlpha = requestedAlpha;
     context.fillStyle = color;
@@ -1357,6 +1381,12 @@ function drawSleeve(from, to, widthAtStart, widthAtEnd, color, ink, seed) {
 
 const BODY_VOLUME_NEAR = "#f1ecde";
 const BODY_VOLUME_FAR = "#ddd7c6";
+/* En vue jeu, les volumes ne sont plus du papier mais du keikogi indigo. */
+const GAME_VOLUME_NEAR = "#3b4878";
+const GAME_VOLUME_FAR = "#2b3459";
+
+function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
+function farVolume() { return isGameView() ? GAME_VOLUME_FAR : BODY_VOLUME_FAR; }
 
 /** Contour d'un membre : une demi-largeur par articulation, normales
     moyennées pour que le coude ou le genou ne casse pas la silhouette. */
@@ -1443,22 +1473,22 @@ function drawArm(shoulder, elbow, wrist, grip, ink, seed) {
 }
 
 function drawTorsoAndHead(skeleton) {
-  strokePath([skeleton.root, skeleton.shoulderCenter], { color: NEAR_INK, width: 1, seed: 30 });
-  strokePath([skeleton.shoulderCenter, skeleton.neckTop], { color: NEAR_INK, width: 0.8, seed: 33 });
-  strokePath([skeleton.leftShoulder, skeleton.rightShoulder], { color: NEAR_INK, width: 0.7, seed: 35 });
-  strokePath([skeleton.leftHip, skeleton.rightHip], { color: NEAR_INK, width: 0.7, seed: 36 });
+  strokePath([skeleton.root, skeleton.shoulderCenter], { color: nearInk(), width: 1, seed: 30 });
+  strokePath([skeleton.shoulderCenter, skeleton.neckTop], { color: nearInk(), width: 0.8, seed: 33 });
+  strokePath([skeleton.leftShoulder, skeleton.rightShoulder], { color: nearInk(), width: 0.7, seed: 35 });
+  strokePath([skeleton.leftHip, skeleton.rightHip], { color: nearInk(), width: 0.7, seed: 36 });
 
   const headAngle = Math.atan2(skeleton.neckDirection.x, skeleton.neckDirection.y);
   context.save();
   context.translate(skeleton.headCenter.x, skeleton.headCenter.y);
   context.rotate(-headAngle);
   if (isSolidView()) {
-    context.fillStyle = BODY_VOLUME_NEAR;
+    context.fillStyle = nearVolume();
     context.beginPath();
     context.ellipse(0, 0, HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, 0, 0, Math.PI * 2);
     context.fill();
   }
-  context.strokeStyle = NEAR_INK;
+  context.strokeStyle = nearInk();
   context.lineWidth = 0.8;
   context.beginPath();
   context.ellipse(0, 0, HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, 0, 0, Math.PI * 2);
@@ -1656,6 +1686,23 @@ function drawShinai(skeleton) {
 
 /* ---------- décor ---------- */
 
+/** Le décor est dessiné en espace écran, avant la transformation monde :
+    il ne suit la caméra qu'en partie, d'où l'effet de profondeur. */
+function drawStage() {
+  if (!stageImageReady) {
+    context.fillStyle = "#2a1d12";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  const scale = canvas.height / stageImage.height;
+  const drawnWidth = stageImage.width * scale;
+  const slack = Math.max(0, drawnWidth - canvas.width);
+  const wandering = camera.originX * STAGE_PARALLAX;
+  const left = Math.max(canvas.width - drawnWidth, Math.min(0, -slack / 2 + wandering));
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.drawImage(stageImage, left, 0, drawnWidth, canvas.height);
+}
+
 function drawFloor() {
   const leftEdge = (0 - camera.originX) / camera.scale;
   const rightEdge = (canvas.width - camera.originX) / camera.scale;
@@ -1820,31 +1867,31 @@ function drawCharacter(skeleton, nearSideName) {
   const far = limbSet(skeleton, nearSideName === "left" ? "right" : "left");
 
   if (solid) {
-    drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], BODY_VOLUME_FAR);
-    drawFootVolume(far.foot, BODY_VOLUME_FAR);
+    drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
+    drawFootVolume(far.foot, farVolume());
   }
   if (showArmour) drawHakamaLeg(far.hip, far.knee, far.foot.ankle, 90);
-  drawLeg(far.hip, far.knee, far.foot, FAR_INK, 10);
+  drawLeg(far.hip, far.knee, far.foot, farInk(), 10);
 
   if (solid) {
-    drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6], BODY_VOLUME_FAR);
+    drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6], farVolume());
   }
   if (showArmour) {
     drawKeikogiSleeve(far.shoulder, far.elbow, 94);
     drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96);
   }
-  drawArm(far.shoulder, far.elbow, far.wrist, far.grip, FAR_INK, 14);
+  drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
 
-  if (solid) drawTorsoVolume(skeleton, BODY_VOLUME_NEAR);
+  if (solid) drawTorsoVolume(skeleton, nearVolume());
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
 
   if (solid) {
-    drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], BODY_VOLUME_NEAR);
-    drawFootVolume(near.foot, BODY_VOLUME_NEAR);
+    drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
+    drawFootVolume(near.foot, nearVolume());
   }
   if (showArmour) drawHakamaLeg(near.hip, near.knee, near.foot.ankle, 100);
-  drawLeg(near.hip, near.knee, near.foot, NEAR_INK, 18);
+  drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
 
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
   if (showArmour) drawTare(skeleton);
@@ -1853,13 +1900,13 @@ function drawCharacter(skeleton, nearSideName) {
   drawShinai(skeleton);
 
   if (solid) {
-    drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], BODY_VOLUME_NEAR);
+    drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], nearVolume());
   }
   if (showArmour) {
     drawKeikogiSleeve(near.shoulder, near.elbow, 104);
     drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
   }
-  drawArm(near.shoulder, near.elbow, near.wrist, near.grip, NEAR_INK, 22);
+  drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
 }
 
 /* ============================================================
@@ -1867,7 +1914,7 @@ function drawCharacter(skeleton, nearSideName) {
    ============================================================ */
 
 const viewState = {
-  viewMode: "normal",
+  viewMode: "jeu",
   currentFrame: 0,
   isPlaying: false,
   playbackSpeed: 0.35,
@@ -2004,11 +2051,13 @@ function render() {
      grands écrans. */
   camera.originY = canvas.height - 20 * camera.scale + shakeY;
 
+  if (isGameView()) drawStage();
+
   context.setTransform(camera.scale, 0, 0, -camera.scale, camera.originX, camera.originY);
   context.lineCap = "round";
   context.lineJoin = "round";
 
-  drawFloor();
+  if (!isGameView()) drawFloor();
 
   /* Le défenseur est dessiné en premier : il est derrière, si bien que
      le shinai de l'attaquant passe devant lui à la traversée. */
@@ -2018,7 +2067,7 @@ function render() {
 
   if (viewState.showTrail && isAttackSequence) drawKissakiTrail(frame, placement.attacker);
 
-  if (viewState.showConstruction) {
+  if (viewState.showConstruction && !isGameView()) {
     const local = point => toWorld(placement.attacker, point);
     context.setLineDash([1.5, 1.5]);
     strokePath([local(skeleton.leftShoulder), local(skeleton.leftWrist)], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 2 });
@@ -2035,18 +2084,18 @@ function render() {
     drawImpactEffects(frame, toWorld(placement.attacker, skeleton.rightFoot.ball), menWorld);
   }
 
-  if (viewState.showJoints) {
+  if (viewState.showJoints && !isGameView()) {
     collectJoints(skeleton).forEach(joint => {
       drawJointMarker(toWorld(placement.attacker, joint.point), joint.near ? "#c2452a" : "#9b9b9b");
     });
   }
-  if (viewState.showJointLabels) {
+  if (viewState.showJointLabels && !isGameView()) {
     collectJoints(skeleton).forEach(joint => {
       drawScreenLabel(toWorld(placement.attacker, joint.point), joint.name,
         joint.near ? "#8a2f19" : "#7b7b7b", joint.offsetX, joint.offsetY);
     });
   }
-  if (viewState.showArmourLabels) {
+  if (viewState.showArmourLabels && !isGameView()) {
     const local = point => toWorld(placement.attacker, point);
     drawScreenLabel(local(skeleton.headCenter), "men", partColor.men, -14, -34);
     drawScreenLabel(local(skeleton.shoulderCenter), "mendare", partColor.mendare, -50, -4);
