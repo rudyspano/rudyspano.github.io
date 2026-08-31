@@ -124,7 +124,21 @@
     color: #fff;
   }
   #strikeButton:hover { background: #e85f33; }
-  #strikeButton small { display: block; font-size: 10px; font-weight: 400; opacity: .85; letter-spacing: .04em; margin-top: 3px; }
+  #strikeButton small, #quickControls .secondary small {
+    display: block;
+    font-size: 9px;
+    font-weight: 400;
+    opacity: .75;
+    letter-spacing: .04em;
+    margin-top: 2px;
+  }
+  #quickControls .secondary {
+    width: 100%;
+    padding: 9px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
   .row { display: flex; gap: 6px; margin-top: 8px; }
   .row button { flex: 1; }
   .row button.selected { background: var(--accent); border-color: #b03d1a; color: #fff; }
@@ -180,9 +194,11 @@
 
     <aside id="quickControls">
       <button id="strikeButton">MEN<small>shōmen-uchi + fumikomi</small></button>
+      <button id="returnButton" class="secondary">Revenir à distance<small>suriashi arrière, 4 pas</small></button>
+      <button id="counterStrikeButton" class="secondary">MEN adverse<small>le motodachi attaque</small></button>
 
       <div class="frameReadout">
-        <span>frame <strong id="frameNumber">0</strong> / 150</span>
+        <span>frame <strong id="frameNumber">0</strong> / <span id="frameTotal">150</span></span>
       </div>
       <div id="phaseName">Kamae</div>
       <input type="range" id="frameSlider" min="0" max="150" step="1" value="0">
@@ -196,6 +212,10 @@
       <div class="frameReadout">
         <span>avance du bassin</span>
         <span><strong id="advanceReadout">0</strong> cm</span>
+      </div>
+      <div class="frameReadout">
+        <span>distance</span>
+        <span><strong id="distanceReadout">260</strong> cm</span>
       </div>
 
       <div class="scrollHint">réglages ci-dessous ↓</div>
@@ -238,7 +258,8 @@
     <div class="legend" id="legend"></div>
 
     <p class="hint">
-      <kbd>Entrée</kbd> lance le men · <kbd>Espace</kbd> lecture/pause · <kbd>←</kbd> <kbd>→</kbd> frame par frame.
+      <kbd>Entrée</kbd> lance le men · <kbd>Retour arrière</kbd> revient à distance ·
+      <kbd>Espace</kbd> lecture/pause · <kbd>←</kbd> <kbd>→</kbd> frame par frame.
     </p>
   </section>
 
@@ -304,15 +325,13 @@ const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
    croisent d'une dizaine de centimètres en garde. */
 const MOTODACHI_BASE_X = 264;
 
-function motodachiToWorld(point) {
-  return { x: MOTODACHI_BASE_X - point.x, y: point.y };
-}
-
 /** Recul du motodachi : il rompt dès qu'il a encaissé, un peu plus vite
     que le frappeur n'avance, pour que la distance ne se referme jamais. */
+const DEFENDER_TOTAL_RETREAT = 60;
+
 function motodachiRetreat(frame) {
   const progress = Math.max(0, Math.min(1, (frame - IMPACT_FRAME) / 52));
-  return 60 * easingFunctions.easeOutCubic(progress);
+  return DEFENDER_TOTAL_RETREAT * easingFunctions.easeOutCubic(progress);
 }
 
 /** Encaissement : le corps se tasse et la tête part en arrière, puis
@@ -332,7 +351,7 @@ function motodachiShinaiDegrees(frame) {
   return -25 + 41 * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
 }
 
-function buildMotodachiPose(frame) {
+function buildDefenderPose(frame) {
   const retreat = motodachiRetreat(frame);
   const shock = motodachiShock(frame);
   const openness = (16 - motodachiShinaiDegrees(frame)) / 41;
@@ -346,10 +365,22 @@ function buildMotodachiPose(frame) {
   };
 }
 
-/** Point de contact de la lame sur le men du motodachi. */
-function motodachiMenPoint(frame) {
-  const head = solveSkeleton(buildMotodachiPose(frame)).headCenter;
-  return motodachiToWorld({ x: head.x, y: head.y + 10 });
+/** Sommet du men du défenseur, dans son repère local : c'est le point
+    que la lame ne peut pas franchir vers le bas. */
+function defenderMenTop(frame) {
+  const head = solveSkeleton(buildDefenderPose(frame)).headCenter;
+  return { x: head.x, y: head.y + HEAD_RADIUS_VERTICAL + 3 };
+}
+
+/** Le men arrête la lame : tant qu'elle surplombe le masque, son angle
+    ne peut pas descendre sous celui qui la ferait passer par ce point. */
+function clampBladeOnMen(pose, menLocalX, menY) {
+  const deltaX = menLocalX - pose.gripX;
+  const deltaY = menY - pose.gripY;
+  if (deltaX <= 0) return;
+  if (Math.hypot(deltaX, deltaY) > SHINAI_LENGTH_FROM_LEFT_GRIP) return;
+  const minimumDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+  if (pose.shinaiDegrees < minimumDegrees) pose.shinaiDegrees = minimumDegrees;
 }
 
 /* ============================================================
@@ -460,32 +491,41 @@ const keyframeList = [
 
   /* Hikitsuke : le pied gauche revient sous le corps en 4 frames, soit
      52 cm parcourus, presque 8 m/s. */
+  /* Rebond : la lame ne s'enfonce pas, elle repart de 10 cm vers le haut
+     dans les deux frames qui suivent le contact. */
+  { frame: 84, easing: "easeOutSine", pose: {
+      rootX: 118, rootY: 82.5, torsoLeanDegrees: 11, headTiltDegrees: 2.5,
+      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 90, leftAnkleY: 13, leftFootDegrees: -26,
+      gripX: 169.5, gripY: 138, shinaiDegrees: 25,
+      leftElbowBias: -3, rightElbowBias: -3.5 } },
+
   { frame: 86, easing: "easeOutSine", pose: {
       rootX: 120, rootY: 85, torsoLeanDegrees: 10, headTiltDegrees: 2,
       rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 116, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 170, gripY: 138, shinaiDegrees: 12,
+      gripX: 170, gripY: 138, shinaiDegrees: 23,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 92, easing: "easeInOutSine", pose: {
       rootX: 130, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 1,
       rightAnkleX: 154, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 116, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 176, gripY: 134, shinaiDegrees: 6,
+      gripX: 176, gripY: 134, shinaiDegrees: 20,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 104, easing: "easeInOutSine", pose: {
       rootX: 140, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 164, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 126, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 186, gripY: 132, shinaiDegrees: 8,
+      gripX: 186, gripY: 132, shinaiDegrees: 17,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
       rootX: 154, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 140, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 200, gripY: 132, shinaiDegrees: 8,
+      gripX: 200, gripY: 132, shinaiDegrees: 15,
       leftElbowBias: -3, rightElbowBias: -4 } },
 
   { frame: 134, easing: "linear", pose: {
@@ -504,6 +544,60 @@ const keyframeList = [
 ];
 
 const LAST_FRAME = keyframeList[keyframeList.length - 1].frame;
+
+/* Retour à distance : suriashi arrière, le pied arrière glisse d'abord,
+   le pied avant suit. Quatre pas de 25,5 cm ramènent exactement au maai,
+   d'où la génération plutôt qu'une liste écrite à la main. */
+const RETURN_STEP_COUNT = 4;
+const RETURN_STEP_LENGTH = 25.25;
+const RETURN_FRAMES_PER_HALF_STEP = 12;
+
+function buildReturnSequence() {
+  const list = [];
+  const endPose = keyframeList[keyframeList.length - 1].pose;
+  let rootX = endPose.rootX;
+  let rightAnkleX = endPose.rightAnkleX;
+  let leftAnkleX = endPose.leftAnkleX;
+  let frame = 0;
+
+  function pushKeyframe(easing) {
+    list.push({ frame: frame, easing: easing, pose: {
+      rootX: rootX, rootY: frame === 0 ? 90.5 : 88.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: rightAnkleX, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: leftAnkleX, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: rootX + 22, gripY: rootX === endPose.rootX ? 104 : 103, shinaiDegrees: 16,
+      leftElbowBias: -8, rightElbowBias: -15 } });
+  }
+
+  pushKeyframe("easeInOutSine");
+  for (let step = 0; step < RETURN_STEP_COUNT; step++) {
+    leftAnkleX -= RETURN_STEP_LENGTH;
+    rootX -= RETURN_STEP_LENGTH / 2;
+    frame += RETURN_FRAMES_PER_HALF_STEP;
+    pushKeyframe("easeInOutSine");
+
+    rightAnkleX -= RETURN_STEP_LENGTH;
+    rootX -= RETURN_STEP_LENGTH / 2;
+    frame += RETURN_FRAMES_PER_HALF_STEP;
+    pushKeyframe("easeInOutSine");
+  }
+  /* Reprise de la garde, hanches remontées. */
+  frame += 12;
+  list.push({ frame: frame, easing: "linear", pose: {
+    rootX: rootX, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+    rightAnkleX: rootX + 13, rightAnkleY: 6, rightFootDegrees: 0,
+    leftAnkleX: rootX - 15, leftAnkleY: 9.2, leftFootDegrees: -14,
+    gripX: rootX + 22, gripY: 104, shinaiDegrees: 16,
+    leftElbowBias: -8, rightElbowBias: -15 } });
+  return list;
+}
+
+const returnSequence = buildReturnSequence();
+const RETURN_LAST_FRAME = returnSequence[returnSequence.length - 1].frame;
+/* Distance regagnée par le retour : elle doit valoir exactement le recul
+   du défenseur pour que le couple retrouve son maai de départ. */
+const RETURN_TRAVEL = keyframeList[keyframeList.length - 1].pose.rootX
+  - returnSequence[returnSequence.length - 1].pose.rootX;
 const IMPACT_FRAME = 82;
 
 const phaseList = [
@@ -541,14 +635,15 @@ const easingFunctions = {
   easeInCubic: t => t * t * t
 };
 
-function interpolatePose(frame) {
-  const clampedFrame = Math.max(0, Math.min(LAST_FRAME, frame));
-  let previousKeyframe = keyframeList[0];
-  let nextKeyframe = keyframeList[keyframeList.length - 1];
-  for (let index = 0; index < keyframeList.length - 1; index++) {
-    if (clampedFrame >= keyframeList[index].frame && clampedFrame <= keyframeList[index + 1].frame) {
-      previousKeyframe = keyframeList[index];
-      nextKeyframe = keyframeList[index + 1];
+function interpolatePose(frame, sequence) {
+  const list = sequence || keyframeList;
+  const clampedFrame = Math.max(0, Math.min(list[list.length - 1].frame, frame));
+  let previousKeyframe = list[0];
+  let nextKeyframe = list[list.length - 1];
+  for (let index = 0; index < list.length - 1; index++) {
+    if (clampedFrame >= list[index].frame && clampedFrame <= list[index + 1].frame) {
+      previousKeyframe = list[index];
+      nextKeyframe = list[index + 1];
       break;
     }
   }
@@ -1123,7 +1218,7 @@ function drawShinai(skeleton) {
 
 /* ---------- décor ---------- */
 
-function drawFloor(pose) {
+function drawFloor() {
   const leftEdge = (0 - camera.originX) / camera.scale;
   const rightEdge = (canvas.width - camera.originX) / camera.scale;
   strokePath([{ x: leftEdge, y: 0 }, { x: rightEdge, y: 0 }],
@@ -1145,31 +1240,31 @@ function drawFloor(pose) {
   context.stroke();
 }
 
-function drawKissakiTrail(frame) {
+function drawKissakiTrail(frame, actor) {
   const trailLength = 14;
   for (let step = trailLength; step >= 1; step--) {
     const sampleFrame = frame - step;
     if (sampleFrame < 44) continue;
-    const previous = solveSkeleton(interpolatePose(sampleFrame));
-    const current = solveSkeleton(interpolatePose(sampleFrame + 1));
+    const previous = toWorld(actor, solveSkeleton(interpolatePose(sampleFrame)).shinaiTip);
+    const current = toWorld(actor, solveSkeleton(interpolatePose(sampleFrame + 1)).shinaiTip);
     context.globalAlpha = 0.5 * (1 - step / trailLength);
     context.strokeStyle = "#c2452a";
     context.lineWidth = 1.2;
     context.beginPath();
-    context.moveTo(previous.shinaiTip.x, previous.shinaiTip.y);
-    context.lineTo(current.shinaiTip.x, current.shinaiTip.y);
+    context.moveTo(previous.x, previous.y);
+    context.lineTo(current.x, current.y);
     context.stroke();
     context.globalAlpha = 1;
   }
 }
 
-function drawImpactEffects(frame, skeleton, contactPoint) {
+function drawImpactEffects(frame, footPoint, contactPoint) {
   const framesSinceImpact = frame - IMPACT_FRAME;
   if (framesSinceImpact < 0 || framesSinceImpact > 24) return;
   const life = framesSinceImpact / 24;
 
   /* Poussière sous le pied qui claque. */
-  const foot = skeleton.rightFoot.ball;
+  const foot = footPoint;
   for (let puffIndex = 0; puffIndex < 7; puffIndex++) {
     const spread = (puffIndex - 3) * 5;
     const radius = 2 + life * 12 + puffIndex % 3;
@@ -1330,7 +1425,7 @@ function drawCharacter(skeleton, nearSideName) {
 }
 
 /* ============================================================
-   7. Boucle de rendu
+   7. Acteurs : qui attaque, qui reçoit, et de quel côté
    ============================================================ */
 
 const viewState = {
@@ -1347,10 +1442,70 @@ const viewState = {
   showConstruction: false
 };
 
+/* Les deux kendokas partagent le même rig et les mêmes poses clés : celui
+   qui attaque déroule `keyframeList`, celui qui reçoit tient la garde de
+   `buildDefenderPose`. Échanger les rôles ne change que deux choses, le
+   sens dans lequel chacun regarde et l'origine autour de laquelle il est
+   dessiné — aucune animation n'est dupliquée. */
+const sceneState = {
+  offsetX: 0,
+  attackerFacesRight: true,
+  sequence: "attack"
+};
+
+function currentSequence() {
+  return sceneState.sequence === "return" ? returnSequence : keyframeList;
+}
+
+function currentLastFrame() {
+  return sceneState.sequence === "return" ? RETURN_LAST_FRAME : LAST_FRAME;
+}
+
+function actorPlacement() {
+  const leftOriginX = sceneState.offsetX;
+  const rightOriginX = MOTODACHI_BASE_X + sceneState.offsetX;
+  const facingRightActor = { originX: leftOriginX, facesRight: true };
+  const facingLeftActor = { originX: rightOriginX, facesRight: false };
+  return sceneState.attackerFacesRight
+    ? { attacker: facingRightActor, defender: facingLeftActor }
+    : { attacker: facingLeftActor, defender: facingRightActor };
+}
+
+/** Passe un point du repère local d'un acteur au repère du dojo. */
+function toWorld(actor, point) {
+  return { x: actor.facesRight ? actor.originX + point.x : actor.originX - point.x, y: point.y };
+}
+
+function toLocalX(actor, worldX) {
+  return actor.facesRight ? worldX - actor.originX : actor.originX - worldX;
+}
+
+function drawActor(actor, skeleton) {
+  context.save();
+  context.translate(actor.originX, 0);
+  if (!actor.facesRight) context.scale(-1, 1);
+  drawCharacter(skeleton, actor.facesRight ? "right" : "left");
+  context.restore();
+}
+
+/* ============================================================
+   8. Boucle de rendu
+   ============================================================ */
+
 function render() {
   const frame = viewState.currentFrame;
-  const pose = interpolatePose(frame);
-  const skeleton = solveSkeleton(pose);
+  const isAttackSequence = sceneState.sequence === "attack";
+  const placement = actorPlacement();
+
+  const attackerPose = interpolatePose(frame, currentSequence());
+  const defenderPose = buildDefenderPose(isAttackSequence ? frame : LAST_FRAME);
+  const menLocal = defenderMenTop(isAttackSequence ? frame : LAST_FRAME);
+  const menWorld = toWorld(placement.defender, menLocal);
+  if (viewState.showMotodachi) {
+    clampBladeOnMen(attackerPose, toLocalX(placement.attacker, menWorld.x), menWorld.y);
+  }
+  const skeleton = solveSkeleton(attackerPose);
+  const attackerRootWorldX = toWorld(placement.attacker, { x: attackerPose.rootX, y: 0 }).x;
 
   const ratio = camera.pixelRatio || 1;
   context.setTransform(1, 0, 0, 1, 0, 0);
@@ -1358,101 +1513,115 @@ function render() {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   camera.scale = (canvas.height / 330);
-  const framesSinceImpact = frame - IMPACT_FRAME;
+  const framesSinceImpact = isAttackSequence ? frame - IMPACT_FRAME : -1;
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
   const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
-  /* Le frappeur est placé au quart gauche : il reste de la place devant
-     lui pour le motodachi, qui se tient 273 cm plus loin en garde. */
-  camera.originX = canvas.width * 0.21 - pose.rootX * camera.scale;
+  /* L'attaquant est placé au quart de l'écran, du côté d'où il vient. */
+  const framing = placement.attacker.facesRight ? 0.21 : 0.79;
+  camera.originX = canvas.width * framing - attackerRootWorldX * camera.scale;
   camera.originY = canvas.height - 42 * ratio + shakeY;
 
   context.setTransform(camera.scale, 0, 0, -camera.scale, camera.originX, camera.originY);
   context.lineCap = "round";
   context.lineJoin = "round";
 
-  drawFloor(pose);
+  drawFloor();
 
-  /* Le motodachi est dessiné en premier : il est derrière, si bien que
-     le shinai du frappeur passe devant lui à la traversée. */
+  /* Le défenseur est dessiné en premier : il est derrière, si bien que
+     le shinai de l'attaquant passe devant lui à la traversée. */
   if (viewState.showMotodachi) {
-    context.save();
-    context.translate(MOTODACHI_BASE_X, 0);
-    context.scale(-1, 1);
-    drawCharacter(solveSkeleton(buildMotodachiPose(frame)), "left");
-    context.restore();
+    drawActor(placement.defender, solveSkeleton(defenderPose));
   }
 
-  if (viewState.showTrail) drawKissakiTrail(frame);
+  if (viewState.showTrail && isAttackSequence) drawKissakiTrail(frame, placement.attacker);
 
   if (viewState.showConstruction) {
+    const local = point => toWorld(placement.attacker, point);
     context.setLineDash([1.5, 1.5]);
-    strokePath([skeleton.leftShoulder, skeleton.leftWrist], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 2 });
-    strokePath([skeleton.rightShoulder, skeleton.rightWrist], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 3 });
-    strokePath([skeleton.leftHip, skeleton.leftFoot.ankle], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 4 });
-    strokePath([skeleton.rightHip, skeleton.rightFoot.ankle], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 5 });
-    strokePath([{ x: pose.rootX, y: 0 }, { x: pose.rootX, y: 175 }], { color: "#999", width: 0.3, single: true, alpha: 0.6, seed: 6 });
+    strokePath([local(skeleton.leftShoulder), local(skeleton.leftWrist)], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 2 });
+    strokePath([local(skeleton.rightShoulder), local(skeleton.rightWrist)], { color: "#c07", width: 0.3, single: true, alpha: 0.5, seed: 3 });
+    strokePath([local(skeleton.leftHip), local(skeleton.leftFoot.ankle)], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 4 });
+    strokePath([local(skeleton.rightHip), local(skeleton.rightFoot.ankle)], { color: "#07c", width: 0.3, single: true, alpha: 0.5, seed: 5 });
+    strokePath([{ x: attackerRootWorldX, y: 0 }, { x: attackerRootWorldX, y: 175 }], { color: "#999", width: 0.3, single: true, alpha: 0.6, seed: 6 });
     context.setLineDash([]);
   }
 
-  drawCharacter(skeleton, "right");
+  drawActor(placement.attacker, skeleton);
 
-  drawImpactEffects(frame, skeleton, motodachiMenPoint(IMPACT_FRAME));
+  if (isAttackSequence) {
+    drawImpactEffects(frame, toWorld(placement.attacker, skeleton.rightFoot.ball), menWorld);
+  }
 
   if (viewState.showJoints) {
     collectJoints(skeleton).forEach(joint => {
-      drawJointMarker(joint.point, joint.near ? "#c2452a" : "#9b9b9b");
+      drawJointMarker(toWorld(placement.attacker, joint.point), joint.near ? "#c2452a" : "#9b9b9b");
     });
   }
   if (viewState.showJointLabels) {
     collectJoints(skeleton).forEach(joint => {
-      drawScreenLabel(joint.point, joint.name, joint.near ? "#8a2f19" : "#7b7b7b", joint.offsetX, joint.offsetY);
+      drawScreenLabel(toWorld(placement.attacker, joint.point), joint.name,
+        joint.near ? "#8a2f19" : "#7b7b7b", joint.offsetX, joint.offsetY);
     });
   }
   if (viewState.showArmourLabels) {
-    drawScreenLabel(skeleton.headCenter, "men", partColor.men, -14, -34);
-    drawScreenLabel(skeleton.shoulderCenter, "mendare", partColor.mendare, -50, -4);
-    drawScreenLabel(pointAlong(skeleton.root, skeleton.shoulderCenter, 0.5), "dō", partColor.do, 22, 0);
-    drawScreenLabel(skeleton.root, "tare + sagari", partColor.tare, -78, 22);
-    drawScreenLabel(skeleton.rightWrist, "kote", partColor.koteRight, 10, 26);
-    drawScreenLabel(skeleton.rightKnee, "hakama", partColor.hakama, -56, 0);
-    drawScreenLabel(skeleton.rightElbow, "keikogi", partColor.keikogi, -50, -10);
-    drawScreenLabel(skeleton.tsuba, "tsuba", "#6d4a1f", -6, 20);
-    drawScreenLabel(pointAlong(skeleton.monouchiStart, skeleton.shinaiTip, 0.5), "monouchi", "#c2452a", -22, -14);
+    const local = point => toWorld(placement.attacker, point);
+    drawScreenLabel(local(skeleton.headCenter), "men", partColor.men, -14, -34);
+    drawScreenLabel(local(skeleton.shoulderCenter), "mendare", partColor.mendare, -50, -4);
+    drawScreenLabel(local(pointAlong(skeleton.root, skeleton.shoulderCenter, 0.5)), "dō", partColor.do, 22, 0);
+    drawScreenLabel(local(skeleton.root), "tare + sagari", partColor.tare, -78, 22);
+    drawScreenLabel(local(skeleton.rightWrist), "kote", partColor.koteRight, 10, 26);
+    drawScreenLabel(local(skeleton.rightKnee), "hakama", partColor.hakama, -56, 0);
+    drawScreenLabel(local(skeleton.rightElbow), "keikogi", partColor.keikogi, -50, -10);
+    drawScreenLabel(local(skeleton.tsuba), "tsuba", "#6d4a1f", -6, 20);
+    drawScreenLabel(local(pointAlong(skeleton.monouchiStart, skeleton.shinaiTip, 0.5)), "monouchi", "#c2452a", -22, -14);
   }
 
   /* Kiai à l'impact, en espace écran pour rester lisible. */
   if (framesSinceImpact >= 0 && framesSinceImpact < 20) {
     const fade = 1 - framesSinceImpact / 20;
-    const anchor = addPointOffset(skeleton.headCenter, { x: -6, y: 26 });
+    const anchor = toWorld(placement.attacker, addPointOffset(skeleton.headCenter, { x: -6, y: 26 }));
     const screenPoint = worldToScreen(anchor);
     context.save();
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.globalAlpha = fade;
     context.fillStyle = "#c2452a";
     context.font = `700 ${(26 + (1 - fade) * 8) * ratio}px -apple-system, sans-serif`;
+    context.textAlign = placement.attacker.facesRight ? "left" : "right";
     context.fillText("MEN !", screenPoint.x, screenPoint.y - (1 - fade) * 20 * ratio);
+    context.textAlign = "left";
     context.restore();
   }
 
   context.setTransform(1, 0, 0, 1, 0, 0);
-  updateReadout(frame, pose);
+  updateReadout(frame, attackerPose, placement, defenderPose);
 }
 
-function updateReadout(frame, pose) {
+function updateReadout(frame, pose, placement, defenderPose) {
   const roundedFrame = Math.round(frame);
+  const lastFrame = currentLastFrame();
+  const slider = document.getElementById("frameSlider");
+  slider.max = lastFrame;
+  slider.value = roundedFrame;
   document.getElementById("frameNumber").textContent = roundedFrame;
-  document.getElementById("frameSlider").value = roundedFrame;
-  document.getElementById("advanceReadout").textContent = Math.round(pose.rootX - keyframeList[0].pose.rootX);
-  const phase = findPhase(roundedFrame);
-  document.getElementById("phaseName").textContent = phase.name;
+  document.getElementById("frameTotal").textContent = lastFrame;
+
+  const startPose = currentSequence()[0].pose;
+  document.getElementById("advanceReadout").textContent = Math.round(pose.rootX - startPose.rootX);
+
+  const attackerWorldX = toWorld(placement.attacker, { x: pose.rootX, y: 0 }).x;
+  const defenderWorldX = toWorld(placement.defender, { x: defenderPose.rootX, y: 0 }).x;
+  document.getElementById("distanceReadout").textContent = Math.round(Math.abs(defenderWorldX - attackerWorldX));
+
+  const phaseName = sceneState.sequence === "return" ? "Retour à distance" : findPhase(roundedFrame).name;
+  document.getElementById("phaseName").textContent = phaseName;
   document.querySelectorAll("#phaseTable tr").forEach(row => {
-    row.classList.toggle("active", row.dataset.phaseName === phase.name);
+    row.classList.toggle("active", row.dataset.phaseName === phaseName);
   });
 }
 
 /* ============================================================
-   8. Boucle temporelle et contrôles
+   9. Boucle temporelle et contrôles
    ============================================================ */
 
 let lastTimestamp = null;
@@ -1463,20 +1632,48 @@ function animationTick(timestamp) {
   lastTimestamp = timestamp;
   if (viewState.isPlaying) {
     viewState.currentFrame += elapsedSeconds * FRAMES_PER_SECOND * viewState.playbackSpeed;
-    if (viewState.currentFrame >= LAST_FRAME) {
-      viewState.currentFrame = LAST_FRAME;
+    if (viewState.currentFrame >= currentLastFrame()) {
+      viewState.currentFrame = currentLastFrame();
       viewState.isPlaying = false;
-      document.getElementById("playButton").textContent = "Rejouer";
+      if (sceneState.sequence === "return") finishReturn();
+      setPlayButtonLabel();
     }
   }
   render();
   requestAnimationFrame(animationTick);
 }
 
-function startStrike() {
+/* Le retour ramène exactement au maai : on replie ce déplacement dans le
+   décalage de la scène, si bien que la garde retrouvée est, au centimètre
+   près, la frame 0 de l'attaque. */
+function finishReturn() {
+  const shift = sceneState.attackerFacesRight ? DEFENDER_TOTAL_RETREAT : -DEFENDER_TOTAL_RETREAT;
+  sceneState.offsetX += shift;
+  sceneState.sequence = "attack";
+  viewState.currentFrame = 0;
+}
+
+function setPlayButtonLabel() {
+  const button = document.getElementById("playButton");
+  button.textContent = viewState.isPlaying ? "Pause"
+    : (viewState.currentFrame >= currentLastFrame() ? "Rejouer" : "Lecture");
+}
+
+function startAttack(facesRight) {
+  if (sceneState.sequence === "return") finishReturn();
+  sceneState.attackerFacesRight = facesRight;
+  sceneState.sequence = "attack";
   viewState.currentFrame = 0;
   viewState.isPlaying = true;
-  document.getElementById("playButton").textContent = "Pause";
+  setPlayButtonLabel();
+}
+
+function startReturn() {
+  if (sceneState.sequence === "return") return;
+  sceneState.sequence = "return";
+  viewState.currentFrame = 0;
+  viewState.isPlaying = true;
+  setPlayButtonLabel();
 }
 
 function buildPhaseTable() {
@@ -1489,9 +1686,10 @@ function buildPhaseTable() {
       `<td><strong>${phase.name}</strong><br><span style="color:#8b93a1">${phase.detail}</span></td>` +
       `<td class="frames">${phase.startFrame}–${phase.endFrame}<br>${frameCount} f<br>${Math.round(frameCount / FRAMES_PER_SECOND * 1000)} ms</td>`;
     row.addEventListener("click", () => {
+      sceneState.sequence = "attack";
       viewState.currentFrame = phase.startFrame;
       viewState.isPlaying = false;
-      document.getElementById("playButton").textContent = "Lecture";
+      setPlayButtonLabel();
     });
     table.appendChild(row);
   });
@@ -1507,13 +1705,15 @@ function buildLegend() {
 }
 
 function bindControls() {
-  document.getElementById("strikeButton").addEventListener("click", startStrike);
+  document.getElementById("strikeButton").addEventListener("click", () => startAttack(true));
+  document.getElementById("counterStrikeButton").addEventListener("click", () => startAttack(false));
+  document.getElementById("returnButton").addEventListener("click", startReturn);
 
   const playButton = document.getElementById("playButton");
   playButton.addEventListener("click", () => {
-    if (viewState.currentFrame >= LAST_FRAME) viewState.currentFrame = 0;
+    if (viewState.currentFrame >= currentLastFrame()) viewState.currentFrame = 0;
     viewState.isPlaying = !viewState.isPlaying;
-    playButton.textContent = viewState.isPlaying ? "Pause" : "Lecture";
+    setPlayButtonLabel();
   });
 
   document.getElementById("previousFrameButton").addEventListener("click", () => stepFrame(-1));
@@ -1521,8 +1721,8 @@ function bindControls() {
 
   document.getElementById("frameSlider").addEventListener("input", event => {
     viewState.isPlaying = false;
-    playButton.textContent = "Lecture";
     viewState.currentFrame = Number(event.target.value);
+    setPlayButtonLabel();
   });
 
   document.querySelectorAll("#speedRow button").forEach(button => {
@@ -1543,23 +1743,17 @@ function bindControls() {
     if (button.dataset.viewMode === viewState.viewMode) button.classList.add("selected");
   });
 
-  const toggleMap = {
-    showJoints: "showJoints",
-    showJointLabels: "showJointLabels",
-    showArmour: "showArmour",
-    showArmourLabels: "showArmourLabels",
-    showTrail: "showTrail",
-    showMotodachi: "showMotodachi",
-    showConstruction: "showConstruction"
-  };
-  Object.keys(toggleMap).forEach(elementId => {
+  const toggleList = ["showJoints", "showJointLabels", "showArmour", "showArmourLabels",
+    "showTrail", "showMotodachi", "showConstruction"];
+  toggleList.forEach(elementId => {
     const checkbox = document.getElementById(elementId);
-    checkbox.checked = viewState[toggleMap[elementId]];
-    checkbox.addEventListener("change", () => { viewState[toggleMap[elementId]] = checkbox.checked; });
+    checkbox.checked = viewState[elementId];
+    checkbox.addEventListener("change", () => { viewState[elementId] = checkbox.checked; });
   });
 
   window.addEventListener("keydown", event => {
-    if (event.key === "Enter") { startStrike(); event.preventDefault(); }
+    if (event.key === "Enter") { startAttack(true); event.preventDefault(); }
+    if (event.key === "Backspace") { startReturn(); event.preventDefault(); }
     if (event.key === " ") { playButton.click(); event.preventDefault(); }
     if (event.key === "ArrowLeft") { stepFrame(-1); event.preventDefault(); }
     if (event.key === "ArrowRight") { stepFrame(1); event.preventDefault(); }
@@ -1568,8 +1762,8 @@ function bindControls() {
 
 function stepFrame(delta) {
   viewState.isPlaying = false;
-  document.getElementById("playButton").textContent = "Lecture";
-  viewState.currentFrame = Math.max(0, Math.min(LAST_FRAME, Math.round(viewState.currentFrame) + delta));
+  viewState.currentFrame = Math.max(0, Math.min(currentLastFrame(), Math.round(viewState.currentFrame) + delta));
+  setPlayButtonLabel();
 }
 
 /* ?frame=82 ouvre directement sur une frame precise (mise au point des poses). */
@@ -1578,7 +1772,7 @@ function applyFrameFromQueryString() {
   if (requestedFrame === null) return;
   viewState.currentFrame = Math.max(0, Math.min(LAST_FRAME, Number(requestedFrame)));
   viewState.isPlaying = false;
-  document.getElementById("playButton").textContent = "Lecture";
+  setPlayButtonLabel();
 }
 
 buildPhaseTable();
