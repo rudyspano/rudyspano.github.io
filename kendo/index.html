@@ -770,68 +770,64 @@ const doKeyframeList = [
       leftElbowBias: -5, rightElbowBias: -6, lateralOffset: 16 } },
 
   { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 82.0, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 108.0, rightAnkleY: 12, rightFootDegrees: 2,
-      leftAnkleX: 52.0, leftAnkleY: 17, leftFootDegrees: -36,
-      gripX: 132.0, gripY: 132, shinaiDegrees: 30,
+      rootX: 92, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 118, rightAnkleY: 12, rightFootDegrees: 2,
+      leftAnkleX: 56, leftAnkleY: 17, leftFootDegrees: -36,
+      gripX: 142, gripY: 132, shinaiDegrees: 22,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24 } },
 
-  /* Frappe : main droite poussée devant, lame à -12,5° sur le bas du
-     plastron. Plus inclinée, elle glisserait au lieu de mordre. */
-  { frame: 82, easing: "easeOutCubic", pose: {
-      rootX: 91.0, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
-      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 58.0, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 144.0, gripY: 122, shinaiDegrees: -12.7,
+  /* Contact au centre-bas du plastron. La lame ne peut pas être à 45°
+     ici : de profil, il faudrait les mains à 176 cm, au-dessus de la
+     tête. Le 45° se lit dans la traversée qui suit. */
+  { frame: 82, easing: "linear", pose: {
+      rootX: 106, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
+      rightAnkleX: 130, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 72, leftAnkleY: 15, leftFootDegrees: -34,
+      gripX: 159, gripY: 120, shinaiDegrees: -9,
       leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28 } },
 
-  { frame: 84, easing: "easeOutSine", pose: {
-      rootX: 93.0, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 72.0, leftAnkleY: 12, leftFootDegrees: -26,
-      gripX: 144.5, gripY: 123, shinaiDegrees: -5,
-      leftElbowBias: -1, rightElbowBias: -2.5, lateralOffset: 31 } },
-
+  /* La lame ne rebondit pas : elle traverse et poursuit vers le bas, les
+     mains descendent avec elle. C'est là que la diagonale se voit. */
   { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 95.0, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
-      rightAnkleX: 115.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 80.0, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 145.0, gripY: 123, shinaiDegrees: -7,
+      rootX: 112, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
+      rightAnkleX: 130, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 97, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 160, gripY: 112, shinaiDegrees: -25,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 34 } },
 
   { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 102.0, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 126.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 88.0, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 150.0, gripY: 128, shinaiDegrees: -4,
+      rootX: 118, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 142, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 104, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 160, gripY: 112, shinaiDegrees: -33,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 40 } },
 
   { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 114.0, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 138.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 100.0, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 160.0, gripY: 124, shinaiDegrees: 0,
+      rootX: 130, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 154, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 116, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 172, gripY: 110, shinaiDegrees: -38,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 46 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 126.0, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 112.0, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 170.0, gripY: 120, shinaiDegrees: 4,
-      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 50 } },
+      rootX: 142, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 166, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 128, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 182, gripY: 108, shinaiDegrees: -26,
+      leftElbowBias: -3, rightElbowBias: -6, lateralOffset: 50 } },
 
   { frame: 134, easing: "linear", pose: {
-      rootX: 137.0, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 122.0, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 159.0, gripY: 104, shinaiDegrees: 16,
+      rootX: 152, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 165, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 137, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 174, gripY: 104, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } },
 
   { frame: 150, easing: "linear", pose: {
-      rootX: 137.0, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 150.0, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 122.0, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 159.0, gripY: 104, shinaiDegrees: 16,
+      rootX: 152, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 165, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 137, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 174, gripY: 104, shinaiDegrees: 16,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } }
 ];
 
@@ -847,10 +843,10 @@ const doPhaseList = [
   { name: "Envol", startFrame: 72, endFrame: 76,
     detail: "La lame reste armée sur le poignet pendant que l'avant-bras descend." },
   { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Main droite poussée devant, lame à -12,5° sur le bas du plastron. Plus inclinée, elle glisserait au lieu de mordre." },
-  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
-    detail: "Le pied gauche revient sous le corps." },
-  { name: "Zanshin", startFrame: 86, endFrame: 116,
+    detail: "Contact au centre-bas du plastron, à 100 cm des mains. De profil la lame ne peut pas être à 45° ici : il faudrait les mains à 176 cm, au-dessus de la tête." },
+  { name: "Traversée de la lame", startFrame: 82, endFrame: 104,
+    detail: "La lame ne rebondit pas, elle traverse : elle poursuit jusqu'à -38° et les mains descendent de 120 à 110 cm. C'est là que la diagonale se voit." },
+  { name: "Zanshin", startFrame: 104, endFrame: 116,
     detail: "On traverse vite après un dō, sans rester devant l'adversaire." },
   { name: "Retour kamae", startFrame: 116, endFrame: 150,
     detail: "Redescente en chūdan, reprise de la garde." }
@@ -984,12 +980,13 @@ const attackCatalogue = {
   },
   do: {
     label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
-    impactFrame: 82, defenderRetreat: 55, opensMen: false,
-    /* Milieu de l'arête avant du plastron. */
+    impactFrame: 82, defenderRetreat: 55, opensMen: false, cutsThrough: true,
+    /* Centre-bas du plastron : la lame doit traverser le corps, pas
+       effleurer l'arête avant. */
     targetLocal: skeleton => {
       const forward = skeleton.forwardDirection;
-      const lowerDo = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.25);
-      return { x: lowerDo.x + forward.x * 11.5, y: lowerDo.y + forward.y * 11.5 };
+      const lowerDo = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.35);
+      return { x: lowerDo.x + forward.x * 4, y: lowerDo.y + forward.y * 4 };
     }
   },
   tsuki: {
@@ -1979,7 +1976,9 @@ function render() {
   placement.attacker.lateral = attackerPose.lateralOffset || 0;
   const menLocal = defenderTargetPoint(frame);
   const menWorld = toWorld(placement.defender, menLocal);
-  if (viewState.showMotodachi && !currentAttack().thrust) {
+  /* Le men et le kote arrêtent la lame ; le dō se coupe en traversant,
+     et l'estoc n'a pas de surface à heurter. */
+  if (viewState.showMotodachi && !currentAttack().thrust && !currentAttack().cutsThrough) {
     const targetInAttackerFrame = toLocal(placement.attacker, menWorld);
     clampBladeOnMen(attackerPose, targetInAttackerFrame.x, targetInAttackerFrame.y);
   }
