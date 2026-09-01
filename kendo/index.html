@@ -1218,9 +1218,15 @@ function solveSkeleton(pose) {
   });
 
   const forwardDirection = { x: torsoDirection.y, y: -torsoDirection.x };
-  const leftShoulder = addPoints(shoulderCenter, 0, -3.5);
-  const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -1), {
-    x: forwardDirection.x * RIGHT_SHOULDER_FORWARD_OFFSET, y: forwardDirection.y * RIGHT_SHOULDER_FORWARD_OFFSET
+  /* L'articulation de l'épaule n'est pas au sommet du tronc, qui est la
+     base du cou : elle est six centimètres plus bas et un peu en avant.
+     Placés au sommet, les bras semblaient sortir de la nuque. */
+  const leftShoulder = addPointOffset(addPoints(shoulderCenter, 0, -7), {
+    x: forwardDirection.x * 1.5, y: forwardDirection.y * 1.5
+  });
+  const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -5), {
+    x: forwardDirection.x * (RIGHT_SHOULDER_FORWARD_OFFSET + 1.5),
+    y: forwardDirection.y * (RIGHT_SHOULDER_FORWARD_OFFSET + 1.5)
   });
   const leftHip = addPoints(root, 0, -0.5);
   const rightHip = addPointOffset(addPoints(root, 0, -2), {
@@ -1599,9 +1605,10 @@ function drawTorsoAndHead(skeleton) {
    Ils ont été relevés sur les pièces dessinées : premier point sur la
    base de l'os, second sur son extrémité. */
 const PIECE_ANCHORS = {
-  /* Le men redessiné est d'aplomb : ses ancres suivent l'axe du casque,
-     de la base du crâne au sommet. */
-  men: { from: [0.52, 0.60], to: [0.45, 0.02] },
+  /* L'axe du crâne va du sommet du dôme à sa base, en arrière de la
+     grille. Mes premières ancres traversaient la face : le casque
+     s'en trouvait basculé de plus de vingt degrés. */
+  men: { from: [0.36, 0.60], to: [0.34, 0.02] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
   tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
@@ -1800,8 +1807,10 @@ function drawKote(elbow, wrist, grip, color, seed) {
 
 function drawKeikogiSleeve(shoulder, elbow, seed) {
   if (isGameView() && pieceReady("manche")) {
+    /* La manche remonte au-dessus de l'articulation : sans ça, le haut de
+       l'épaule restait en peau nue entre le col et le tissu. */
     if (drawPiece("manche", PIECE_ANCHORS.manche.from, PIECE_ANCHORS.manche.to,
-        shoulder, pointAlong(shoulder, elbow, 1.05))) return;
+        pointAlong(shoulder, elbow, -0.22), pointAlong(shoulder, elbow, 1.02))) return;
   }
   drawSleeve(shoulder, pointAlong(shoulder, elbow, 0.85), 6.5, 5, partColor.keikogi, partColor.keikogi, seed);
 }
@@ -2324,7 +2333,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
   if (isGameView() && pieceReady("keikogi")) {
     drawPiece("keikogi", PIECE_ANCHORS.keikogi.from, PIECE_ANCHORS.keikogi.to,
-      pointAlong(skeleton.root, skeleton.shoulderCenter, 1.06),
+      pointAlong(skeleton.root, skeleton.shoulderCenter, 1.0),
       pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { widthFactor: 0.58 });
   }
   if (showArmour) drawDo(skeleton);
