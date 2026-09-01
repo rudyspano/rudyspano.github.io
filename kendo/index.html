@@ -1222,15 +1222,15 @@ function solveSkeleton(pose) {
   });
 
   const forwardDirection = { x: torsoDirection.y, y: -torsoDirection.x };
-  /* L'articulation de l'épaule n'est pas au sommet du tronc, qui est la
-     base du cou : elle est six centimètres plus bas et un peu en avant.
-     Placés au sommet, les bras semblaient sortir de la nuque. */
-  const leftShoulder = addPointOffset(addPoints(shoulderCenter, 0, -7), {
-    x: forwardDirection.x * 1.5, y: forwardDirection.y * 1.5
+  /* L'articulation de l'épaule est six centimètres sous la base du cou et
+     à l'aplomb du bassin, pas en avant : c'est de là que part le bras,
+     qui plonge ensuite vers l'avant. Avancée, elle donnait un bras trop
+     droit et une épaule posée sur la poitrine. */
+  const leftShoulder = addPointOffset(addPoints(shoulderCenter, 0, -8), {
+    x: -forwardDirection.x * 5.5, y: -forwardDirection.y * 5.5
   });
-  const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -5), {
-    x: forwardDirection.x * (RIGHT_SHOULDER_FORWARD_OFFSET + 1.5),
-    y: forwardDirection.y * (RIGHT_SHOULDER_FORWARD_OFFSET + 1.5)
+  const rightShoulder = addPointOffset(addPoints(shoulderCenter, 0, -6), {
+    x: -forwardDirection.x * 3.5, y: -forwardDirection.y * 3.5
   });
   const leftHip = addPoints(root, 0, -0.5);
   const rightHip = addPointOffset(addPoints(root, 0, -2), {
@@ -1615,7 +1615,7 @@ const PIECE_ANCHORS = {
   /* L'axe du crâne va du sommet du dôme à sa base, en arrière de la
      grille. Mes premières ancres traversaient la face : le casque
      s'en trouvait basculé de plus de vingt degrés. */
-  men: { from: [0.36, 0.833], to: [0.34, 0.00] },
+  men: { from: [0.36, 0.60], to: [0.34, 0.02] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
   tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
@@ -1820,12 +1820,19 @@ function drawKote(elbow, wrist, grip, color, seed) {
   context.stroke();
 }
 
-function drawKeikogiSleeve(shoulder, elbow, seed) {
+function drawKeikogiSleeve(shoulder, elbow, grip, seed) {
   if (isGameView() && pieceReady("manche")) {
-    /* La manche remonte au-dessus de l'articulation : sans ça, le haut de
-       l'épaule restait en peau nue entre le col et le tissu. */
+    /* La manche va de l'épaule au revers du kote, pas au coude : mesurée
+       sur le coude, elle laissait un avant-bras nu dès que le bras
+       s'allonge. Elle remonte aussi au-dessus de l'articulation, sinon le
+       haut de l'épaule restait en peau entre le col et le tissu. */
+    const towardElbow = directionBetween(grip, elbow);
+    const cuff = {
+      x: grip.x + towardElbow.x * (KOTE_LENGTH - 5),
+      y: grip.y + towardElbow.y * (KOTE_LENGTH - 5)
+    };
     if (drawPiece("manche", PIECE_ANCHORS.manche.from, PIECE_ANCHORS.manche.to,
-        pointAlong(shoulder, elbow, -0.22), pointAlong(shoulder, elbow, 1.02))) return;
+        pointAlong(shoulder, cuff, -0.16), cuff)) return;
   }
   drawSleeve(shoulder, pointAlong(shoulder, elbow, 0.85), 6.5, 5, partColor.keikogi, partColor.keikogi, seed);
 }
@@ -2341,7 +2348,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
     drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6], farVolume());
   }
   if (showArmour) {
-    drawKeikogiSleeve(far.shoulder, far.elbow, 94);
+    drawKeikogiSleeve(far.shoulder, far.elbow, far.grip, 94);
     drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96);
   }
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
@@ -2377,7 +2384,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], nearVolume());
   }
   if (showArmour) {
-    drawKeikogiSleeve(near.shoulder, near.elbow, 104);
+    drawKeikogiSleeve(near.shoulder, near.elbow, near.grip, 104);
     drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
   }
   drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
