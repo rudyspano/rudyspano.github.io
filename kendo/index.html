@@ -1293,19 +1293,38 @@ function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
   const settings = options || {};
   const ax = anchorFrom[0] * image.naturalWidth, ay = anchorFrom[1] * image.naturalHeight;
   const bx = anchorTo[0] * image.naturalWidth, by = anchorTo[1] * image.naturalHeight;
-  const imageSpan = Math.hypot(bx - ax, by - ay) || 1;
+  const deltaX = bx - ax, deltaY = by - ay;
+  const imageSpan = Math.hypot(deltaX, deltaY) || 1;
   const worldSpan = Math.hypot(worldTo.x - worldFrom.x, worldTo.y - worldFrom.y);
-  const scale = worldSpan / imageSpan;
+  let scaleX = worldSpan / imageSpan, scaleY = scaleX;
+
+  /* Une largeur imposée découple les deux axes : le vêtement s'allonge
+     avec l'os sans grossir avec lui. Une échelle unique faisait enfler
+     la manche de moitié dès que le bras s'étend. */
+  if (settings.widthCentimetres) {
+    const alongIsVertical = Math.abs(deltaY) >= Math.abs(deltaX);
+    if (alongIsVertical) {
+      scaleX = settings.widthCentimetres / image.naturalWidth;
+      const remaining = worldSpan * worldSpan - (scaleX * deltaX) * (scaleX * deltaX);
+      if (remaining > 0) scaleY = Math.sqrt(remaining) / Math.abs(deltaY);
+    } else {
+      scaleY = settings.widthCentimetres / image.naturalHeight;
+      const remaining = worldSpan * worldSpan - (scaleY * deltaY) * (scaleY * deltaY);
+      if (remaining > 0) scaleX = Math.sqrt(remaining) / Math.abs(deltaX);
+    }
+  }
+  scaleX *= settings.stretch || 1;
+  scaleY *= settings.thickness || 1;
+
+  /* L'orientation se calcule sur le vecteur déjà mis à l'échelle, sinon
+     les deux ancres ne tomberaient plus sur les extrémités de l'os. */
   const rotation = Math.atan2(worldTo.y - worldFrom.y, worldTo.x - worldFrom.x)
-    - Math.atan2(-(by - ay), bx - ax);
+    - Math.atan2(-scaleY * deltaY, scaleX * deltaX);
   context.save();
   context.globalAlpha = settings.alpha === undefined ? 1 : settings.alpha;
   context.translate(worldFrom.x, worldFrom.y);
   context.rotate(rotation);
-  /* Les deux facteurs jouent dans les axes de la vignette, pas dans ceux
-     du monde : selon que la pièce est dessinée en long ou en travers, ils
-     touchent sa longueur ou son épaisseur. */
-  context.scale(scale * (settings.stretch || 1), -scale * (settings.thickness || 1));
+  context.scale(scaleX, -scaleY);
   context.translate(-ax, -ay);
   context.drawImage(image, 0, 0);
   context.restore();
@@ -1832,7 +1851,7 @@ function drawKeikogiSleeve(shoulder, elbow, grip, seed) {
       y: grip.y + towardElbow.y * (KOTE_LENGTH - 5)
     };
     if (drawPiece("manche", PIECE_ANCHORS.manche.from, PIECE_ANCHORS.manche.to,
-        pointAlong(shoulder, cuff, -0.16), cuff)) return;
+        pointAlong(shoulder, cuff, -0.16), cuff, { widthCentimetres: 21 })) return;
   }
   drawSleeve(shoulder, pointAlong(shoulder, elbow, 0.85), 6.5, 5, partColor.keikogi, partColor.keikogi, seed);
 }
@@ -1946,7 +1965,7 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
   if (isGameView() && pieceReady("hakama-pan")) {
     const hem = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
     if (drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
-        hip, hem, { stretch: 0.82 })) return;
+        hip, hem, { widthCentimetres: 30 })) return;
   }
   const hemPoint = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
   const hipNormal = perpendicular(directionBetween(hip, knee));
@@ -2105,7 +2124,7 @@ function drawHakamaPanels(skeleton, cloth) {
     const [anchor, hem, halfWidth, seed] = panel;
     if (isGameView() && pieceReady("hakama-pan")) {
       drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
-        anchor, hem, { stretch: 0.78 });
+        anchor, hem, { widthCentimetres: 34 });
       return;
     }
     const middle = pointAlong(anchor, hem, 0.55);
@@ -2357,7 +2376,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   if (isGameView() && pieceReady("keikogi")) {
     drawPiece("keikogi", PIECE_ANCHORS.keikogi.from, PIECE_ANCHORS.keikogi.to,
       pointAlong(skeleton.root, skeleton.shoulderCenter, 1.0),
-      pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { stretch: 0.58 });
+      pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { widthCentimetres: 32 });
   }
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
