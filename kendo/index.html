@@ -1291,8 +1291,13 @@ function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
   if (!pieceReady(name)) return false;
   const image = pieceImages[name];
   const settings = options || {};
-  const ax = anchorFrom[0] * image.naturalWidth, ay = anchorFrom[1] * image.naturalHeight;
-  const bx = anchorTo[0] * image.naturalWidth, by = anchorTo[1] * image.naturalHeight;
+  /* On peut ne prendre qu'une bande horizontale de la vignette : les
+     ancres sont alors comptées dans cette bande. */
+  const bandTop = (settings.sourceTop || 0) * image.naturalHeight;
+  const bandHeight = ((settings.sourceBottom === undefined ? 1 : settings.sourceBottom)
+    - (settings.sourceTop || 0)) * image.naturalHeight;
+  const ax = anchorFrom[0] * image.naturalWidth, ay = anchorFrom[1] * bandHeight;
+  const bx = anchorTo[0] * image.naturalWidth, by = anchorTo[1] * bandHeight;
   const deltaX = bx - ax, deltaY = by - ay;
   const imageSpan = Math.hypot(deltaX, deltaY) || 1;
   const worldSpan = Math.hypot(worldTo.x - worldFrom.x, worldTo.y - worldFrom.y);
@@ -1308,7 +1313,7 @@ function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
       const remaining = worldSpan * worldSpan - (scaleX * deltaX) * (scaleX * deltaX);
       if (remaining > 0) scaleY = Math.sqrt(remaining) / Math.abs(deltaY);
     } else {
-      scaleY = settings.widthCentimetres / image.naturalHeight;
+      scaleY = settings.widthCentimetres / bandHeight;
       const remaining = worldSpan * worldSpan - (scaleY * deltaY) * (scaleY * deltaY);
       if (remaining > 0) scaleX = Math.sqrt(remaining) / Math.abs(deltaX);
     }
@@ -1326,7 +1331,8 @@ function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
   context.rotate(rotation);
   context.scale(scaleX, -scaleY);
   context.translate(-ax, -ay);
-  context.drawImage(image, 0, 0);
+  context.drawImage(image, 0, bandTop, image.naturalWidth, bandHeight,
+    0, 0, image.naturalWidth, bandHeight);
   context.restore();
   context.globalAlpha = 1;
   return true;
@@ -1502,9 +1508,19 @@ const HAKAMA_CLOTH_FAR = "#182448";
 
 function drawGameLegVolume(limb, near) {
   /* Larges : ce qui dépasse de la jupe doit lire comme une jambe de
-     hakama, pas comme un collant. */
+     hakama, pas comme un collant. Le volume plein reste dessous, il
+     bouche les jours entre les deux tronçons de tissu. */
   drawLimbVolume([limb.hip, limb.knee, limb.foot.ankle], [12, 10.5, 6.5],
     near ? HAKAMA_CLOTH_NEAR : HAKAMA_CLOTH_FAR);
+
+  /* Deux bandes de la vignette du hakama posées sur la cuisse et sur le
+     tibia : le tissu de la jambe a la même trame que la jupe. */
+  if (!pieceReady("hakama-pan")) return;
+  const anchors = { from: [0.5, 0.02], to: [0.5, 0.98] };
+  drawPiece("hakama-pan", anchors.from, anchors.to, limb.hip, limb.knee,
+    { widthCentimetres: 25, sourceTop: 0.06, sourceBottom: 0.55, alpha: 0.92 });
+  drawPiece("hakama-pan", anchors.from, anchors.to, limb.knee, limb.foot.ankle,
+    { widthCentimetres: 19, sourceTop: 0.55, sourceBottom: 0.99, alpha: 0.92 });
 }
 
 function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
@@ -1583,7 +1599,7 @@ function drawTorsoVolume(skeleton, fillColor) {
 
 function drawFoot(foot) {
   return isGameView() && pieceReady("pied")
-    && drawPiece("pied", PIECE_ANCHORS.pied.from, PIECE_ANCHORS.pied.to, foot.heel, foot.toe);
+    && drawPiece("pied", PIECE_ANCHORS.pied.from, PIECE_ANCHORS.pied.to, foot.ankle, foot.toe);
 }
 
 function drawLeg(hip, knee, foot, ink, seed) {
@@ -1647,7 +1663,9 @@ const PIECE_ANCHORS = {
   kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
   /* Avant-bras plus poing : la mesure ne dépend pas de la pose. */
   manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
-  pied: { from: [0.13, 0.72], to: [0.93, 0.93] },
+  /* Ancré sur la cheville : posé sur le talon, le pied flottait à côté
+     de la jambe, l'articulation ne tombant pas au même endroit. */
+  pied: { from: [0.24, 0.45], to: [0.93, 0.93] },
   hakamaPanel: { from: [0.50, 0.03], to: [0.50, 0.97] }
 };
 
