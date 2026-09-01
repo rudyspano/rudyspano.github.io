@@ -286,6 +286,7 @@ const FRAMES_PER_SECOND = 60;
 
 const TORSO_LENGTH = 48;
 const NECK_LENGTH = 8;
+const NECK_FOLLOWS_TORSO = 0.2;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -1180,7 +1181,10 @@ function solveSkeleton(pose) {
     x: root.x + torsoDirection.x * TORSO_LENGTH,
     y: root.y + torsoDirection.y * TORSO_LENGTH
   };
-  const neckRadians = toRadians(pose.torsoLeanDegrees + pose.headTiltDegrees);
+  /* Le cou compense l'inclinaison du tronc : on penche le corps, pas la
+     tête, sinon le regard part dans le plancher. Il n'en reprend qu'un
+     cinquième, ce qui reste du mouvement de la nuque. */
+  const neckRadians = toRadians(pose.torsoLeanDegrees * NECK_FOLLOWS_TORSO + pose.headTiltDegrees);
   const neckDirection = { x: Math.sin(neckRadians), y: Math.cos(neckRadians) };
   const neckTop = {
     x: shoulderCenter.x + neckDirection.x * NECK_LENGTH,
@@ -1611,7 +1615,7 @@ const PIECE_ANCHORS = {
   /* L'axe du crâne va du sommet du dôme à sa base, en arrière de la
      grille. Mes premières ancres traversaient la face : le casque
      s'en trouvait basculé de plus de vingt degrés. */
-  men: { from: [0.36, 0.63], to: [0.34, 0.00] },
+  men: { from: [0.36, 0.833], to: [0.34, 0.00] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
   tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
