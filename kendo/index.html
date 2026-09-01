@@ -1259,6 +1259,74 @@ stageImage.src = "assets/dojo-stage.png";
 /* Le plancher est au ras des combattants, il doit défiler presque avec
    eux ; les murs et le plafond sont loin et bougent peu. L'image est donc
    dessinée en deux bandes, séparées à la ligne où le sol rejoint le fond. */
+/* Les pièces dessinées, générées séparément puis posées sur le rig. Le
+   squelette continue de commander : chaque vignette est amenée sur son os
+   par ses deux points d'ancrage, exprimés en fractions de sa propre image. */
+const pieceImages = {};
+["men", "do", "tare", "kote", "manche", "pied", "hakama-pan", "shinai"].forEach(name => {
+  const image = new Image();
+  image.src = "assets/pieces/" + name + ".png";
+  pieceImages[name] = image;
+});
+
+function pieceReady(name) {
+  const image = pieceImages[name];
+  return image && image.complete && image.naturalWidth > 0;
+}
+
+/** Pose une vignette sur un os : son point `from` vient sur A, son point
+    `to` sur B, le reste suit à l'échelle. L'image se lit y vers le bas,
+    le monde y vers le haut, d'où le retournement. */
+function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
+  if (!pieceReady(name)) return false;
+  const image = pieceImages[name];
+  const settings = options || {};
+  const ax = anchorFrom[0] * image.naturalWidth, ay = anchorFrom[1] * image.naturalHeight;
+  const bx = anchorTo[0] * image.naturalWidth, by = anchorTo[1] * image.naturalHeight;
+  const imageSpan = Math.hypot(bx - ax, by - ay) || 1;
+  const worldSpan = Math.hypot(worldTo.x - worldFrom.x, worldTo.y - worldFrom.y);
+  const scale = worldSpan / imageSpan;
+  const rotation = Math.atan2(worldTo.y - worldFrom.y, worldTo.x - worldFrom.x)
+    - Math.atan2(-(by - ay), bx - ax);
+  context.save();
+  context.globalAlpha = settings.alpha === undefined ? 1 : settings.alpha;
+  context.translate(worldFrom.x, worldFrom.y);
+  context.rotate(rotation);
+  context.scale(scale * (settings.widthFactor || 1), -scale);
+  context.translate(-ax, -ay);
+  context.drawImage(image, 0, 0);
+  context.restore();
+  context.globalAlpha = 1;
+  return true;
+}
+
+/** Le shinai plie : sa vignette est débitée en tranches, chacune posée
+    sur un segment de la ligne médiane courbe. */
+function drawShinaiPiece(centreLine) {
+  if (!pieceReady("shinai")) return false;
+  const image = pieceImages.shinai;
+  const slices = centreLine.length - 1;
+  const sliceWidth = image.naturalWidth / slices;
+  /* La vignette est dessinée épaisse pour rester lisible seule ; posée
+     sur le rig elle donnerait un shinai de 14 cm de section. */
+  const thickness = 0.42;
+  const halfHeight = image.naturalHeight / 2;
+  for (let index = 0; index < slices; index++) {
+    const from = centreLine[index], to = centreLine[index + 1];
+    const segment = Math.hypot(to.x - from.x, to.y - from.y);
+    const scale = segment / sliceWidth;
+    context.save();
+    context.translate(from.x, from.y);
+    context.rotate(Math.atan2(to.y - from.y, to.x - from.x));
+    context.scale(scale, -scale);
+    /* Un demi-pixel de recouvrement, sinon les tranches laissent un jour. */
+    context.drawImage(image, index * sliceWidth, 0, sliceWidth + 0.5, image.naturalHeight,
+      0, -halfHeight * thickness, sliceWidth + 0.5, image.naturalHeight * thickness);
+    context.restore();
+  }
+  return true;
+}
+
 const STAGE_FLOOR_LINE = 0.72;
 const STAGE_ROOM_PARALLAX = 0.30;
 const STAGE_FLOOR_PARALLAX = 0.85;
@@ -1387,8 +1455,19 @@ function drawSleeve(from, to, widthAtStart, widthAtEnd, color, ink, seed) {
 const BODY_VOLUME_NEAR = "#f1ecde";
 const BODY_VOLUME_FAR = "#ddd7c6";
 /* En vue jeu, les volumes ne sont plus du papier mais du keikogi indigo. */
-const GAME_VOLUME_NEAR = "#3b4878";
-const GAME_VOLUME_FAR = "#2b3459";
+/* En vue jeu, les membres nus prennent une carnation, pas de l'indigo :
+   les manches et le hakama couvrent le reste. */
+const GAME_VOLUME_NEAR = "#e5bf98";
+const GAME_VOLUME_FAR = "#bd9270";
+const GAME_TORSO_NEAR = "#3b4878";
+const GAME_TORSO_FAR = "#2b3459";
+
+/** La cuisse est sous le hakama, le tibia est nu : une seule couleur pour
+    toute la jambe laissait des cuisses de peau quand les jambes s'écartent. */
+function drawGameLegVolume(limb, near) {
+  drawLimbVolume([limb.hip, limb.knee], [8.5, 7.5], near ? GAME_TORSO_NEAR : GAME_TORSO_FAR);
+  drawLimbVolume([limb.knee, limb.foot.ankle], [5.5, 4], near ? GAME_VOLUME_NEAR : GAME_VOLUME_FAR);
+}
 
 function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
 function farVolume() { return isGameView() ? GAME_VOLUME_FAR : BODY_VOLUME_FAR; }
@@ -1464,7 +1543,18 @@ function drawTorsoVolume(skeleton, fillColor) {
   drawLimbVolume([shoulder, skeleton.neckTop], [7, 4.5], fillColor);
 }
 
+function drawFoot(foot) {
+  return isGameView() && pieceReady("pied")
+    && drawPiece("pied", PIECE_ANCHORS.pied.from, PIECE_ANCHORS.pied.to, foot.heel, foot.toe);
+}
+
 function drawLeg(hip, knee, foot, ink, seed) {
+  /* Les vignettes portent le dessin : les traits d'os par-dessus
+     donneraient un personnage rayé. */
+  if (isGameView() && pieceReady("pied")) {
+    drawFoot(foot);
+    return;
+  }
   strokePath([hip, knee], { color: ink, width: 0.9, seed: seed });
   strokePath([knee, foot.ankle], { color: ink, width: 0.9, seed: seed + 3 });
   strokePath([foot.heel, foot.ankle, foot.ball, foot.toe], { color: ink, width: 0.9, seed: seed + 6 });
@@ -1472,12 +1562,14 @@ function drawLeg(hip, knee, foot, ink, seed) {
 }
 
 function drawArm(shoulder, elbow, wrist, grip, ink, seed) {
+  if (isGameView() && pieceReady("kote")) return;
   strokePath([shoulder, elbow], { color: ink, width: 0.9, seed: seed });
   strokePath([elbow, wrist], { color: ink, width: 0.9, seed: seed + 3 });
   strokePath([wrist, grip], { color: ink, width: 0.9, seed: seed + 6 });
 }
 
 function drawTorsoAndHead(skeleton) {
+  if (isGameView() && pieceReady("men")) return;
   strokePath([skeleton.root, skeleton.shoulderCenter], { color: nearInk(), width: 1, seed: 30 });
   strokePath([skeleton.shoulderCenter, skeleton.neckTop], { color: nearInk(), width: 0.8, seed: 33 });
   strokePath([skeleton.leftShoulder, skeleton.rightShoulder], { color: nearInk(), width: 0.7, seed: 35 });
@@ -1503,7 +1595,26 @@ function drawTorsoAndHead(skeleton) {
 
 /* ---------- pièces d'armure ---------- */
 
+/* Points d'ancrage de chaque vignette, en fractions de sa propre image.
+   Ils ont été relevés sur les pièces dessinées : premier point sur la
+   base de l'os, second sur son extrémité. */
+const PIECE_ANCHORS = {
+  men: { from: [0.52, 0.72], to: [0.40, 0.03] },
+  do: { from: [0.58, 0.06], to: [0.46, 0.95] },
+  tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
+  kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
+  manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
+  pied: { from: [0.13, 0.72], to: [0.93, 0.93] },
+  hakamaPanel: { from: [0.50, 0.03], to: [0.50, 0.97] }
+};
+
 function drawMen(skeleton) {
+  if (isGameView() && pieceReady("men")) {
+    const up = skeleton.neckDirection;
+    const crown = addPointOffset(skeleton.headCenter,
+      { x: up.x * (HEAD_RADIUS_VERTICAL + 3), y: up.y * (HEAD_RADIUS_VERTICAL + 3) });
+    if (drawPiece("men", PIECE_ANCHORS.men.from, PIECE_ANCHORS.men.to, skeleton.neckTop, crown)) return;
+  }
   const forward = { x: skeleton.neckDirection.y, y: -skeleton.neckDirection.x };
   const up = skeleton.neckDirection;
   const center = skeleton.headCenter;
@@ -1588,6 +1699,11 @@ function drawMen(skeleton) {
 }
 
 function drawDo(skeleton) {
+  if (isGameView() && pieceReady("do")) {
+    const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 1.02);
+    const belly = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.06);
+    if (drawPiece("do", PIECE_ANCHORS.do.from, PIECE_ANCHORS.do.to, chest, belly)) return;
+  }
   const up = skeleton.torsoDirection;
   const forward = { x: up.y, y: -up.x };
   const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.78);
@@ -1623,6 +1739,12 @@ function drawDo(skeleton) {
 }
 
 function drawTare(skeleton) {
+  if (isGameView() && pieceReady("tare")) {
+    const up = skeleton.torsoDirection;
+    const waist = addPointOffset(skeleton.root, { x: up.x * 6, y: up.y * 6 });
+    const bottom = addPointOffset(waist, { x: -up.x * 34, y: -up.y * 34 });
+    if (drawPiece("tare", PIECE_ANCHORS.tare.from, PIECE_ANCHORS.tare.to, waist, bottom)) return;
+  }
   const up = skeleton.torsoDirection;
   const forward = { x: up.y, y: -up.x };
   const waist = addPointOffset(skeleton.root, { x: up.x * 4, y: up.y * 4 });
@@ -1652,6 +1774,10 @@ function drawTare(skeleton) {
 }
 
 function drawKote(elbow, wrist, grip, color, seed) {
+  if (isGameView() && pieceReady("kote")) {
+    if (drawPiece("kote", PIECE_ANCHORS.kote.from, PIECE_ANCHORS.kote.to,
+        pointAlong(elbow, wrist, 0.15), grip)) return;
+  }
   const cuff = pointAlong(elbow, wrist, -0.12);
   drawSleeve(cuff, wrist, 4.6, 3.4, color, color, seed);
   /* Poing rembourré du kote. */
@@ -1670,6 +1796,10 @@ function drawKote(elbow, wrist, grip, color, seed) {
 }
 
 function drawKeikogiSleeve(shoulder, elbow, seed) {
+  if (isGameView() && pieceReady("manche")) {
+    if (drawPiece("manche", PIECE_ANCHORS.manche.from, PIECE_ANCHORS.manche.to,
+        shoulder, pointAlong(shoulder, elbow, 1.05))) return;
+  }
   drawSleeve(shoulder, pointAlong(shoulder, elbow, 0.85), 6.5, 5, partColor.keikogi, partColor.keikogi, seed);
 }
 
@@ -1779,6 +1909,11 @@ function hakamaState(frame) {
 }
 
 function drawHakamaLeg(hip, knee, hemTarget, seed) {
+  if (isGameView() && pieceReady("hakama-pan")) {
+    const hem = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
+    if (drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
+        hip, hem, { widthFactor: 0.82 })) return;
+  }
   const hemPoint = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
   const hipNormal = perpendicular(directionBetween(hip, knee));
   const kneeNormal = jointNormal(hip, knee, hemPoint);
@@ -1862,6 +1997,7 @@ function pointAlongBlade(centreLine, distanceFromGrip) {
 
 function drawShinai(skeleton, flex) {
   const centreLine = shinaiCentreLine(skeleton, flex);
+  if (isGameView() && drawShinaiPiece(centreLine)) return;
   const tip = centreLine[centreLine.length - 1];
   const tsuba = pointAlongBlade(centreLine, TSUBA_DISTANCE_FROM_LEFT_GRIP);
   const nakayui = pointAlongBlade(centreLine, NAKAYUI_FROM_LEFT_GRIP);
@@ -1932,6 +2068,11 @@ function drawHakamaPanels(skeleton, cloth) {
   const anchors = hakamaAnchors(skeleton);
   [[anchors.waistFront, cloth.frontHem, 9, 110], [anchors.waistBack, cloth.backHem, 8, 114]].forEach(panel => {
     const [anchor, hem, halfWidth, seed] = panel;
+    if (isGameView() && pieceReady("hakama-pan")) {
+      drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
+        anchor, hem, { widthFactor: 0.78 });
+      return;
+    }
     const middle = pointAlong(anchor, hem, 0.55);
     const outline = limbOutline([anchor, middle, hem], [halfWidth, halfWidth * 1.15, halfWidth * 1.25]);
     fillPath(outline, partColor.hakama, 0.16);
@@ -2158,7 +2299,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   const farHem = cloth && (nearSideName === "left" ? cloth.rightHem : cloth.leftHem);
 
   if (solid) {
-    drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
+    if (isGameView()) {
+      drawGameLegVolume(far, false);
+    } else {
+      drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
+    }
     drawFootVolume(far.foot, farVolume());
   }
   if (showArmour) drawHakamaLeg(far.hip, far.knee, farHem || far.foot.ankle, 90);
@@ -2173,12 +2318,16 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   }
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
 
-  if (solid) drawTorsoVolume(skeleton, nearVolume());
+  if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
 
   if (solid) {
-    drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
+    if (isGameView()) {
+      drawGameLegVolume(near, true);
+    } else {
+      drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
+    }
     drawFootVolume(near.foot, nearVolume());
   }
   if (showArmour) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
