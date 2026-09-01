@@ -1263,7 +1263,7 @@ stageImage.src = "assets/dojo-stage.png";
    squelette continue de commander : chaque vignette est amenée sur son os
    par ses deux points d'ancrage, exprimés en fractions de sa propre image. */
 const pieceImages = {};
-["men", "do", "tare", "kote", "manche", "pied", "hakama-pan", "shinai"].forEach(name => {
+["men", "do", "tare", "kote", "manche", "pied", "hakama-pan", "shinai", "keikogi"].forEach(name => {
   const image = new Image();
   image.src = "assets/pieces/" + name + ".png";
   pieceImages[name] = image;
@@ -1599,7 +1599,10 @@ function drawTorsoAndHead(skeleton) {
    Ils ont été relevés sur les pièces dessinées : premier point sur la
    base de l'os, second sur son extrémité. */
 const PIECE_ANCHORS = {
-  men: { from: [0.52, 0.72], to: [0.40, 0.03] },
+  /* Le men redessiné est d'aplomb : ses ancres suivent l'axe du casque,
+     de la base du crâne au sommet. */
+  men: { from: [0.52, 0.60], to: [0.45, 0.02] },
+  keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
   tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
   kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
@@ -2319,6 +2322,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
 
   if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
+  if (isGameView() && pieceReady("keikogi")) {
+    drawPiece("keikogi", PIECE_ANCHORS.keikogi.from, PIECE_ANCHORS.keikogi.to,
+      pointAlong(skeleton.root, skeleton.shoulderCenter, 1.06),
+      pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { widthFactor: 0.58 });
+  }
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
 
