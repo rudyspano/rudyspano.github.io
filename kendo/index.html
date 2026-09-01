@@ -1346,8 +1346,9 @@ function drawShinaiPiece(centreLine) {
   const slices = centreLine.length - 1;
   const sliceWidth = image.naturalWidth / slices;
   /* La vignette est dessinée épaisse pour rester lisible seule ; posée
-     sur le rig elle donnerait un shinai de 14 cm de section. */
-  const thickness = 0.42;
+     telle quelle sur le rig, elle donnerait un shinai de 14 cm de
+     section. Réduite de moitié il devenait une baguette. */
+  const thickness = 0.66;
   const halfHeight = image.naturalHeight / 2;
   for (let index = 0; index < slices; index++) {
     const from = centreLine[index], to = centreLine[index + 1];
@@ -1801,10 +1802,12 @@ function drawDo(skeleton) {
 
 function drawTare(skeleton) {
   if (isGameView() && pieceReady("tare")) {
-    const up = skeleton.torsoDirection;
-    const waist = addPointOffset(skeleton.root, { x: up.x * 6, y: up.y * 6 });
-    const bottom = addPointOffset(waist, { x: -up.x * 34, y: -up.y * 34 });
-    if (drawPiece("tare", PIECE_ANCHORS.tare.from, PIECE_ANCHORS.tare.to, waist, bottom)) return;
+    /* Le tare pend d'aplomb, comme le hakama : monté sur l'axe du buste,
+       il partait de travers dès que le corps s'inclinait. */
+    const waist = { x: skeleton.root.x + skeleton.forwardDirection.x * 2, y: skeleton.root.y + 6 };
+    const bottom = { x: waist.x, y: waist.y - 34 };
+    if (drawPiece("tare", PIECE_ANCHORS.tare.from, PIECE_ANCHORS.tare.to, waist, bottom,
+        { widthCentimetres: 40 })) return;
   }
   const up = skeleton.torsoDirection;
   const forward = { x: up.y, y: -up.x };
