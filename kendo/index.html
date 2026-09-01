@@ -1494,11 +1494,17 @@ const GAME_VOLUME_FAR = "#bd9270";
 const GAME_TORSO_NEAR = "#3b4878";
 const GAME_TORSO_FAR = "#2b3459";
 
-/** La cuisse est sous le hakama, le tibia est nu : une seule couleur pour
-    toute la jambe laissait des cuisses de peau quand les jambes s'écartent. */
+/** La jambe entière est de la teinte du hakama : elle passe sous la jupe,
+    et ce qui en dépasse quand les appuis s'écartent se confond avec le
+    tissu au lieu de trancher en peau nue. Seul le pied reste nu. */
+const HAKAMA_CLOTH_NEAR = "#243054";
+const HAKAMA_CLOTH_FAR = "#182448";
+
 function drawGameLegVolume(limb, near) {
-  drawLimbVolume([limb.hip, limb.knee], [8.5, 7.5], near ? GAME_TORSO_NEAR : GAME_TORSO_FAR);
-  drawLimbVolume([limb.knee, limb.foot.ankle], [5.5, 4], near ? GAME_VOLUME_NEAR : GAME_VOLUME_FAR);
+  /* Larges : ce qui dépasse de la jupe doit lire comme une jambe de
+     hakama, pas comme un collant. */
+  drawLimbVolume([limb.hip, limb.knee, limb.foot.ankle], [12, 10.5, 6.5],
+    near ? HAKAMA_CLOTH_NEAR : HAKAMA_CLOTH_FAR);
 }
 
 function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
@@ -1961,13 +1967,6 @@ function hakamaState(frame) {
   return hakamaCache.states[wanted];
 }
 
-/** Le hakama d'une seule pièce se dessine après les jambes : on se
-    contente ici de dire s'il peut l'être. */
-function drawHakamaSheetLater(skeleton, cloth, near, far) {
-  return pieceReady("hakama-pan")
-    && (skeleton.root.y + 5) - Math.min(cloth.frontHem.y, cloth.backHem.y) >= 12;
-}
-
 function drawHakamaLeg(hip, knee, hemTarget, seed) {
   if (isGameView() && pieceReady("hakama-pan")) {
     const hem = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
@@ -2136,51 +2135,19 @@ function legPointAtHeight(hip, knee, ankle, height) {
   return pointAlong(knee, ankle, Math.max(0, Math.min(1, ratio)));
 }
 
-/* Le hakama est une seule pièce de tissu, pas quatre panneaux collés. On
-   la débite en bandes horizontales : chacune s'ouvre exactement sur la
-   silhouette des deux jambes à sa hauteur, plus une marge d'ampleur qui
-   croît vers l'ourlet. Quand la jambe avant part, le tissu s'ouvre avec
-   elle au lieu de glisser en bloc. */
-const HAKAMA_BANDS = 44;
-const HAKAMA_WAIST_MARGIN = 5;
-const HAKAMA_HEM_MARGIN = 19;
+/* Le hakama pend d'aplomb sous la ceinture. Il ne suit ni l'inclinaison
+   du buste ni l'écartement des jambes : c'est une jupe lourde, et les
+   jambes passent dessous. Elles sont donc peintes de sa couleur, si bien
+   qu'aucune ne dépasse en peau nue quand elles s'écartent. */
+const HAKAMA_HEM_HEIGHT = 9;
+const HAKAMA_WIDTH = 46;
 
-function drawHakamaSheet(skeleton, cloth, near, far) {
+function drawHakamaSheet(skeleton) {
   if (!pieceReady("hakama-pan")) return false;
-  const image = pieceImages["hakama-pan"];
-  const waistY = skeleton.root.y + 5;
-  const hemY = Math.min(cloth.frontHem.y, cloth.backHem.y);
-  if (waistY - hemY < 12) return false;
-
-  /* Le balancement simulé décale le bas du tissu, sans toucher la ceinture. */
-  const restFrontX = skeleton.root.x + skeleton.forwardDirection.x * 22;
-  const swing = (cloth.frontHem.x - restFrontX) * 0.55;
-
-  for (let band = 0; band < HAKAMA_BANDS; band++) {
-    const topRatio = band / HAKAMA_BANDS;
-    const bottomRatio = (band + 1) / HAKAMA_BANDS;
-    const topY = waistY + (hemY - waistY) * topRatio;
-    const bottomY = waistY + (hemY - waistY) * bottomRatio;
-    const middleRatio = (topRatio + bottomRatio) / 2;
-    const middleY = (topY + bottomY) / 2;
-
-    const nearLeg = legPointAtHeight(near.hip, near.knee, near.foot.ankle, middleY);
-    const farLeg = legPointAtHeight(far.hip, far.knee, far.foot.ankle, middleY);
-    const margin = HAKAMA_WAIST_MARGIN + (HAKAMA_HEM_MARGIN - HAKAMA_WAIST_MARGIN) * middleRatio;
-    const drift = swing * middleRatio * middleRatio;
-    const left = Math.min(nearLeg.x, farLeg.x) - margin + drift;
-    const right = Math.max(nearLeg.x, farLeg.x) + margin + drift;
-
-    const sourceTop = topRatio * image.naturalHeight;
-    const sourceHeight = Math.max(1, (bottomRatio - topRatio) * image.naturalHeight);
-    context.save();
-    context.scale(1, -1);
-    /* Un demi-centimètre de recouvrement, sinon les bandes laissent un jour. */
-    context.drawImage(image, 0, sourceTop, image.naturalWidth, sourceHeight,
-      left, -topY, right - left, (topY - bottomY) + 0.5);
-    context.restore();
-  }
-  return true;
+  const waist = { x: skeleton.root.x, y: skeleton.root.y + 6 };
+  const hem = { x: skeleton.root.x, y: HAKAMA_HEM_HEIGHT };
+  return drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
+    waist, hem, { widthCentimetres: HAKAMA_WIDTH });
 }
 
 /** Les deux pans qui pendent de la ceinture, dessinés par-dessus les
@@ -2425,9 +2392,9 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
     } else {
       drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
     }
-    drawFootVolume(far.foot, farVolume());
+    drawFootVolume(far.foot, isGameView() ? GAME_VOLUME_FAR : farVolume());
   }
-  const singleSheet = isGameView() && cloth && drawHakamaSheetLater(skeleton, cloth, near, far);
+  const singleSheet = isGameView() && pieceReady("hakama-pan");
   if (showArmour && !singleSheet) drawHakamaLeg(far.hip, far.knee, farHem || far.foot.ankle, 90);
   drawLeg(far.hip, far.knee, far.foot, farInk(), 10);
 
@@ -2455,10 +2422,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
     } else {
       drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
     }
-    drawFootVolume(near.foot, nearVolume());
+    drawFootVolume(near.foot, isGameView() ? GAME_VOLUME_NEAR : nearVolume());
   }
   if (showArmour && !singleSheet) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
-  if (singleSheet) drawHakamaSheet(skeleton, cloth, near, far);
+  if (singleSheet) drawHakamaSheet(skeleton);
   else if (showArmour && cloth) drawHakamaPanels(skeleton, cloth);
   drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
 
