@@ -1298,7 +1298,10 @@ function drawPiece(name, anchorFrom, anchorTo, worldFrom, worldTo, options) {
   context.globalAlpha = settings.alpha === undefined ? 1 : settings.alpha;
   context.translate(worldFrom.x, worldFrom.y);
   context.rotate(rotation);
-  context.scale(scale * (settings.widthFactor || 1), -scale);
+  /* Les deux facteurs jouent dans les axes de la vignette, pas dans ceux
+     du monde : selon que la pièce est dessinée en long ou en travers, ils
+     touchent sa longueur ou son épaisseur. */
+  context.scale(scale * (settings.stretch || 1), -scale * (settings.thickness || 1));
   context.translate(-ax, -ay);
   context.drawImage(image, 0, 0);
   context.restore();
@@ -1608,11 +1611,12 @@ const PIECE_ANCHORS = {
   /* L'axe du crâne va du sommet du dôme à sa base, en arrière de la
      grille. Mes premières ancres traversaient la face : le casque
      s'en trouvait basculé de plus de vingt degrés. */
-  men: { from: [0.36, 0.60], to: [0.34, 0.02] },
+  men: { from: [0.36, 0.63], to: [0.34, 0.00] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
   tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
   kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
+  /* Avant-bras plus poing : la mesure ne dépend pas de la pose. */
   manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
   pied: { from: [0.13, 0.72], to: [0.93, 0.93] },
   hakamaPanel: { from: [0.50, 0.03], to: [0.50, 0.97] }
@@ -1785,8 +1789,15 @@ function drawTare(skeleton) {
 
 function drawKote(elbow, wrist, grip, color, seed) {
   if (isGameView() && pieceReady("kote")) {
-    if (drawPiece("kote", PIECE_ANCHORS.kote.from, PIECE_ANCHORS.kote.to,
-        pointAlong(elbow, wrist, 0.15), grip)) return;
+    /* Monté sur la distance coude-poing, le kote se dessinait entre 16 et
+       31 cm selon la frame, et le bras éloigné en faisait toujours les
+       trois quarts du proche : l'avant-bras ne change pas de longueur,
+       c'est sa projection qui raccourcit. On le pose donc au poing, sur
+       une longueur constante. */
+    const towardElbow = directionBetween(grip, elbow);
+    const cuff = { x: grip.x + towardElbow.x * KOTE_LENGTH, y: grip.y + towardElbow.y * KOTE_LENGTH };
+    if (drawPiece("kote", PIECE_ANCHORS.kote.to, PIECE_ANCHORS.kote.from, grip, cuff,
+        { thickness: 0.78 })) return;
   }
   const cuff = pointAlong(elbow, wrist, -0.12);
   drawSleeve(cuff, wrist, 4.6, 3.4, color, color, seed);
@@ -1924,7 +1935,7 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
   if (isGameView() && pieceReady("hakama-pan")) {
     const hem = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
     if (drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
-        hip, hem, { widthFactor: 0.82 })) return;
+        hip, hem, { stretch: 0.82 })) return;
   }
   const hemPoint = hemTarget.simulated ? hemTarget : pointAlong(knee, hemTarget, 0.68);
   const hipNormal = perpendicular(directionBetween(hip, knee));
@@ -1956,6 +1967,7 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
    tranchant : c'est elle qui dit de quel côté on frappe. */
 const SHINAI_SLAT_COUNT = 3;
 const NAKAYUI_FROM_LEFT_GRIP = 88;
+const KOTE_LENGTH = 30;
 
 /** Flèche de la lame, en centimètres, comptée perpendiculairement.
     Deux causes : le retard de la pointe quand la lame accélère, et le
@@ -2082,7 +2094,7 @@ function drawHakamaPanels(skeleton, cloth) {
     const [anchor, hem, halfWidth, seed] = panel;
     if (isGameView() && pieceReady("hakama-pan")) {
       drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
-        anchor, hem, { widthFactor: 0.78 });
+        anchor, hem, { stretch: 0.78 });
       return;
     }
     const middle = pointAlong(anchor, hem, 0.55);
@@ -2334,7 +2346,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   if (isGameView() && pieceReady("keikogi")) {
     drawPiece("keikogi", PIECE_ANCHORS.keikogi.from, PIECE_ANCHORS.keikogi.to,
       pointAlong(skeleton.root, skeleton.shoulderCenter, 1.0),
-      pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { widthFactor: 0.58 });
+      pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { stretch: 0.58 });
   }
   if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
