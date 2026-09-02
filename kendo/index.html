@@ -292,14 +292,6 @@ const NECK_FOLLOWS_TORSO = 0.2;
 const HEAD_TILT_OFFSET_DEGREES = -10;
 /* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
 const MENDARE_BAND_TOP = 0.56;
-/* Hauteur de la poignée au-dessus des épaules, à partir de laquelle le bras
-   proche passe derrière le men. Vu de profil, au furikaburi le bras encadre le
-   visage et efface le casque ; on l'écarte donc en profondeur, comme le font
-   les jeux de combat, plutôt qu'en déplaçant la tête — la mesure dit qu'il
-   faudrait la reculer de 16 cm, une fois et demie sa largeur.
-   Le chevauchement bras/casque n'existe qu'entre 32 et 55 cm : à 25 cm la
-   bascule tombe donc là où les deux ne se touchent pas, et ne se voit pas. */
-const ARM_BEHIND_MEN_HEIGHT = 25;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -2493,33 +2485,21 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawDo(skeleton);
+  if (showArmour) drawMen(skeleton);
 
-  /* Le shinai reste sous le bras, sinon la lame passerait devant les mains
-     qui la tiennent. */
-  const drawNearArm = () => {
-    if (solid) {
-      drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], nearVolume());
-    }
-    if (showArmour) {
-      drawKeikogiSleeve(near.shoulder, near.elbow, near.grip, 104);
-      drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
-    }
-    drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
-  };
+  drawShinai(skeleton, bladeFlex);
 
-  const armBehindMen = near.grip.y - skeleton.shoulderCenter.y > ARM_BEHIND_MEN_HEIGHT;
-  if (armBehindMen) {
-    drawShinai(skeleton, bladeFlex);
-    drawNearArm();
-    if (showArmour) drawMen(skeleton);
-  } else {
-    if (showArmour) drawMen(skeleton);
-    drawShinai(skeleton, bladeFlex);
-    drawNearArm();
+  if (solid) {
+    drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6], nearVolume());
   }
+  if (showArmour) {
+    drawKeikogiSleeve(near.shoulder, near.elbow, near.grip, 104);
+    drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
+  }
+  drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
 
-  /* Seule l'épaulette repasse par-dessus le bras : c'est une épaulette, elle
-     retombe sur l'épaule quelle que soit la hauteur du bras. */
+  /* Seule l'épaulette repasse par-dessus le bras ; le reste du men est déjà
+     peint dessous, avant le shinai. */
   if (showArmour) drawMendare(skeleton);
 }
 
