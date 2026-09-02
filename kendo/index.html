@@ -320,7 +320,10 @@ const TOE_LENGTH = 7;
    bout de la tsuka. À cinq centimètres le pommeau sortait du gant. */
 const SHINAI_BUTT_OVERHANG = 1;
 const SHINAI_LENGTH_FROM_LEFT_GRIP = 115;
-const GRIP_SPACING = 24;
+/* Écart des deux poignées sur le manche. La main droite vient au contact de la
+   tsuba : à 24 le gant s'arrêtait à 28 le long de la lame alors que la garde
+   est dessinée à 32,5, laissant quatre centimètres et demi de manche à nu. */
+const GRIP_SPACING = 28;
 /* Poing droit contre la tsuba : 24 cm entre les deux mains, la garde
    se trouve juste après le poing droit. */
 const TSUBA_DISTANCE_FROM_LEFT_GRIP = 29;
@@ -1303,7 +1306,8 @@ stageImage.src = "assets/dojo-stage.png";
    squelette continue de commander : chaque vignette est amenée sur son os
    par ses deux points d'ancrage, exprimés en fractions de sa propre image. */
 const pieceImages = {};
-["men", "do", "tare", "kote", "kote-paume", "manche", "pied", "hakama-pan", "shinai", "keikogi"]
+["men", "do", "tare", "kote", "kote-paume", "kote-poing", "manche", "pied", "hakama-pan",
+   "shinai", "keikogi"]
   .forEach(name => {
   const image = new Image();
   image.src = "assets/pieces/" + name + ".png";
@@ -1925,6 +1929,19 @@ function drawTare(skeleton) {
 /** La main éloignée est de l'autre côté du manche : c'est sa paume qu'on voit,
     pas le dos du gant, d'où une seconde vignette. Les deux ont la même
     géométrie et partagent donc les mêmes ancres. */
+/** Les doigts qui serrent, repris par-dessus le shinai. La main éloignée est
+    derrière le manche et doit le rester, mais sa prise passe devant, sinon la
+    tsuka traverse le poing. La vignette est celle du kote de paume réduite au
+    poing seul, posée exactement au même endroit : sa découpe retombe donc sur
+    les pixels déjà peints dessous, et ne se voit pas. */
+function drawFarKoteGrip(elbow, grip) {
+  if (!isGameView() || !pieceReady("kote-poing")) return;
+  const towardElbow = directionBetween(grip, elbow);
+  const cuff = { x: grip.x + towardElbow.x * KOTE_LENGTH, y: grip.y + towardElbow.y * KOTE_LENGTH };
+  drawPiece("kote-poing", PIECE_ANCHORS.kote.to, PIECE_ANCHORS.kote.from, grip, cuff,
+    { thickness: 0.78 });
+}
+
 function drawKote(elbow, wrist, grip, color, seed, near) {
   const pieceName = near ? "kote" : "kote-paume";
   if (isGameView() && pieceReady(pieceName)) {
@@ -2549,6 +2566,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   if (showArmour && armOverMendare) drawMendare(skeleton);
 
   drawShinai(skeleton, bladeFlex);
+  if (showArmour) drawFarKoteGrip(far.elbow, far.grip);
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6],
