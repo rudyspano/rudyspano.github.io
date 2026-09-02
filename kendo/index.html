@@ -1532,7 +1532,25 @@ const GAME_TORSO_FAR = "#2b3459";
 const HAKAMA_CLOTH_NEAR = "#243054";
 const HAKAMA_CLOTH_FAR = "#182448";
 
-function drawGameLegVolume(limb, near) {
+/** Une bande de tissu posée sur un tronçon de jambe. Elle déborde vers l'axe
+    du corps, où elle passe sous la jupe : sans ce recouvrement les deux
+    vignettes se juxtaposent et leur motif se décale, ce qui dessine une
+    couture le long de la cuisse. Le côté extérieur garde sa largeur, c'est lui
+    qui fait la silhouette. */
+function drawHakamaLegBand(from, to, widthCentimetres, rootX, options) {
+  const direction = directionBetween(from, to);
+  /* Sens dans lequel part l'axe horizontal de la vignette, une fois posée. */
+  const acrossX = -direction.y;
+  const middleX = (from.x + to.x) / 2;
+  const innerOnPositiveSide = (rootX - middleX) * acrossX > 0;
+  const total = widthCentimetres + HAKAMA_LEG_INNER_EXTRA;
+  const innerShare = (widthCentimetres / 2 + HAKAMA_LEG_INNER_EXTRA) / total;
+  const anchorX = innerOnPositiveSide ? 1 - innerShare : innerShare;
+  drawPiece("hakama-pan", [anchorX, 0.02], [anchorX, 0.98], from, to,
+    Object.assign({ widthCentimetres: total }, options));
+}
+
+function drawGameLegVolume(limb, near, rootX) {
   /* Larges : ce qui dépasse de la jupe doit lire comme une jambe de
      hakama, pas comme un collant. Le volume plein reste dessous, il
      bouche les jours entre les deux tronçons de tissu. */
@@ -1542,11 +1560,10 @@ function drawGameLegVolume(limb, near) {
   /* Deux bandes de la vignette du hakama posées sur la cuisse et sur le
      tibia : le tissu de la jambe a la même trame que la jupe. */
   if (!pieceReady("hakama-pan")) return;
-  const anchors = { from: [0.5, 0.02], to: [0.5, 0.98] };
-  drawPiece("hakama-pan", anchors.from, anchors.to, limb.hip, limb.knee,
-    { widthCentimetres: 25, sourceTop: 0.06, sourceBottom: 0.55, alpha: 0.92 });
-  drawPiece("hakama-pan", anchors.from, anchors.to, limb.knee, limb.foot.ankle,
-    { widthCentimetres: 19, sourceTop: 0.55, sourceBottom: 0.99, alpha: 0.92 });
+  drawHakamaLegBand(limb.hip, limb.knee, 25, rootX,
+    { sourceTop: 0.06, sourceBottom: 0.55, alpha: 0.92 });
+  drawHakamaLegBand(limb.knee, limb.foot.ankle, 19, rootX,
+    { sourceTop: 0.55, sourceBottom: 0.99, alpha: 0.92 });
 }
 
 function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
@@ -2217,7 +2234,9 @@ function legPointAtHeight(hip, knee, ankle, height) {
    jambes passent dessous. Elles sont donc peintes de sa couleur, si bien
    qu'aucune ne dépasse en peau nue quand elles s'écartent. */
 const HAKAMA_HEM_HEIGHT = 9;
-const HAKAMA_WIDTH = 80;
+/* Débord du tissu de jambe vers l'axe du corps, sous la jupe. */
+const HAKAMA_LEG_INNER_EXTRA = 16;
+const HAKAMA_WIDTH = 46;
 
 function drawHakamaSheet(skeleton) {
   if (!pieceReady("hakama-pan")) return false;
@@ -2465,7 +2484,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
 
   if (solid) {
     if (isGameView()) {
-      drawGameLegVolume(far, false);
+      drawGameLegVolume(far, false, skeleton.root.x);
     } else {
       drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
     }
@@ -2494,7 +2513,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
 
   if (solid) {
     if (isGameView()) {
-      drawGameLegVolume(near, true);
+      drawGameLegVolume(near, true, skeleton.root.x);
     } else {
       drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
     }
