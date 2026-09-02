@@ -287,6 +287,9 @@ const FRAMES_PER_SECOND = 60;
 const TORSO_LENGTH = 48;
 const NECK_LENGTH = 8;
 const NECK_FOLLOWS_TORSO = 0.2;
+/* La tête bascule en arrière d'autant, sur toutes les poses : le rig la
+   tenait penchée vers l'avant. Négatif = vers l'arrière du kendoka. */
+const HEAD_TILT_OFFSET_DEGREES = -10;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -1184,7 +1187,8 @@ function solveSkeleton(pose) {
   /* Le cou compense l'inclinaison du tronc : on penche le corps, pas la
      tête, sinon le regard part dans le plancher. Il n'en reprend qu'un
      cinquième, ce qui reste du mouvement de la nuque. */
-  const neckRadians = toRadians(pose.torsoLeanDegrees * NECK_FOLLOWS_TORSO + pose.headTiltDegrees);
+  const neckRadians = toRadians(pose.torsoLeanDegrees * NECK_FOLLOWS_TORSO
+    + pose.headTiltDegrees + HEAD_TILT_OFFSET_DEGREES);
   const neckDirection = { x: Math.sin(neckRadians), y: Math.cos(neckRadians) };
   const neckTop = {
     x: shoulderCenter.x + neckDirection.x * NECK_LENGTH,
@@ -2457,7 +2461,6 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawDo(skeleton);
-  if (showArmour) drawMen(skeleton);
 
   drawShinai(skeleton, bladeFlex);
 
@@ -2469,6 +2472,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
     drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106);
   }
   drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
+
+  /* Le men vient en dernier : son mendare retombe sur l'épaule, il ne passe
+     pas dessous. */
+  if (showArmour) drawMen(skeleton);
 }
 
 /* ============================================================
