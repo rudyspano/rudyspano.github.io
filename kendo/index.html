@@ -297,6 +297,11 @@ const MENDARE_BAND_TOP = 0.56;
    furikaburi ; il en faudrait seize pour dégager toute la largeur de la
    manche, mais la garde ne le supporte pas. */
 const MEN_SETBACK_CENTIMETRES = 6;
+/* Angles du bras, entre lesquels il passe devant l'épaulette pendant la
+   descente de la coupe. Au-dessus de 50 degrés il est encore trop haut, en
+   dessous de 15 il est redescendu en garde et l'épaulette repasse devant. */
+const ARM_OVER_MENDARE_FROM_DEGREES = 50;
+const ARM_OVER_MENDARE_TO_DEGREES = 15;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -2441,7 +2446,7 @@ function limbSet(skeleton, side) {
    présenté à la caméra dépend du sens dans lequel le personnage regarde :
    le frappeur est vu de sa droite, le motodachi, tourné vers lui, de sa
    gauche. */
-function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
+function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare) {
   const solid = isSolidView();
   const showArmour = viewState.showArmour;
   const near = limbSet(skeleton, nearSideName);
@@ -2496,6 +2501,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawDo(skeleton);
   if (showArmour) drawMen(skeleton);
+  if (showArmour && armOverMendare) drawMendare(skeleton);
 
   drawShinai(skeleton, bladeFlex);
 
@@ -2509,8 +2515,9 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
 
   /* Seule l'épaulette repasse par-dessus le bras ; le reste du men est déjà
-     peint dessous, avant le shinai. */
-  if (showArmour) drawMendare(skeleton);
+     peint dessous, avant le shinai. Pendant la descente de la coupe elle est
+     au contraire déjà passée dessous, et le bras entier la recouvre. */
+  if (showArmour && !armOverMendare) drawMendare(skeleton);
 }
 
 /* ============================================================
@@ -2618,12 +2625,29 @@ function markSimulated(point) {
   return { x: point.x, y: point.y, simulated: true };
 }
 
+/** Le bras passe devant l'épaulette pendant la descente de la coupe seulement.
+    La descente ne se lit pas sur le squelette : la montée et la descente
+    traversent les mêmes angles de bras, à un degré près. On la date donc par
+    le sommet de l'armé, la keyframe où la poignée est la plus haute. */
+function armPassesOverMendare(frame, skeleton, nearSideName) {
+  const keyframes = currentSequence();
+  const apex = keyframes.reduce(
+    (highest, keyframe) => keyframe.pose.gripY > highest.pose.gripY ? keyframe : highest,
+    keyframes[0]);
+  if (frame <= apex.frame) return false;
+  const near = limbSet(skeleton, nearSideName);
+  const degrees = Math.atan2(near.elbow.y - near.shoulder.y, near.elbow.x - near.shoulder.x)
+    * 180 / Math.PI;
+  return degrees <= ARM_OVER_MENDARE_FROM_DEGREES && degrees >= ARM_OVER_MENDARE_TO_DEGREES;
+}
+
 function drawActor(actor, skeleton) {
   const scale = actorScale(actor);
   context.save();
   context.translate(actor.originX, -actorDrop(actor));
   context.scale(actor.facesRight ? scale : -scale, scale);
-  drawCharacter(skeleton, actor.facesRight ? "right" : "left", actor.bladeFlex || 0, actor.cloth);
+  drawCharacter(skeleton, actor.facesRight ? "right" : "left", actor.bladeFlex || 0, actor.cloth,
+    actor.armOverMendare || false);
   context.restore();
 }
 
@@ -2650,6 +2674,8 @@ function render() {
     clampBladeOnMen(attackerPose, targetInAttackerFrame.x, targetInAttackerFrame.y);
   }
   const skeleton = solveSkeleton(attackerPose);
+  placement.attacker.armOverMendare = armPassesOverMendare(frame, skeleton,
+    placement.attacker.facesRight ? "right" : "left");
   const attackerRootWorldX = toWorld(placement.attacker, { x: attackerPose.rootX, y: 0 }).x;
 
   const ratio = camera.pixelRatio || 1;
