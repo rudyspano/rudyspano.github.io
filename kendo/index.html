@@ -290,6 +290,8 @@ const NECK_FOLLOWS_TORSO = 0.2;
 /* La tête bascule en arrière d'autant, sur toutes les poses : le rig la
    tenait penchée vers l'avant. Négatif = vers l'arrière du kendoka. */
 const HEAD_TILT_OFFSET_DEGREES = -10;
+/* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
+const MENDARE_BAND_TOP = 0.56;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -1676,12 +1678,34 @@ const PIECE_ANCHORS = {
   hakamaPanel: { from: [0.50, 0.03], to: [0.50, 0.97] }
 };
 
+/** Axe du crâne : du haut du cou au sommet du dôme, sur lequel le men se pose. */
+function skullAxis(skeleton) {
+  const up = skeleton.neckDirection;
+  return {
+    base: skeleton.neckTop,
+    crown: addPointOffset(skeleton.headCenter,
+      { x: up.x * (HEAD_RADIUS_VERTICAL + 3), y: up.y * (HEAD_RADIUS_VERTICAL + 3) })
+  };
+}
+
+/** Le mendare seul, repris par-dessus le bras. C'est une épaulette : elle
+    retombe sur l'épaule, alors que le reste du bras passe devant le men. La
+    bande est reprise dans la vignette du men, qui la contient déjà ; les
+    ancres, comptées sur l'image entière, sont ramenées à la bande. */
+function drawMendare(skeleton) {
+  if (!isGameView() || !pieceReady("men")) return;
+  const axis = skullAxis(skeleton);
+  const withinBand = fraction => (fraction - MENDARE_BAND_TOP) / (1 - MENDARE_BAND_TOP);
+  drawPiece("men",
+    [PIECE_ANCHORS.men.from[0], withinBand(PIECE_ANCHORS.men.from[1])],
+    [PIECE_ANCHORS.men.to[0], withinBand(PIECE_ANCHORS.men.to[1])],
+    axis.base, axis.crown, { sourceTop: MENDARE_BAND_TOP });
+}
+
 function drawMen(skeleton) {
   if (isGameView() && pieceReady("men")) {
-    const up = skeleton.neckDirection;
-    const crown = addPointOffset(skeleton.headCenter,
-      { x: up.x * (HEAD_RADIUS_VERTICAL + 3), y: up.y * (HEAD_RADIUS_VERTICAL + 3) });
-    if (drawPiece("men", PIECE_ANCHORS.men.from, PIECE_ANCHORS.men.to, skeleton.neckTop, crown)) return;
+    const axis = skullAxis(skeleton);
+    if (drawPiece("men", PIECE_ANCHORS.men.from, PIECE_ANCHORS.men.to, axis.base, axis.crown)) return;
   }
   const forward = { x: skeleton.neckDirection.y, y: -skeleton.neckDirection.x };
   const up = skeleton.neckDirection;
@@ -2461,6 +2485,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawDo(skeleton);
+  if (showArmour) drawMen(skeleton);
 
   drawShinai(skeleton, bladeFlex);
 
@@ -2473,9 +2498,9 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   }
   drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
 
-  /* Le men vient en dernier : son mendare retombe sur l'épaule, il ne passe
-     pas dessous. */
-  if (showArmour) drawMen(skeleton);
+  /* Seule l'épaulette repasse par-dessus le bras ; le reste du men est déjà
+     peint dessous, avant le shinai. */
+  if (showArmour) drawMendare(skeleton);
 }
 
 /* ============================================================
