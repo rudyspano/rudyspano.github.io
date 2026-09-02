@@ -1660,9 +1660,9 @@ const PIECE_ANCHORS = {
   men: { from: [0.36, 0.60], to: [0.34, 0.02] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
-  /* Vignette de profil : l'ancre haute est sur le bord supérieur de la
-     ceinture, en arrière du bourrelet qui la termine. */
-  tare: { from: [0.50, 0.11], to: [0.50, 0.98] },
+  /* Vignette de profil. L'axe du corps passe au milieu de la CEINTURE, pas
+     au milieu de l'image : le pan avant déborde vers l'avant, d'où 0,42. */
+  tare: { from: [0.42, 0.00], to: [0.42, 1.00] },
   kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
   /* Avant-bras plus poing : la mesure ne dépend pas de la pose. */
   manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
@@ -1807,9 +1807,11 @@ function drawTare(skeleton) {
     /* Le tare pend d'aplomb, comme le hakama : monté sur l'axe du buste,
        il partait de travers dès que le corps s'inclinait. */
     const waist = { x: skeleton.root.x + skeleton.forwardDirection.x * 2, y: skeleton.root.y + 6 };
-    const bottom = { x: waist.x, y: waist.y - 34 };
+    const bottom = { x: waist.x, y: waist.y - 39 };
+    /* 37 cm pour l'image entière, ce qui laisse 31 cm à la ceinture seule :
+       le reste est le pan avant, qui déborde par-dessus la cuisse. */
     if (drawPiece("tare", PIECE_ANCHORS.tare.from, PIECE_ANCHORS.tare.to, waist, bottom,
-        { widthCentimetres: 30 })) return;
+        { widthCentimetres: 37 })) return;
   }
   const up = skeleton.torsoDirection;
   const forward = { x: up.y, y: -up.x };
@@ -2436,7 +2438,6 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
       pointAlong(skeleton.root, skeleton.shoulderCenter, 1.0),
       pointAlong(skeleton.root, skeleton.shoulderCenter, 0.02), { widthCentimetres: 32 });
   }
-  if (showArmour) drawDo(skeleton);
   drawTorsoAndHead(skeleton);
 
   if (solid) {
@@ -2452,8 +2453,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth) {
   else if (showArmour && cloth) drawHakamaPanels(skeleton, cloth);
   drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
 
-  /* Le tare se porte par-dessus le hakama, donc après les deux jambes. */
+  /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
+     se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
+  if (showArmour) drawDo(skeleton);
   if (showArmour) drawMen(skeleton);
 
   drawShinai(skeleton, bladeFlex);
