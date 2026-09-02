@@ -292,6 +292,9 @@ const NECK_FOLLOWS_TORSO = 0.2;
 const HEAD_TILT_OFFSET_DEGREES = -10;
 /* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
 const MENDARE_BAND_TOP = 0.56;
+/* Recul du men sur l'axe du regard. Le rig ne bouge pas : seule la vignette du
+   casque et son épaulette reculent. */
+const MEN_SETBACK_CENTIMETRES = 10;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
 
@@ -1681,10 +1684,15 @@ const PIECE_ANCHORS = {
 /** Axe du crâne : du haut du cou au sommet du dôme, sur lequel le men se pose. */
 function skullAxis(skeleton) {
   const up = skeleton.neckDirection;
+  const backward = {
+    x: -up.y * MEN_SETBACK_CENTIMETRES,
+    y: up.x * MEN_SETBACK_CENTIMETRES
+  };
   return {
-    base: skeleton.neckTop,
+    base: addPointOffset(skeleton.neckTop, backward),
     crown: addPointOffset(skeleton.headCenter,
-      { x: up.x * (HEAD_RADIUS_VERTICAL + 3), y: up.y * (HEAD_RADIUS_VERTICAL + 3) })
+      { x: up.x * (HEAD_RADIUS_VERTICAL + 3) + backward.x,
+        y: up.y * (HEAD_RADIUS_VERTICAL + 3) + backward.y })
   };
 }
 
