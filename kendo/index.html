@@ -298,9 +298,12 @@ const MENDARE_BAND_TOP = 0.56;
    manche, mais la garde ne le supporte pas. */
 const MEN_SETBACK_CENTIMETRES = 6;
 /* Angles du bras, entre lesquels il passe devant l'épaulette pendant la
-   descente de la coupe. Au-dessus de 50 degrés il est encore trop haut, en
-   dessous de 15 il est redescendu en garde et l'épaulette repasse devant. */
-const ARM_OVER_MENDARE_FROM_DEGREES = 50;
+   descente de la coupe. En dessous de 15 degrés il est redescendu en garde et
+   l'épaulette repasse devant. La borne haute ne peut pas ouvrir plus tôt que
+   trois frames après le sommet : l'angle du bras continue de croître alors que
+   la poignée culmine déjà. Ouvrir avant demanderait de déplacer le sommet, pas
+   de relever cet angle. */
+const ARM_OVER_MENDARE_FROM_DEGREES = 62;
 const ARM_OVER_MENDARE_TO_DEGREES = 15;
 const HEAD_RADIUS_HORIZONTAL = 9.5;
 const HEAD_RADIUS_VERTICAL = 12;
