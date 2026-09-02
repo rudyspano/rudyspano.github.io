@@ -293,13 +293,13 @@ const HEAD_TILT_OFFSET_DEGREES = -10;
 /* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
 const MENDARE_BAND_TOP = 0.56;
 /* Recul du men sur l'axe du regard. Le rig ne bouge pas : seule la vignette du
-   casque et son épaulette reculent. Six centimètres dégagent l'axe du bras au
-   furikaburi ; il en faudrait seize pour dégager toute la largeur de la
-   manche, mais la garde ne le supporte pas. */
-const MEN_SETBACK_CENTIMETRES = 6;
-/* L'épaulette, elle, reste sur l'épaule : reculée avec le casque, elle
-   débordait de six centimètres derrière le dos et y dessinait une bosse. */
-const MENDARE_SETBACK_CENTIMETRES = 0;
+   casque recule, épaulette comprise — elle est dessinée dedans, on ne peut pas
+   l'en détacher sans casser la pièce en deux.
+   C'est là tout le compromis : l'épaulette s'évase vers l'arrière, donc reculer
+   le men la fait saillir derrière le dos. Le bord arrière à hauteur d'épaule
+   passe de -4,3 cm à recul nul à -10,4 cm à six, contre -4 à -6 pour le reste
+   du dos. Au-delà de deux, ça se lit comme une bosse. */
+const MEN_SETBACK_CENTIMETRES = 0;
 /* Angle du bras au-delà duquel il passe devant l'épaulette. En dessous il est
    en garde, et l'épaulette lui repasse devant. */
 const ARM_OVER_MENDARE_DEGREES = 15;
@@ -316,7 +316,9 @@ const FOOT_HEEL_OFFSET = { x: -7, y: -6 };
 const FOOT_BALL_OFFSET = { x: 11, y: -6 };
 const TOE_LENGTH = 7;
 
-const SHINAI_BUTT_OVERHANG = 5;
+/* Le manche ne déborde presque pas de la main gauche : le petit doigt est au
+   bout de la tsuka. À cinq centimètres le pommeau sortait du gant. */
+const SHINAI_BUTT_OVERHANG = 1;
 const SHINAI_LENGTH_FROM_LEFT_GRIP = 115;
 const GRIP_SPACING = 24;
 /* Poing droit contre la tsuba : 24 cm entre les deux mains, la garde
@@ -1724,11 +1726,11 @@ const PIECE_ANCHORS = {
 };
 
 /** Axe du crâne : du haut du cou au sommet du dôme, sur lequel le men se pose. */
-function skullAxis(skeleton, setbackCentimetres) {
+function skullAxis(skeleton) {
   const up = skeleton.neckDirection;
   const backward = {
-    x: -up.y * setbackCentimetres,
-    y: up.x * setbackCentimetres
+    x: -up.y * MEN_SETBACK_CENTIMETRES,
+    y: up.x * MEN_SETBACK_CENTIMETRES
   };
   return {
     base: addPointOffset(skeleton.neckTop, backward),
@@ -1738,32 +1740,25 @@ function skullAxis(skeleton, setbackCentimetres) {
   };
 }
 
-/** Ancres du men ramenées dans une bande de sa vignette : elles sont relevées
-    sur l'image entière, drawPiece les compte dans la bande extraite. */
-function menAnchorsWithin(top, bottom) {
-  const within = fraction => (fraction - top) / (bottom - top);
-  return {
-    from: [PIECE_ANCHORS.men.from[0], within(PIECE_ANCHORS.men.from[1])],
-    to: [PIECE_ANCHORS.men.to[0], within(PIECE_ANCHORS.men.to[1])]
-  };
-}
-
-/** Le mendare seul. C'est une épaulette : elle retombe sur l'épaule, alors que
-    le reste du bras passe devant le men, et elle ne recule pas avec lui. */
+/** Le mendare seul, repris par-dessus le bras : c'est une épaulette, elle
+    retombe sur l'épaule. La bande est reprise dans la vignette du men, qui la
+    contient déjà et l'a donc déjà peinte dessous ; les ancres, relevées sur
+    l'image entière, sont ramenées à la bande. */
 function drawMendare(skeleton) {
   if (!isGameView() || !pieceReady("men")) return;
-  const axis = skullAxis(skeleton, MENDARE_SETBACK_CENTIMETRES);
-  const anchors = menAnchorsWithin(MENDARE_BAND_TOP, 1);
-  drawPiece("men", anchors.from, anchors.to, axis.base, axis.crown,
-    { sourceTop: MENDARE_BAND_TOP });
+  const axis = skullAxis(skeleton);
+  const withinBand = fraction => (fraction - MENDARE_BAND_TOP) / (1 - MENDARE_BAND_TOP);
+  drawPiece("men",
+    [PIECE_ANCHORS.men.from[0], withinBand(PIECE_ANCHORS.men.from[1])],
+    [PIECE_ANCHORS.men.to[0], withinBand(PIECE_ANCHORS.men.to[1])],
+    axis.base, axis.crown, { sourceTop: MENDARE_BAND_TOP });
 }
 
 function drawMen(skeleton) {
   if (isGameView() && pieceReady("men")) {
-    const axis = skullAxis(skeleton, MEN_SETBACK_CENTIMETRES);
-    const anchors = menAnchorsWithin(0, MENDARE_BAND_TOP);
-    if (drawPiece("men", anchors.from, anchors.to, axis.base, axis.crown,
-        { sourceBottom: MENDARE_BAND_TOP })) return;
+    const axis = skullAxis(skeleton);
+    if (drawPiece("men", PIECE_ANCHORS.men.from, PIECE_ANCHORS.men.to,
+        axis.base, axis.crown)) return;
   }
   const forward = { x: skeleton.neckDirection.y, y: -skeleton.neckDirection.x };
   const up = skeleton.neckDirection;
@@ -2519,7 +2514,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
     drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6],
       isGameView() ? SLEEVE_CLOTH_FAR : farVolume());
   }
-  if (showArmour) drawKeikogiSleeve(far.shoulder, far.elbow, far.grip, 94);
+  if (showArmour) {
+    drawKeikogiSleeve(far.shoulder, far.elbow, far.grip, 94);
+    drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96, false);
+  }
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
 
   if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
@@ -2551,10 +2549,6 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   if (showArmour && armOverMendare) drawMendare(skeleton);
 
   drawShinai(skeleton, bladeFlex);
-
-  /* La main éloignée tient le manche : peinte avant le shinai, c'est la tsuka
-     qu'on voyait à sa place. */
-  if (showArmour) drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96, false);
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6],
