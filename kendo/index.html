@@ -1660,7 +1660,9 @@ const PIECE_ANCHORS = {
   men: { from: [0.36, 0.60], to: [0.34, 0.02] },
   keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
   do: { from: [0.58, 0.06], to: [0.46, 0.95] },
-  tare: { from: [0.50, 0.10], to: [0.50, 0.95] },
+  /* Vignette de profil : l'ancre haute est sur le bord supérieur de la
+     ceinture, en arrière du bourrelet qui la termine. */
+  tare: { from: [0.50, 0.11], to: [0.50, 0.98] },
   kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
   /* Avant-bras plus poing : la mesure ne dépend pas de la pose. */
   manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
@@ -1807,7 +1809,7 @@ function drawTare(skeleton) {
     const waist = { x: skeleton.root.x + skeleton.forwardDirection.x * 2, y: skeleton.root.y + 6 };
     const bottom = { x: waist.x, y: waist.y - 34 };
     if (drawPiece("tare", PIECE_ANCHORS.tare.from, PIECE_ANCHORS.tare.to, waist, bottom,
-        { widthCentimetres: 40 })) return;
+        { widthCentimetres: 30 })) return;
   }
   const up = skeleton.torsoDirection;
   const forward = { x: up.y, y: -up.x };
