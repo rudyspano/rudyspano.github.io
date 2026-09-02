@@ -368,12 +368,23 @@ function motodachiShock(frame) {
 
 /** Il tient le chūdan, puis abaisse la pointe pour ouvrir son men
     pendant que le frappeur arme, et la remonte après la traversée. */
+/* Garde chūdan : la main gauche est au bas du dō, et le shinai relève d'autant
+   pour que la pointe reste sur la gorge adverse. L'ouverture du motodachi va de
+   cet angle à -25 degrés. */
+const GUARD_SHINAI_DEGREES = 22;
+const MOTODACHI_OPEN_DEGREES = -25;
+const MOTODACHI_OPENING_SPAN = GUARD_SHINAI_DEGREES - MOTODACHI_OPEN_DEGREES;
+
 function motodachiShinaiDegrees(frame) {
-  if (!currentAttack().opensMen) return 16;
-  if (frame <= 58) return 16;
-  if (frame < 76) return 16 - 41 * easingFunctions.easeInOutSine((frame - 58) / 18);
-  if (frame <= 110) return -25;
-  return -25 + 41 * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
+  if (!currentAttack().opensMen) return GUARD_SHINAI_DEGREES;
+  if (frame <= 58) return GUARD_SHINAI_DEGREES;
+  if (frame < 76) {
+    return GUARD_SHINAI_DEGREES
+      - MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine((frame - 58) / 18);
+  }
+  if (frame <= 110) return MOTODACHI_OPEN_DEGREES;
+  return MOTODACHI_OPEN_DEGREES
+    + MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
 }
 
 function buildDefenderPose(frame) {
@@ -382,13 +393,13 @@ function buildDefenderPose(frame) {
   }
   const retreat = motodachiRetreat(frame);
   const shock = motodachiShock(frame);
-  const openness = (16 - motodachiShinaiDegrees(frame)) / 41;
+  const openness = (GUARD_SHINAI_DEGREES - motodachiShinaiDegrees(frame)) / MOTODACHI_OPENING_SPAN;
   return {
     rootX: -retreat, rootY: 89 - shock * 2.5,
     torsoLeanDegrees: 6 + shock * 4, headTiltDegrees: -shock * 8,
     rightAnkleX: 13 - retreat, rightAnkleY: 6, rightFootDegrees: 0,
     leftAnkleX: -15 - retreat, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: 26 - retreat, gripY: 104 - openness * 8, shinaiDegrees: motodachiShinaiDegrees(frame),
+    gripX: 26 - retreat, gripY: 93 - openness * 8, shinaiDegrees: motodachiShinaiDegrees(frame),
     leftElbowBias: -8, rightElbowBias: -15
   };
 }
@@ -450,21 +461,21 @@ const menKeyframeList = [
       rootX: 4, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -11, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 26, gripY: 104, shinaiDegrees: 16,
+      gripX: 26, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 20, easing: "easeInOutSine", pose: {
       rootX: 4, rootY: 90, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
       rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -11, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 26, gripY: 103.5, shinaiDegrees: 16,
+      gripX: 26, gripY: 92.5, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 44, easing: "easeOutCubic", pose: {
       rootX: 10, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 23, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: -5, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 32, gripY: 104, shinaiDegrees: 12,
+      gripX: 32, gripY: 93, shinaiDegrees: 18,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   /* Mi-armé : les poings passent devant le corps, pas contre l'épaule.
@@ -571,14 +582,14 @@ const menKeyframeList = [
       rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 187, gripY: 104, shinaiDegrees: 16,
+      gripX: 187, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 187, gripY: 104, shinaiDegrees: 16,
+      gripX: 187, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } }
 ];
 
@@ -696,14 +707,14 @@ const koteKeyframeList = [
       rootX: 119, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 104, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 141, gripY: 104, shinaiDegrees: 16,
+      gripX: 141, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 119, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 104, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 141, gripY: 104, shinaiDegrees: 16,
+      gripX: 141, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } }
 ];
 
@@ -745,7 +756,7 @@ const doKeyframeList = [
       rootX: 30, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 43, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 15, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 52, gripY: 104, shinaiDegrees: 12,
+      gripX: 52, gripY: 93, shinaiDegrees: 18,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 50, easing: "easeInOutSine", pose: {
@@ -836,14 +847,14 @@ const doKeyframeList = [
       rootX: 152, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 165, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 137, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 174, gripY: 104, shinaiDegrees: 16,
+      gripX: 174, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 152, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 165, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 137, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 174, gripY: 104, shinaiDegrees: 16,
+      gripX: 174, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } }
 ];
 
@@ -950,14 +961,14 @@ const tsukiKeyframeList = [
       rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 98, gripY: 104, shinaiDegrees: 16,
+      gripX: 98, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } },
 
   { frame: 150, easing: "linear", pose: {
       rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
       rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 98, gripY: 104, shinaiDegrees: 16,
+      gripX: 98, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15 } }
 ];
 
