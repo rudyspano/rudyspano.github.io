@@ -1855,8 +1855,12 @@ function drawMen(skeleton) {
 
 function drawDo(skeleton) {
   if (isGameView() && pieceReady("do")) {
-    const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 1.02);
-    const belly = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.06);
+    /* La vignette est mise à l'échelle par la distance entre ses deux ancres.
+       On garde donc celle du haut sur la poitrine et on descend celle du bas :
+       l'agrandissement part vers le bas, et la largeur suit. */
+    const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, DO_TOP_ALONG_TORSO);
+    const belly = pointAlong(skeleton.root, skeleton.shoulderCenter,
+      DO_TOP_ALONG_TORSO - (DO_TOP_ALONG_TORSO - DO_BOTTOM_ALONG_TORSO) * DO_SCALE);
     if (drawPiece("do", PIECE_ANCHORS.do.from, PIECE_ANCHORS.do.to, chest, belly)) return;
   }
   const up = skeleton.torsoDirection;
@@ -2136,6 +2140,12 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
    tranchant : c'est elle qui dit de quel côté on frappe. */
 const SHINAI_SLAT_COUNT = 3;
 const NAKAYUI_FROM_LEFT_GRIP = 88;
+/* Le dō, placé le long du torse en fractions de la hauteur bassin-épaules, et
+   agrandi d'autant à partir de son bord haut. */
+const DO_TOP_ALONG_TORSO = 1.02;
+const DO_BOTTOM_ALONG_TORSO = 0.06;
+const DO_SCALE = 1.05;
+
 const KOTE_LENGTH = 33;
 /* Rotation de la seule main droite, celle qui tient sous la tsuba. Négatif
    parce que le repère a l'axe vertical vers le haut : c'est le sens horaire
