@@ -1372,9 +1372,10 @@ let stageImageReady = false;
 stageImage.addEventListener("load", () => { stageImageReady = true; });
 stageImage.src = "assets/dojo-stage.png";
 
-/* Le plancher est au ras des combattants, il doit défiler presque avec
-   eux ; les murs et le plafond sont loin et bougent peu. L'image est donc
-   dessinée en deux bandes, séparées à la ligne où le sol rejoint le fond. */
+/* Le décor ne bouge pas. Il a été découpé un temps en deux bandes défilant
+   à des vitesses différentes, plancher et salle, pour donner de la
+   profondeur : on y lisait surtout une image coupée en deux, la couture se
+   voyant plus que l'effet. */
 /* Les pièces dessinées, générées séparément puis posées sur le rig. Le
    squelette continue de commander : chaque vignette est amenée sur son os
    par ses deux points d'ancrage, exprimés en fractions de sa propre image. */
@@ -1474,9 +1475,12 @@ function drawShinaiPiece(centreLine) {
   return true;
 }
 
-const STAGE_FLOOR_LINE = 0.72;
-const STAGE_ROOM_PARALLAX = 0.30;
-const STAGE_FLOOR_PARALLAX = 0.85;
+/* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
+   receveur recule d'un demi, et il faut de la marge pour les corps. Le
+   centre est compté depuis le décalage courant, et il est décalé vers
+   l'avant du frappeur, puisque c'est de ce côté que le terrain se gagne. */
+const GAME_ACTION_SPAN = 430;
+const GAME_ACTION_CENTRE = 152;
 
 const canvas = document.getElementById("scene");
 const context = canvas.getContext("2d");
@@ -2406,35 +2410,25 @@ function drawStage() {
   }
   const scale = canvas.height / stageImage.height;
   const drawnWidth = stageImage.width * scale;
-  const slack = Math.max(0, drawnWidth - canvas.width);
+  const left = (canvas.width - drawnWidth) / 2;
 
-  /* La bande est répétée en miroir de part et d'autre : le dojo est plus
-     large que l'image, et la salle est symétrique. */
-  function drawBand(sourceTop, sourceHeight, parallax) {
-    const offset = -slack / 2 + camera.originX * parallax;
-    const destinationTop = sourceTop * scale;
-    const destinationHeight = sourceHeight * scale;
-    for (let repeat = -1; repeat <= 1; repeat++) {
-      const left = offset + repeat * drawnWidth;
-      if (left > canvas.width || left + drawnWidth < 0) continue;
-      context.save();
-      if (repeat !== 0) {
-        context.translate(left + drawnWidth / 2, 0);
-        context.scale(-1, 1);
-        context.translate(-drawnWidth / 2, 0);
-        context.drawImage(stageImage, 0, sourceTop, stageImage.width, sourceHeight,
-          0, destinationTop, drawnWidth, destinationHeight);
-      } else {
-        context.drawImage(stageImage, 0, sourceTop, stageImage.width, sourceHeight,
-          left, destinationTop, drawnWidth, destinationHeight);
-      }
-      context.restore();
+  /* L'image est répétée en miroir de part et d'autre au cas où l'écran
+     serait plus large qu'elle : le dojo est symétrique, la reprise ne se
+     voit pas. */
+  for (let repeat = -1; repeat <= 1; repeat++) {
+    const bandLeft = left + repeat * drawnWidth;
+    if (bandLeft > canvas.width || bandLeft + drawnWidth < 0) continue;
+    context.save();
+    if (repeat !== 0) {
+      context.translate(bandLeft + drawnWidth / 2, 0);
+      context.scale(-1, 1);
+      context.translate(-drawnWidth / 2, 0);
+      context.drawImage(stageImage, 0, 0, drawnWidth, canvas.height);
+    } else {
+      context.drawImage(stageImage, bandLeft, 0, drawnWidth, canvas.height);
     }
+    context.restore();
   }
-
-  const floorTop = Math.round(stageImage.height * STAGE_FLOOR_LINE);
-  drawBand(0, floorTop, STAGE_ROOM_PARALLAX);
-  drawBand(floorTop, stageImage.height - floorTop, STAGE_FLOOR_PARALLAX);
 }
 
 function drawFloor() {
@@ -2902,22 +2896,39 @@ function render() {
   context.fillStyle = "#f4f1e8";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  camera.scale = (canvas.height / 330);
   const framesSinceImpact = isAttackSequence ? frame - currentAttack().impactFrame : -1;
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
   const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
-  /* En vue jeu la caméra cadre les deux combattants, comme dans un jeu de
-     combat : c'est ce qui rend l'avance de l'attaquant lisible. Verrouillée
-     sur lui, il resterait immobile à l'écran et l'adversaire semblerait
-     foncer. Les vues d'analyse, elles, le gardent au quart de l'écran pour
-     qu'il reste grand et stable. */
-  const defenderRootWorldX = toWorld(placement.defender, { x: defenderPose.rootX, y: 0 }).x;
-  const focusWorldX = isGameView()
-    ? (attackerRootWorldX + defenderRootWorldX) / 2
-    : attackerRootWorldX;
-  const framing = isGameView() ? 0.5 : (placement.attacker.facesRight ? 0.21 : 0.79);
-  camera.originX = canvas.width * framing - focusWorldX * camera.scale;
+  /* En vue jeu, la caméra ne bouge pas : le décor est fixe, une caméra qui
+     suivrait ferait glisser sous les pieds posés un plancher immobile, et
+     l'avance ne se lirait qu'à moitié — le cadrage en avalerait la part
+     qu'il rattrape. Elle cadre donc une fois pour toutes l'aire où le
+     geste se joue, quitte à reculer un peu quand l'écran est étroit. Son
+     centre suit le décalage accumulé par les allers-retours, si bien qu'un
+     retour à distance ne fait sauter ni les combattants ni le fond.
+
+     Les vues d'analyse, elles, gardent le frappeur au quart de l'écran :
+     là il n'y a pas de décor, seulement une ligne de sol, et on veut le
+     voir grand et stable. */
+  if (isGameView()) {
+    camera.scale = Math.min(canvas.height / 330, canvas.width / GAME_ACTION_SPAN);
+    /* Le décalage accumulé ne change qu'à la fin du retour à distance. Si
+       la caméra l'attendait, elle sauterait d'un coup de tout le pas ;
+       elle le suit donc pendant que le pas se fait. */
+    const returning = sceneState.sequence === "return";
+    const progress = returning ? easingFunctions.easeInOutSine(
+      Math.min(1, frame / currentLastFrame())) : 0;
+    const drift = returning ? currentAttack().returnOffsetShift * progress
+      * (sceneState.attackerFacesRight ? 1 : -1) : 0;
+    const centre = sceneState.offsetX + drift + (sceneState.attackerFacesRight
+      ? GAME_ACTION_CENTRE : MOTODACHI_BASE_X - GAME_ACTION_CENTRE);
+    camera.originX = canvas.width / 2 - centre * camera.scale;
+  } else {
+    camera.scale = canvas.height / 330;
+    const framing = placement.attacker.facesRight ? 0.21 : 0.79;
+    camera.originX = canvas.width * framing - attackerRootWorldX * camera.scale;
+  }
   /* La marge sous le sol est comptée en centimètres, pas en pixels : le
      pas en diagonale fait descendre le frappeur jusqu'à 15 cm sous la
      ligne de sol, et une marge fixe en pixels le tronquerait sur les
