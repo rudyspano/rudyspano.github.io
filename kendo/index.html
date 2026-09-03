@@ -2579,9 +2579,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
     drawFootVolume(near.foot, isGameView() ? GAME_VOLUME_NEAR : nearVolume());
   }
   if (showArmour && !singleSheet) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
+  /* Le pied proche passe avant la jupe, comme le pied éloigné : peint après,
+     il se posait par-dessus le tissu au lieu d'en sortir. */
+  drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
   if (singleSheet) drawHakamaSheet(skeleton);
   else if (showArmour && cloth) drawHakamaPanels(skeleton, cloth);
-  drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
 
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
      se porte par-dessus le tare, dont il recouvre la ceinture. */
