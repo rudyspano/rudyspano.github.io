@@ -362,6 +362,10 @@ const MOTODACHI_BASE_X = 264;
    fait trente-six centimètres de large, la tôle qu'on frappe est donc à
    seize ou dix-huit centimètres de l'axe, du côté opposé à la caméra. */
 const DO_SIDE_DEPTH = 16;
+/* Distance de l'arête avant du plastron dessiné à l'axe du corps, mesurée
+   sur la silhouette réellement peinte : la vignette est plus large que le
+   contour analytique, qui donnait treize centimètres. */
+const DO_FRONT_FROM_AXIS = 14;
 
 /** Recul du motodachi : il rompt dès qu'il a encaissé, un peu plus vite
     que le frappeur n'avance, pour que la distance ne se referme jamais. */
@@ -408,6 +412,23 @@ function motodachiShinaiDegrees(frame) {
     + MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
 }
 
+/** Le motodachi lève les deux bras pour ouvrir son dō : c'est ainsi qu'on
+    présente la cible à l'entraînement, et c'est ce qui dégage le plastron
+    de ses poings. Il monte pendant que le frappeur arme, tient pendant la
+    coupe, et redescend une fois qu'on est passé. */
+function motodachiArmLift(frame) {
+  if (!currentAttack().raisesArms) return 0;
+  if (frame <= 40) return 0;
+  if (frame < 66) return easingFunctions.easeInOutSine((frame - 40) / 26);
+  if (frame <= 104) return 1;
+  return 1 - easingFunctions.easeInOutSine(Math.min(1, (frame - 104) / 30));
+}
+
+/* Poings au-dessus du front et shinai rabattu dans le dos, comme un armé
+   tenu : c'est la position haute du motodachi. */
+const MOTODACHI_LIFT_HEIGHT = 72;
+const MOTODACHI_LIFT_SHINAI_DEGREES = 135;
+
 function buildDefenderPose(frame) {
   if (sceneState.sequence === "return") {
     return interpolatePose(frame, currentAttack().defenderReturnSequence);
@@ -415,13 +436,17 @@ function buildDefenderPose(frame) {
   const retreat = motodachiRetreat(frame);
   const shock = motodachiShock(frame);
   const openness = (GUARD_SHINAI_DEGREES - motodachiShinaiDegrees(frame)) / MOTODACHI_OPENING_SPAN;
+  const lift = motodachiArmLift(frame);
   return {
     rootX: -retreat, rootY: 89 - shock * 2.5,
     torsoLeanDegrees: 6 + shock * 4, headTiltDegrees: -shock * 8,
     rightAnkleX: 13 - retreat, rightAnkleY: 6, rightFootDegrees: 0,
     leftAnkleX: -15 - retreat, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: 33 - retreat, gripY: 93 - openness * 8, shinaiDegrees: motodachiShinaiDegrees(frame),
-    leftElbowBias: -8, rightElbowBias: -15
+    gripX: 33 - retreat - lift * 7,
+    gripY: 93 - openness * 8 + lift * MOTODACHI_LIFT_HEIGHT,
+    shinaiDegrees: motodachiShinaiDegrees(frame)
+      + lift * (MOTODACHI_LIFT_SHINAI_DEGREES - GUARD_SHINAI_DEGREES),
+    leftElbowBias: -8 + lift, rightElbowBias: -15 + lift * 7
   };
 }
 
@@ -768,9 +793,10 @@ const kotePhaseList = [
    motodachi, c'est-à-dire vers le fond de l'image. Partant d'une main
    écartée vers la caméra par le pas en diagonale et visant une tôle
    enfouie derrière le plan du corps, elle croise ce plan aux deux tiers
-   de sa course : au-delà, elle est derrière lui et n'est plus dessinée.
-   C'est ce manque — cinquante-trois centimètres sur cent quinze — qui dit
-   la profondeur, faute de pouvoir tourner la caméra, et c'est pourquoi
+   de sa course : au-delà, et pour autant qu'elle se projette dans sa
+   silhouette, elle est derrière lui et n'est plus dessinée. C'est ce
+   manque — vingt-neuf centimètres sur cent quinze — qui dit la
+   profondeur, faute de pouvoir tourner la caméra, et c'est pourquoi
    l'impact ne se voit pas : il a lieu du côté caché. Ensuite le
    glissement : le frappeur simule la coupe du corps entier en faisant
    courir la lame sur le plastron jusqu'au côté opposé, sa droite à lui,
@@ -834,19 +860,21 @@ const doKeyframeList = [
       rootX: 96, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
       rightAnkleX: 120, rightAnkleY: 12, rightFootDegrees: 2,
       leftAnkleX: 64, leftAnkleY: 17, leftFootDegrees: -36,
-      gripX: 148, gripY: 138, shinaiDegrees: 42,
+      gripX: 142, gripY: 118, shinaiDegrees: 40,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24, bladeDepth: 0 } },
 
-  /* Frappe : la lame entre dans le bas du plastron, en profondeur, du côté
-     droit du motodachi. Elle croise le plan de son corps aux deux tiers de
-     sa course : au-delà elle est derrière lui, si bien qu'on ne voit plus
-     que soixante-deux centimètres de shinai sur cent quinze. Le contact
+  /* Frappe : main gauche au nombril, treize centimètres au-dessus du
+     bassin, et lame presque à plat — c'est la conséquence, non un choix :
+     le dō visé est à peu près à la hauteur de ce poing, donc toute la
+     diagonale du coup part dans la profondeur et non dans le plan de
+     l'image. La lame entre dans le bas du plastron du côté droit du
+     motodachi ; passé l'arête avant elle est derrière lui, et le contact
      lui-même est caché — c'est bien le but. */
   { frame: 82, easing: "linear", pose: {
       rootX: 110, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
       rightAnkleX: 134, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 78, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 163, gripY: 127, shinaiDegrees: -17,
+      gripX: 156, gripY: 93.5, shinaiDegrees: 3,
       leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28, bladeDepth: 1 } },
 
   /* Glissement sur le plastron : la lame ressort de la profondeur en
@@ -856,14 +884,14 @@ const doKeyframeList = [
       rootX: 113, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
       rightAnkleX: 134, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 102, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 164, gripY: 124, shinaiDegrees: -15,
+      gripX: 164, gripY: 97.5, shinaiDegrees: 3,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 34, bladeDepth: 0.85 } },
 
   { frame: 90, easing: "easeInOutSine", pose: {
       rootX: 121, rootY: 87, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 145, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 109, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 173, gripY: 120, shinaiDegrees: -13,
+      gripX: 173, gripY: 100.5, shinaiDegrees: 0.5,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 40, bladeDepth: 0.6 } },
 
   /* Le shinai est ressorti tout entier du côté du spectateur : la coupe
@@ -872,21 +900,21 @@ const doKeyframeList = [
       rootX: 132, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 0,
       rightAnkleX: 156, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 120, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 186, gripY: 118, shinaiDegrees: -15,
+      gripX: 186, gripY: 102.5, shinaiDegrees: -2,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 44, bladeDepth: 0 } },
 
   { frame: 104, easing: "easeInOutSine", pose: {
       rootX: 142, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 166, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 130, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 196, gripY: 112, shinaiDegrees: -26,
+      gripX: 196, gripY: 102, shinaiDegrees: -20,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 48, bladeDepth: 0 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
       rootX: 152, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
       rightAnkleX: 176, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 140, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 204, gripY: 108, shinaiDegrees: -22,
+      gripX: 204, gripY: 100, shinaiDegrees: -16,
       leftElbowBias: -3, rightElbowBias: -6, lateralOffset: 50, bladeDepth: 0 } },
 
   { frame: 134, easing: "linear", pose: {
@@ -910,15 +938,15 @@ const doPhaseList = [
   { name: "Seme d'entrée", startFrame: 20, endFrame: 44,
     detail: "On entre de 26 cm avant d'armer : le dō se coupe de près, sinon le contact se fait trop loin sur la lame." },
   { name: "Furikaburi", startFrame: 44, endFrame: 58,
-    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne." },
+    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne. En face, le motodachi lève les deux bras pour ouvrir son dō — c'est ainsi qu'on présente la cible, et c'est ce qui dégage le plastron de ses poings." },
   { name: "Poussée en diagonale", startFrame: 58, endFrame: 72,
     detail: "Le pas quitte la ligne vers la droite : on ouvre le plastron et on passe à côté, pas dedans." },
   { name: "Descente devant la cible", startFrame: 72, endFrame: 80,
-    detail: "La lame reste redressée à 42° : la pointe descend devant l'adversaire, jamais au-dessus de lui. C'est ce qui fait que la lame arrive par le côté proche." },
+    detail: "La lame reste redressée à 40° et les mains tombent déjà vers le nombril : la pointe descend devant l'adversaire, jamais au-dessus de lui." },
   { name: "Fumikomi (frappe)", startFrame: 80, endFrame: 82,
-    detail: "Le poignet se déroule d'un coup, 59° en deux frames, et la lame entre en diagonale dans le bas du plastron, du côté droit du motodachi, c'est-à-dire vers le fond. Elle croise le plan de son corps aux deux tiers de sa course : cinquante-trois centimètres de shinai passent derrière lui et disparaissent, l'impact compris." },
+    detail: "Le poignet se déroule d'un coup, 37° en deux frames, et la main gauche arrive au nombril, treize centimètres au-dessus du bassin. La lame entre dans le bas du plastron du côté droit du motodachi, c'est-à-dire vers le fond : vingt-neuf centimètres de shinai passent derrière lui et disparaissent, l'impact compris. Elle est presque à plat, et ce n'est pas un défaut : le dō visé est à la hauteur de ce poing, donc la diagonale du coup est tout entière dans la profondeur." },
   { name: "Glissement sur le dō", startFrame: 82, endFrame: 92,
-    detail: "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La part cachée fond de 53 à 25 puis 2 cm, si bien que la lame ressort peu à peu de derrière le corps. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit." },
+    detail: "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La main gauche reste au nombril et suit la remontée du bassin. La part cachée fond de 29 à 19 puis 0 cm, si bien que la lame ressort peu à peu de derrière le corps. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit." },
   { name: "Dégagement", startFrame: 92, endFrame: 104,
     detail: "Le shinai est ressorti tout entier du côté du spectateur, la coupe est finie. Libérée, la lame plonge : c'est là que se lit la diagonale." },
   { name: "Zanshin", startFrame: 104, endFrame: 116,
@@ -1056,6 +1084,7 @@ const attackCatalogue = {
   do: {
     label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
     impactFrame: 82, defenderRetreat: 55, retreatDelay: 4, opensMen: false, cutsThrough: true,
+    raisesArms: true,
     /* Le contact est sur le dō droit du motodachi, donc de l'autre côté de
        son corps : de profil il se projette au milieu de sa silhouette, et
        il est caché. C'est le point que la lame vise, pas celui où elle
@@ -2826,17 +2855,23 @@ function render() {
   const bladeDepth = viewState.showMotodachi ? (attackerPose.bladeDepth || 0) : 0;
   const lateralStep = attackerPose.lateralOffset || 0;
   if (bladeDepth > 0.02 && lateralStep > 5) {
-    /* La lame va de la main du frappeur, écartée de `lateralStep` vers la
-       caméra par son pas en diagonale, jusqu'au dō droit du motodachi,
-       enfoui de DŌ_SIDE_DEPTH derrière le plan de son corps. Elle croise
-       ce plan à cette fraction de sa course : au-delà, elle est derrière
-       lui, donc invisible. Le reste du glissement ramène la frontière
-       au-delà de la pointe, si bien que la lame ressort peu à peu. */
+    /* Une lame cesse d'être vue quand deux conditions tiennent ensemble :
+       elle est passée derrière le plan du corps, et elle se projette dans
+       la silhouette. La frontière est donc la plus lointaine des deux.
+       Profondeur : la main du frappeur est écartée de `lateralStep` vers la
+       caméra par son pas en diagonale, la tôle visée est enfouie de
+       DO_SIDE_DEPTH derrière le plan du corps, la lame croise donc ce plan
+       à cette fraction de sa course. Silhouette : l'arête avant du
+       plastron, quelques centimètres mordus pour que la lame touche la
+       tôle avant de disparaître. Sans cette seconde condition, la lame se
+       coupait en plein air dès que le motodachi levait les bras et
+       dégageait le devant de son corps. */
     const contactLocal = toLocal(placement.attacker, menWorld);
     const crossing = lateralStep / (lateralStep + DO_SIDE_DEPTH);
     const crossingX = skeleton.leftGrip.x + (contactLocal.x - skeleton.leftGrip.x) * crossing;
-    placement.attacker.bladeClipX = crossingX
-      + (1 - bladeDepth) * (skeleton.shinaiTip.x + 6 - crossingX);
+    const nearEdgeX = contactLocal.x - DO_FRONT_FROM_AXIS;
+    placement.attacker.bladeClipX = Math.max(crossingX, nearEdgeX)
+      + (1 - bladeDepth) * (skeleton.shinaiTip.x + 6 - Math.max(crossingX, nearEdgeX));
   } else {
     placement.attacker.bladeClipX = null;
   }
@@ -2880,7 +2915,10 @@ function render() {
   /* Le défenseur est dessiné en premier : il est derrière, si bien que
      le shinai de l'attaquant passe devant lui à la traversée. */
   if (viewState.showMotodachi) {
-    drawActor(placement.defender, solveSkeleton(defenderPose));
+    const defenderSkeleton = solveSkeleton(defenderPose);
+    placement.defender.armOverMendare = armPassesOverMendare(defenderSkeleton,
+      placement.defender.facesRight ? "right" : "left");
+    drawActor(placement.defender, defenderSkeleton);
   }
 
   if (viewState.showTrail && isAttackSequence) {
