@@ -1968,6 +1968,97 @@ function drawDo(skeleton) {
   }
 }
 
+/* Les cordons et le zekken sont des détails de finition : ils tiennent en
+   quelques traits, et n'existent que dans les vues dessinées. Le calque,
+   lui, montre le squelette et n'a que faire d'un nœud de himo. */
+const CORD_INK = "#141a33";
+
+/** Himo du men : deux cordons partent de l'arrière de la coque et se nouent
+    derrière la nuque. De profil on n'en voit que ce qui en dépasse. */
+function drawMenCords(skeleton) {
+  if (!isSolidView() || !viewState.showArmour) return;
+  const up = skeleton.neckDirection;
+  const back = { x: -up.y, y: up.x };
+  const ink = isGameView() ? CORD_INK : partColor.men;
+  const anchor = addPointOffset(skeleton.headCenter, {
+    x: back.x * (HEAD_RADIUS_HORIZONTAL + 1.5),
+    y: back.y * (HEAD_RADIUS_HORIZONTAL + 1.5)
+  });
+  for (let cord = 0; cord < 2; cord++) {
+    const spread = cord === 0 ? 2.4 : -1.2;
+    const start = addPointOffset(anchor, { x: up.x * spread, y: up.y * spread });
+    const middle = addPointOffset(start, { x: back.x * 5 - up.x * 4, y: back.y * 5 - up.y * 4 });
+    const end = addPointOffset(middle, { x: back.x * 1.5 - up.x * 8, y: back.y * 1.5 - up.y * 8 });
+    strokePath([start, middle, end],
+      { color: ink, width: 0.5, single: true, alpha: 0.75, seed: 120 + cord });
+  }
+  /* Le nœud, deux traits croisés là où les cordons se rejoignent. */
+  const knot = addPointOffset(anchor, { x: back.x * 4.5 - up.x * 3, y: back.y * 4.5 - up.y * 3 });
+  strokePath([addPointOffset(knot, { x: -1, y: -1 }), addPointOffset(knot, { x: 1, y: 1 })],
+    { color: ink, width: 0.7, single: true, alpha: 0.8, seed: 123 });
+}
+
+/** Himo du dō : les cordons de poitrine montent des angles hauts du plastron,
+    passent sur l'épaule et vont se nouer dans le dos ; celui de taille file
+    vers l'arrière au bas de la tôle. */
+function drawDoCords(skeleton) {
+  if (!isSolidView() || !viewState.showArmour) return;
+  const up = skeleton.torsoDirection;
+  const forward = { x: up.y, y: -up.x };
+  const ink = isGameView() ? CORD_INK : partColor.do;
+  /* Le himo s'attache au bord haut de la tôle, pas au milieu : plus bas, le
+     cordon se dessinait en travers du plastron. */
+  const chest = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.97);
+  const frontTop = addPointOffset(chest, { x: forward.x * 10, y: forward.y * 10 });
+  const overShoulder = addPointOffset(skeleton.shoulderCenter,
+    { x: forward.x * 2.5, y: forward.y * 2.5 + 1.5 });
+  const behind = addPointOffset(skeleton.shoulderCenter,
+    { x: -forward.x * 8, y: -forward.y * 8 - 1 });
+  strokePath([frontTop, overShoulder, behind],
+    { color: ink, width: 0.5, single: true, alpha: 0.7, seed: 126 });
+
+  /* Le cordon de taille se noue dans le dos : de profil il n'en dépasse que
+     la boucle, derrière la tôle. */
+  const waistBack = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.22);
+  strokePath([addPointOffset(waistBack, { x: -forward.x * 7, y: -forward.y * 7 }),
+              addPointOffset(waistBack, { x: -forward.x * 11, y: -forward.y * 11 - 2.5 })],
+    { color: ink, width: 0.45, single: true, alpha: 0.6, seed: 128 });
+}
+
+/** Zekken : la plaque de tissu qui pend au pan central du tare. Vu de profil
+    elle est presque de champ, on n'en voit qu'une bande étroite — d'où le
+    kanji écrasé à l'horizontale, qui se devine plus qu'il ne se lit. */
+function drawZekken(skeleton) {
+  if (!isSolidView() || !viewState.showArmour) return;
+  const up = skeleton.torsoDirection;
+  const forward = { x: up.y, y: -up.x };
+  const front = addPointOffset(skeleton.root,
+    { x: forward.x * 10 + up.x * 1, y: forward.y * 10 + up.y * 1 });
+  const top = addPointOffset(front, { x: -up.x * 3, y: -up.y * 3 });
+  const bottom = addPointOffset(top, { x: -up.x * 13, y: -up.y * 13 });
+  const panel = segmentQuad(top, bottom, 3, 2.7);
+  fillPath(panel, "#1b2244", 0.3);
+  strokePath(panel, { color: isGameView() ? "#0f142c" : partColor.tare,
+    width: 0.35, closed: true, alpha: 0.7, seed: 130 });
+
+  const centre = pointAlong(top, bottom, 0.46);
+  context.save();
+  context.translate(centre.x, centre.y);
+  context.rotate(-Math.atan2(up.x, up.y));
+  /* Le repère a l'axe vertical vers le haut, le texte se lit vers le bas :
+     on le retourne. L'écrasement horizontal est la perspective, pas un
+     effet de style — la plaque est vue par la tranche. */
+  context.scale(0.5, -1);
+  context.globalAlpha = 0.4;
+  context.fillStyle = isGameView() ? "#ddd8c8" : partColor.tare;
+  context.font = '5px "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif';
+  context.textAlign = "center";
+  context.fillText("剣", 0, -0.5);
+  context.fillText("道", 0, 5);
+  context.globalAlpha = 1;
+  context.restore();
+}
+
 function drawTare(skeleton) {
   if (isGameView() && pieceReady("tare")) {
     /* Le tare pend d'aplomb, comme le hakama : monté sur l'axe du buste,
@@ -2660,7 +2751,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
+  if (showArmour) drawZekken(skeleton);
   if (showArmour) drawDo(skeleton);
+  if (showArmour) drawDoCords(skeleton);
+  if (showArmour) drawMenCords(skeleton);
   if (showArmour) drawMen(skeleton);
   if (showArmour && armOverMendare) drawMendare(skeleton);
 
