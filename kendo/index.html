@@ -759,13 +759,16 @@ const kotePhaseList = [
    Dō : armé comme le men, mais la lame arrive sur l'arête avant du
    plastron — celle qui est tournée vers le frappeur. Le geste se lit en
    deux temps, et c'est l'ordre qui compte : la lame mord d'abord le côté
-   proche, puis traverse le corps, si bien qu'elle finit de l'autre côté.
-   Deux conséquences sur les poses : la lame reste redressée jusqu'à la
-   toute fin de la descente, pour que la pointe passe devant l'adversaire
-   et non au-dessus de lui ; et la coupe se fait en poussant les mains
-   vers l'avant, presque à l'horizontale, plutôt qu'en faisant pivoter la
-   lame vers le bas. Le « 45° » enseigné vient du sabre : de profil, une
-   lame si inclinée demanderait les mains au-dessus de la tête.
+   proche du plastron, puis glisse dessus jusqu'à en sortir par l'autre
+   côté. Une lame de shinai ne rentre pas dans un dō : elle porte sur la
+   tôle et court le long, ce qui interdit à la pointe de dépasser l'arête
+   opposée tant que la coupe dure. Deux conséquences sur les poses : la
+   lame reste redressée jusqu'à la toute fin de la descente, pour que la
+   pointe passe devant l'adversaire et non au-dessus de lui ; et le
+   glissement se fait en poussant les mains presque à l'horizontale,
+   pointe collée au plastron, plutôt qu'en faisant pivoter la lame vers
+   le bas. Le « 45° » enseigné vient du sabre : de profil, une lame si
+   inclinée demanderait les mains au-dessus de la tête.
    ------------------------------------------------------------ */
 const doKeyframeList = [
   { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
@@ -811,75 +814,83 @@ const doKeyframeList = [
       leftElbowBias: -6, rightElbowBias: -7, lateralOffset: 9 } },
 
   { frame: 76, easing: "linear", pose: {
-      rootX: 66, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 90, rightAnkleY: 26, rightFootDegrees: 4,
-      leftAnkleX: 40, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 112, gripY: 148, shinaiDegrees: 74,
+      rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
+      rightAnkleX: 96, rightAnkleY: 26, rightFootDegrees: 4,
+      leftAnkleX: 46, leftAnkleY: 20, leftFootDegrees: -40,
+      gripX: 118, gripY: 148, shinaiDegrees: 74,
       leftElbowBias: -5, rightElbowBias: -6, lateralOffset: 16 } },
 
   /* La lame reste redressee : la pointe descend devant l'adversaire, pas
-     au-dessus de lui. C'est ce qui fait mordre le bord avant du do. */
+     au-dessus de lui. C'est ce qui fait qu'elle arrive par le cote proche. */
   { frame: 80, easing: "linear", pose: {
-      rootX: 78, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 102, rightAnkleY: 12, rightFootDegrees: 2,
-      leftAnkleX: 48, leftAnkleY: 17, leftFootDegrees: -36,
-      gripX: 128, gripY: 138, shinaiDegrees: 42,
+      rootX: 84, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
+      rightAnkleX: 108, rightAnkleY: 12, rightFootDegrees: 2,
+      leftAnkleX: 52, leftAnkleY: 17, leftFootDegrees: -36,
+      gripX: 136, gripY: 138, shinaiDegrees: 42,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24 } },
 
-  /* Morsure : le monouchi touche l'arete avant du plastron, la pointe
-     entre a peine dans le corps. On frappe le cote proche, pas le dos. */
+  /* Impact : le monouchi se pose en travers du plastron, kissaki cinq
+     centimetres avant l'arete opposee. La lame porte sur le do, elle
+     n'entre pas dans le corps. */
   { frame: 82, easing: "linear", pose: {
-      rootX: 86, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
-      rightAnkleX: 110, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 56, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 139, gripY: 132, shinaiDegrees: -11,
+      rootX: 94, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
+      rightAnkleX: 118, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 62, leftAnkleY: 15, leftFootDegrees: -34,
+      gripX: 147, gripY: 129, shinaiDegrees: -11,
       leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28 } },
 
-  /* Traversee : les mains poussent en avant presque a l'horizontale. La
-     lame ne pivote pas vers le bas, elle coupe le corps de part en part. */
+  /* Glissement sur le do : la pointe suit la tole, elle descend le long
+     du plastron au lieu de le traverser. Le corps commence a ceder. */
   { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 94, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
-      rightAnkleX: 110, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 80, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 152, gripY: 130, shinaiDegrees: -13,
+      rootX: 97, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
+      rightAnkleX: 118, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 86, leftAnkleY: 10.2, leftFootDegrees: -18,
+      gripX: 150, gripY: 127.5, shinaiDegrees: -12,
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 34 } },
 
-  /* Sortie : la pointe ressort derriere le plastron, le shinai est passe
-     tout entier de l'autre cote du corps. */
-  { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 104, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
+  { frame: 90, easing: "easeInOutSine", pose: {
+      rootX: 104, rootY: 87, torsoLeanDegrees: 9, headTiltDegrees: 0,
       rightAnkleX: 128, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 90, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 166, gripY: 127, shinaiDegrees: -15,
+      leftAnkleX: 92, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 157, gripY: 126, shinaiDegrees: -13,
       leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 40 } },
 
-  /* Une fois sortie, la lame plonge : c'est la fin de la diagonale. */
+  /* Fin de coupe : la pointe quitte le plastron par son arete basse, de
+     l'autre cote de celle qui a ete touchee. */
+  { frame: 96, easing: "easeInOutSine", pose: {
+      rootX: 119, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 0,
+      rightAnkleX: 143, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 107, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 172, gripY: 125, shinaiDegrees: -17,
+      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 44 } },
+
+  /* Une fois la lame degagee, elle plonge : c'est la fin de la diagonale. */
   { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 120, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 144, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 106, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 180, gripY: 116, shinaiDegrees: -30,
-      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 46 } },
+      rootX: 129, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 153, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 117, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 182, gripY: 114, shinaiDegrees: -28,
+      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 48 } },
 
   { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 134, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 158, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 120, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 188, gripY: 108, shinaiDegrees: -24,
+      rootX: 140, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
+      rightAnkleX: 164, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 128, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 190, gripY: 108, shinaiDegrees: -22,
       leftElbowBias: -3, rightElbowBias: -6, lateralOffset: 50 } },
 
   { frame: 134, easing: "linear", pose: {
-      rootX: 144, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 157, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 129, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 187, gripY: 93, shinaiDegrees: 22,
+      rootX: 148, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 161, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 133, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 191, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } },
 
   { frame: 150, easing: "linear", pose: {
-      rootX: 144, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 157, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 129, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 187, gripY: 93, shinaiDegrees: 22,
+      rootX: 148, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
+      rightAnkleX: 161, rightAnkleY: 6, rightFootDegrees: 0,
+      leftAnkleX: 133, leftAnkleY: 9.2, leftFootDegrees: -14,
+      gripX: 191, gripY: 93, shinaiDegrees: 22,
       leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50 } }
 ];
 
@@ -895,11 +906,13 @@ const doPhaseList = [
   { name: "Descente devant la cible", startFrame: 72, endFrame: 80,
     detail: "La lame reste redressée à 42° : la pointe descend devant l'adversaire, jamais au-dessus de lui. C'est ce qui fait que la lame arrive par le côté proche." },
   { name: "Fumikomi (frappe)", startFrame: 80, endFrame: 82,
-    detail: "Le poignet se déroule d'un coup, 53° en deux frames : le monouchi mord l'arête avant du plastron et la pointe n'entre que de onze centimètres. Rien n'est encore traversé." },
-  { name: "Traversée du corps", startFrame: 82, endFrame: 92,
-    detail: "Les mains poussent en avant presque à l'horizontale, 30 cm en dix frames : la lame coupe le corps de part en part et la pointe ressort derrière le plastron. Le motodachi n'est repoussé qu'une fois la lame sortie." },
-  { name: "Zanshin", startFrame: 92, endFrame: 116,
-    detail: "La lame, sortie du corps, plonge enfin vers le bas : c'est là que se lit la diagonale. On traverse vite, sans rester devant l'adversaire." },
+    detail: "Le poignet se déroule d'un coup, 53° en deux frames : le monouchi se pose en travers du plastron, kissaki cinq centimètres avant l'arête opposée. La lame porte sur le dō, elle n'entre pas dans le corps." },
+  { name: "Glissement sur le dō", startFrame: 82, endFrame: 92,
+    detail: "Les mains poussent presque à l'horizontale : la pointe court sur la tôle, du côté touché vers l'autre, en descendant de huit centimètres le long du plastron. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit et le glissement ne se verrait pas." },
+  { name: "Dégagement", startFrame: 92, endFrame: 104,
+    detail: "La pointe quitte le plastron par son arête basse, de l'autre côté de celle qui a été touchée. Libérée, la lame plonge enfin : c'est là que se lit la diagonale." },
+  { name: "Zanshin", startFrame: 104, endFrame: 116,
+    detail: "On traverse vite après un dō, sans rester devant l'adversaire." },
   { name: "Retour kamae", startFrame: 116, endFrame: 150,
     detail: "Redescente en chūdan, reprise de la garde." }
 ];
@@ -1032,7 +1045,7 @@ const attackCatalogue = {
   },
   do: {
     label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
-    impactFrame: 82, defenderRetreat: 55, retreatDelay: 8, opensMen: false, cutsThrough: true,
+    impactFrame: 82, defenderRetreat: 55, retreatDelay: 4, opensMen: false, cutsThrough: true,
     /* Arête avant du plastron, dans son tiers bas : c'est là que la lame
        mord, et c'est de là qu'elle traverse le corps. Viser le centre du
        torse faisait apparaître le contact une fois la lame déjà passée. */
