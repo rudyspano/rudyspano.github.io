@@ -358,6 +358,11 @@ const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
    croisent d'une dizaine de centimètres en garde. */
 const MOTODACHI_BASE_X = 264;
 
+/* Profondeur du dō droit derrière le plan du corps : un torse de kendoka
+   fait trente-six centimètres de large, la tôle qu'on frappe est donc à
+   seize ou dix-huit centimètres de l'axe, du côté opposé à la caméra. */
+const DO_SIDE_DEPTH = 16;
+
 /** Recul du motodachi : il rompt dès qu'il a encaissé, un peu plus vite
     que le frappeur n'avance, pour que la distance ne se referme jamais. */
 function currentAttack() {
@@ -760,15 +765,18 @@ const kotePhaseList = [
    plastron — celle qui est tournée vers le frappeur. Le geste se lit en
    deux temps, et le second se joue dans la profondeur. D'abord la coupe
    en diagonale : la lame entre dans le bas du plastron du côté droit du
-   motodachi, c'est-à-dire vers le fond de l'image. Ce qui est au-delà du
-   point d'entrée est derrière son corps, donc caché : le shinai est
-   tronqué à l'écran, et c'est ce manque qui dit la profondeur, faute de
-   pouvoir tourner la caméra. Ensuite le glissement : le frappeur simule
-   la coupe du corps entier en faisant courir la lame sur le plastron
-   jusqu'au côté opposé, sa droite à lui, celle du spectateur. La part
-   cachée fond alors jusqu'à zéro et la pointe réapparaît en glissant sur
-   la tôle. C'est le champ `bladeDepth` des poses qui pilote ce masquage,
-   de 1 à la frappe à 0 une fois la coupe finie.
+   motodachi, c'est-à-dire vers le fond de l'image. Partant d'une main
+   écartée vers la caméra par le pas en diagonale et visant une tôle
+   enfouie derrière le plan du corps, elle croise ce plan aux deux tiers
+   de sa course : au-delà, elle est derrière lui et n'est plus dessinée.
+   C'est ce manque — cinquante-trois centimètres sur cent quinze — qui dit
+   la profondeur, faute de pouvoir tourner la caméra, et c'est pourquoi
+   l'impact ne se voit pas : il a lieu du côté caché. Ensuite le
+   glissement : le frappeur simule la coupe du corps entier en faisant
+   courir la lame sur le plastron jusqu'au côté opposé, sa droite à lui,
+   celle du spectateur. La part cachée fond alors jusqu'à zéro et le
+   shinai ressort tout entier. Le champ `bladeDepth` des poses règle ce
+   masquage, de 1 à la frappe à 0 une fois la coupe finie.
    ------------------------------------------------------------ */
 const doKeyframeList = [
   { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
@@ -830,14 +838,15 @@ const doKeyframeList = [
       leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24, bladeDepth: 0 } },
 
   /* Frappe : la lame entre dans le bas du plastron, en profondeur, du côté
-     droit du motodachi. Tout ce qui est au-delà du contact passe derrière
-     son corps : on ne voit plus que les quatre-vingt-huit premiers
-     centimètres du shinai, le reste est caché. */
+     droit du motodachi. Elle croise le plan de son corps aux deux tiers de
+     sa course : au-delà elle est derrière lui, si bien qu'on ne voit plus
+     que soixante-deux centimètres de shinai sur cent quinze. Le contact
+     lui-même est caché — c'est bien le but. */
   { frame: 82, easing: "linear", pose: {
       rootX: 110, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
       rightAnkleX: 134, rightAnkleY: 6, rightFootDegrees: 0,
       leftAnkleX: 78, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 163, gripY: 127, shinaiDegrees: -20,
+      gripX: 163, gripY: 127, shinaiDegrees: -17,
       leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28, bladeDepth: 1 } },
 
   /* Glissement sur le plastron : la lame ressort de la profondeur en
@@ -907,9 +916,9 @@ const doPhaseList = [
   { name: "Descente devant la cible", startFrame: 72, endFrame: 80,
     detail: "La lame reste redressée à 42° : la pointe descend devant l'adversaire, jamais au-dessus de lui. C'est ce qui fait que la lame arrive par le côté proche." },
   { name: "Fumikomi (frappe)", startFrame: 80, endFrame: 82,
-    detail: "Le poignet se déroule d'un coup, 62° en deux frames, et la lame entre en diagonale dans le bas du plastron, du côté droit du motodachi. La coupe part vers le fond : les vingt-sept derniers centimètres du shinai passent derrière son corps et disparaissent de l'image." },
+    detail: "Le poignet se déroule d'un coup, 59° en deux frames, et la lame entre en diagonale dans le bas du plastron, du côté droit du motodachi, c'est-à-dire vers le fond. Elle croise le plan de son corps aux deux tiers de sa course : cinquante-trois centimètres de shinai passent derrière lui et disparaissent, l'impact compris." },
   { name: "Glissement sur le dō", startFrame: 82, endFrame: 92,
-    detail: "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La part cachée fond au fur et à mesure, si bien que la pointe réapparaît en courant sur la tôle. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit." },
+    detail: "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La part cachée fond de 53 à 25 puis 2 cm, si bien que la lame ressort peu à peu de derrière le corps. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit." },
   { name: "Dégagement", startFrame: 92, endFrame: 104,
     detail: "Le shinai est ressorti tout entier du côté du spectateur, la coupe est finie. Libérée, la lame plonge : c'est là que se lit la diagonale." },
   { name: "Zanshin", startFrame: 104, endFrame: 116,
@@ -1047,14 +1056,11 @@ const attackCatalogue = {
   do: {
     label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
     impactFrame: 82, defenderRetreat: 55, retreatDelay: 4, opensMen: false, cutsThrough: true,
-    /* Bas de l'arête avant du plastron : le dō se coupe sous les côtes, et
-       ce point sert aussi de frontière au masquage de la lame, puisque
-       c'est là qu'elle entre dans le corps. */
-    targetLocal: skeleton => {
-      const forward = skeleton.forwardDirection;
-      const lowerDo = pointAlong(skeleton.root, skeleton.shoulderCenter, 0.22);
-      return { x: lowerDo.x + forward.x * 11.3, y: lowerDo.y + forward.y * 11.3 };
-    }
+    /* Le contact est sur le dō droit du motodachi, donc de l'autre côté de
+       son corps : de profil il se projette au milieu de sa silhouette, et
+       il est caché. C'est le point que la lame vise, pas celui où elle
+       disparaît. */
+    targetLocal: skeleton => pointAlong(skeleton.root, skeleton.shoulderCenter, 0.2)
   },
   tsuki: {
     label: "TSUKI", keyframes: tsukiKeyframeList, phases: tsukiPhaseList,
@@ -2438,7 +2444,7 @@ function drawKissakiTrail(frame, actor) {
   }
 }
 
-function drawImpactEffects(frame, footPoint, contactPoint) {
+function drawImpactEffects(frame, footPoint, contactPoint, flashClip) {
   const framesSinceImpact = frame - currentAttack().impactFrame;
   if (framesSinceImpact < 0 || framesSinceImpact > 24) return;
   const life = framesSinceImpact / 24;
@@ -2457,9 +2463,19 @@ function drawImpactEffects(frame, footPoint, contactPoint) {
     context.globalAlpha = 1;
   }
 
-  /* Éclat au point de frappe. */
+  /* Éclat au point de frappe. Quand la lame est partie dans la profondeur,
+     il est derrière le corps : on n'en voit que ce qui dépasse du bord, du
+     côté du frappeur. Le dessiner en entier mettait l'impact sur le flanc
+     visible, c'est-à-dire du mauvais côté. */
   if (framesSinceImpact < 10) {
     const flash = 1 - framesSinceImpact / 10;
+    if (flashClip) {
+      context.save();
+      context.beginPath();
+      context.rect(Math.min(flashClip.edge, flashClip.behind), -60,
+        Math.abs(flashClip.edge - flashClip.behind), 420);
+      context.clip();
+    }
     context.globalAlpha = flash;
     context.strokeStyle = "#c2452a";
     context.lineWidth = 0.9;
@@ -2473,6 +2489,7 @@ function drawImpactEffects(frame, footPoint, contactPoint) {
       context.stroke();
     }
     context.globalAlpha = 1;
+    if (flashClip) context.restore();
   }
 }
 
@@ -2807,10 +2824,19 @@ function render() {
      point où elle disparaît part du contact et court jusqu'au-delà de la
      pointe : c'est ce déplacement qui donne le glissement sur le dō. */
   const bladeDepth = viewState.showMotodachi ? (attackerPose.bladeDepth || 0) : 0;
-  if (bladeDepth > 0.02) {
-    const contactLocalX = toLocal(placement.attacker, menWorld).x;
-    placement.attacker.bladeClipX = contactLocalX
-      + (1 - bladeDepth) * (skeleton.shinaiTip.x + 6 - contactLocalX);
+  const lateralStep = attackerPose.lateralOffset || 0;
+  if (bladeDepth > 0.02 && lateralStep > 5) {
+    /* La lame va de la main du frappeur, écartée de `lateralStep` vers la
+       caméra par son pas en diagonale, jusqu'au dō droit du motodachi,
+       enfoui de DŌ_SIDE_DEPTH derrière le plan de son corps. Elle croise
+       ce plan à cette fraction de sa course : au-delà, elle est derrière
+       lui, donc invisible. Le reste du glissement ramène la frontière
+       au-delà de la pointe, si bien que la lame ressort peu à peu. */
+    const contactLocal = toLocal(placement.attacker, menWorld);
+    const crossing = lateralStep / (lateralStep + DO_SIDE_DEPTH);
+    const crossingX = skeleton.leftGrip.x + (contactLocal.x - skeleton.leftGrip.x) * crossing;
+    placement.attacker.bladeClipX = crossingX
+      + (1 - bladeDepth) * (skeleton.shinaiTip.x + 6 - crossingX);
   } else {
     placement.attacker.bladeClipX = null;
   }
@@ -2890,7 +2916,12 @@ function render() {
   drawActor(placement.attacker, skeleton);
 
   if (isAttackSequence) {
-    drawImpactEffects(frame, toWorld(placement.attacker, skeleton.rightFoot.ball), menWorld);
+    const flashClipX = placement.attacker.bladeClipX;
+    drawImpactEffects(frame, toWorld(placement.attacker, skeleton.rightFoot.ball), menWorld,
+      flashClipX === null || flashClipX === undefined ? null : {
+        edge: toWorld(placement.attacker, { x: flashClipX, y: 0 }).x,
+        behind: toWorld(placement.attacker, { x: -400, y: 0 }).x
+      });
   }
 
   if (viewState.showJoints && !isGameView()) {
