@@ -315,6 +315,10 @@ const SHIN_LENGTH = 42;
 const FOOT_HEEL_OFFSET = { x: -7, y: -6 };
 const FOOT_BALL_OFFSET = { x: 11, y: -6 };
 const TOE_LENGTH = 7;
+/* Rotation d'ensemble des deux pieds, dans le même sens que la main droite.
+   Négatif parce que le repère a l'axe vertical vers le haut : c'est le sens
+   horaire à l'écran, celui du talon qui se lève sur le pied arrière. */
+const FOOT_ROTATION_DEGREES = -10;
 
 /* Le manche ne déborde presque pas de la main gauche : le petit doigt est au
    bout de la tsuka. À cinq centimètres le pommeau sortait du gant. */
@@ -1193,7 +1197,9 @@ function solveElbow(shoulder, wrist, elbowBias) {
 }
 
 function solveFoot(ankle, footDegrees) {
-  const radians = toRadians(footDegrees);
+  /* Le repli des orteils garde l'angle d'origine : c'est le talon levé qu'il
+     traduit, la rotation d'ensemble ne doit pas l'accentuer. */
+  const radians = toRadians(footDegrees + FOOT_ROTATION_DEGREES);
   const heel = addPointOffset(ankle, rotateOffset(FOOT_HEEL_OFFSET, radians));
   const ball = addPointOffset(ankle, rotateOffset(FOOT_BALL_OFFSET, radians));
   /* Talon levé : les orteils se replient au lieu de traverser le sol. */
@@ -1934,15 +1940,15 @@ function drawTare(skeleton) {
     tsuka traverse le poing. La vignette est celle du kote de paume réduite au
     poing seul, posée exactement au même endroit : sa découpe retombe donc sur
     les pixels déjà peints dessous, et ne se voit pas. */
-function drawFarKoteGrip(elbow, grip) {
+function drawFarKoteGrip(elbow, grip, rotationDegrees) {
   if (!isGameView() || !pieceReady("kote-poing")) return;
-  const towardElbow = directionBetween(grip, elbow);
+  const towardElbow = rotateOffset(directionBetween(grip, elbow), toRadians(rotationDegrees));
   const cuff = { x: grip.x + towardElbow.x * KOTE_LENGTH, y: grip.y + towardElbow.y * KOTE_LENGTH };
   drawPiece("kote-poing", PIECE_ANCHORS.kote.to, PIECE_ANCHORS.kote.from, grip, cuff,
     { thickness: 0.78 });
 }
 
-function drawKote(elbow, wrist, grip, color, seed, near) {
+function drawKote(elbow, wrist, grip, color, seed, near, rotationDegrees) {
   const pieceName = near ? "kote" : "kote-paume";
   if (isGameView() && pieceReady(pieceName)) {
     /* Monté sur la distance coude-poing, le kote se dessinait entre 16 et
@@ -1950,7 +1956,7 @@ function drawKote(elbow, wrist, grip, color, seed, near) {
        trois quarts du proche : l'avant-bras ne change pas de longueur,
        c'est sa projection qui raccourcit. On le pose donc au poing, sur
        une longueur constante. */
-    const towardElbow = directionBetween(grip, elbow);
+    const towardElbow = rotateOffset(directionBetween(grip, elbow), toRadians(rotationDegrees));
     const cuff = { x: grip.x + towardElbow.x * KOTE_LENGTH, y: grip.y + towardElbow.y * KOTE_LENGTH };
     if (drawPiece(pieceName, PIECE_ANCHORS.kote.to, PIECE_ANCHORS.kote.from, grip, cuff,
         { thickness: 0.78 })) return;
@@ -2131,6 +2137,10 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
 const SHINAI_SLAT_COUNT = 3;
 const NAKAYUI_FROM_LEFT_GRIP = 88;
 const KOTE_LENGTH = 33;
+/* Rotation de la seule main droite, celle qui tient sous la tsuba. Négatif
+   parce que le repère a l'axe vertical vers le haut : c'est le sens horaire
+   à l'écran, celui du talon qui se lève sur le pied arrière. */
+const RIGHT_KOTE_ROTATION_DEGREES = -10;
 
 /** Flèche de la lame, en centimètres, comptée perpendiculairement.
     Deux causes : le retard de la pointe quand la lame accélère, et le
@@ -2512,6 +2522,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   const showArmour = viewState.showArmour;
   const near = limbSet(skeleton, nearSideName);
   const far = limbSet(skeleton, nearSideName === "left" ? "right" : "left");
+  /* La rotation ne vaut que pour la main droite, qu'elle soit proche ou
+     éloignée selon le sens dans lequel le kendoka regarde. */
+  const nearIsRightHand = nearSideName === "right";
+  const nearKoteRotation = nearIsRightHand ? RIGHT_KOTE_ROTATION_DEGREES : 0;
+  const farKoteRotation = nearIsRightHand ? 0 : RIGHT_KOTE_ROTATION_DEGREES;
   const nearHem = cloth && (nearSideName === "left" ? cloth.leftHem : cloth.rightHem);
   const farHem = cloth && (nearSideName === "left" ? cloth.rightHem : cloth.leftHem);
 
@@ -2533,7 +2548,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   }
   if (showArmour) {
     drawKeikogiSleeve(far.shoulder, far.elbow, far.grip, 94);
-    drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96, false);
+    drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96, false, farKoteRotation);
   }
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
 
@@ -2566,7 +2581,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   if (showArmour && armOverMendare) drawMendare(skeleton);
 
   drawShinai(skeleton, bladeFlex);
-  if (showArmour) drawFarKoteGrip(far.elbow, far.grip);
+  if (showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6],
@@ -2574,7 +2589,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare)
   }
   if (showArmour) {
     drawKeikogiSleeve(near.shoulder, near.elbow, near.grip, 104);
-    drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106, true);
+    drawKote(near.elbow, near.wrist, near.grip, near.koteColor, 106, true, nearKoteRotation);
   }
   drawArm(near.shoulder, near.elbow, near.wrist, near.grip, nearInk(), 22);
 
