@@ -101,17 +101,20 @@
     /* Déplacement libre du frappeur, commandé au doigt : un swipe vaut un pas
        de suriashi. Vers l'avant, soixante centimètres suffisent à venir au
        contact, le kote frappant déjà à 77. */
-    "stepLength": 16, "framesPerStep": 15, "hipDrop": 3,
+    "stepLength": 16, "hipDrop": 3,
     /* Okuri-ashi : le pied de tête glisse, puis celui qui suit claque sous le
        corps une fois et demie plus vite — il a le même chemin à faire dans les
        deux cinquièmes du temps. C'est ce rattrapage qui fait le pas de kendo,
-       et non deux moitiés égales. */
+       et non deux moitiés égales. Les pieds se lisent sur le terrain couvert et
+       non sur une horloge : le même cycle sert donc le pas isolé et la glissade,
+       à l'allure qu'on veut. */
     "followFootSpeedRatio": 1.5,
-    /* Enchaîner les pas du même côté les accélère : chaque pas consécutif dure
-       ce facteur de moins, jusqu'à ce plancher. Un pas qui va jusqu'au bout sans
-       être relancé remet le compteur à zéro, si bien que la marche glissée
-       s'accélère sous le doigt et que le pas isolé garde son poids. */
-    "chainedStepSpeedUp": 0.82, "fastestStepFrames": 8,
+    /* Le doigt dit où se tenir : un balayage sur toute la largeur de l'écran
+       vaut ce terrain-là, soit une douzaine de pas. Le corps y va à `glideSpeed`
+       centimètres par frame au plus, en rattrapant `glideFollow` de ce qui reste
+       à chaque frame — de sorte qu'il file tant que c'est loin et se pose sans
+       à-coup en arrivant. Doigt levé, il finit sur un pas entier. */
+    "swipeTravelPerScreen": 190, "glideSpeed": 2.2, "glideFollow": 0.22,
     "maximumApproach": 60,
     /* Vers l'arrière il n'y a d'autre limite que le bord de l'image, la caméra
        ne travellant pas : la valeur est recalculée à l'écran, et celle-ci ne
@@ -120,17 +123,38 @@
        arrière et hakama. */
     "maximumRetreat": 120, "edgeMargin": 24, "bodyRearReach": 34,
     /* La fenêtre d'où une coupe part juste. Elle n'est pas choisie : elle se lit
-       sur les deux lames en garde. À issoku-ittō les kissaki se croisent de
-       15,25 cm — on attaque de là, pointes déjà croisées. Reculer davantage les
-       décroise, et il n'y a plus de coup à porter : la lame passe dans le vide.
-       Avancer jusqu'à ce que le croisement dépasse le monouchi (27 cm, soit
-       11,7 cm d'avance) et l'on est dedans : la lame arrive au-delà de sa cible,
-       sur la garde plutôt que sur les trois derniers pouces.
+       sur les deux lames en garde, aux deux repères qu'un kendoka regarde.
 
-       La fenêtre fait donc la longueur du monouchi, 27 cm, et un pas de 16 en
-       sort des deux côtés : c'est ce qui rend la distance exigeante. Elle reste
-       plus large qu'un pas, si bien qu'on peut toujours y revenir. */
-    "strikeWindowFar": 15, "strikeWindowNear": 12
+       Elle s'ouvre quand **les kissaki se croisent** et se ferme quand **les
+       nakayui se dépassent**. Les deux lames visant la gorge d'en face, leur
+       inclinaison change avec la distance et ces croisements se résolvent
+       numériquement : 27,6 cm de recul pour le premier, 27,5 cm d'avance pour le
+       second. Cinquante-cinq centimètres, donc, pour un pas de seize.
+
+       À refaire si l'on retouche la garde, la taille du shinai ou `aimFollow` :
+       une lame plus plate porte plus loin et décale les deux croisements. */
+    "strikeWindowFar": 27.5, "strikeWindowNear": 27.5,
+    /* Une coupe peut partir en pleine marche : la posture où le pas l'a laissé
+       se raccorde alors à celle qui est écrite, sur ce nombre de frames. Sans
+       ce fondu le pied en l'air sauterait à sa place écrite ; avec, on entre
+       dans la coupe depuis là où l'on était vraiment. */
+    "strideSettleFrames": 9,
+    /* Le **prolongement** de la lame passe par la gorge adverse : en garde,
+       l'angle du shinai est celui de la droite qui va du poing à cette gorge, et
+       non une constante écrite. Les deux kendokas se visent ainsi l'un l'autre.
+
+       Mesure faite sur le rig : le prolongement de la lame passe par la gorge à
+       12,3° à la distance écrite, 14,9° si l'on entre de 40 cm, 11,3° si l'on
+       rompt de 20. Viser **relève** donc la pointe quand on entre, la gorge se
+       rapprochant à hauteur constante. Un demi vise à moitié, zéro fige la garde
+       écrite — mais alors les croisements ci-dessus sont faux. */
+    "aimFollow": 1
+  },
+  "playback": {
+    /* Vitesse de lecture du combat, plus lente que le temps réel : la coupe vaut
+       d'être regardée. L'armé se joue plus vite qu'elle — attendre lame en l'air,
+       cible non nommée, est du temps mort et non de la tension. */
+    "speed": 0.6, "armingSpeedUp": 1.75
   },
   "camera": {
     /* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le

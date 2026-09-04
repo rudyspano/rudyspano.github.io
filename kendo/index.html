@@ -319,7 +319,7 @@ let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_HE
 
 /* Retour à distance */
 let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES, RETURN_LOW_HIP, RETURN_MID_HIP,
-    KAMAE_HIP_HEIGHT, RETURN_MAXIMUM_STEP;
+    KAMAE_HIP_HEIGHT, RETURN_MAXIMUM_STEP, AIM_FOLLOW;
 
 /* Cadrage de la vue jeu */
 let GAME_ACTION_SPAN, GAME_ACTION_CENTRE, LATERAL_DROP_PER_CM, LATERAL_SCALE_PER_CM;
@@ -406,6 +406,7 @@ function applyRigData(rig) {
   RETURN_MID_HIP = rig.returnStep.midHip;
   KAMAE_HIP_HEIGHT = rig.returnStep.kamaeHipHeight;
   RETURN_MAXIMUM_STEP = rig.returnStep.maximumStepLength;
+  AIM_FOLLOW = rig.movement.aimFollow;
 
   /* Cadrage de la vue jeu */
   GAME_ACTION_SPAN = rig.camera.actionSpan;
@@ -2316,6 +2317,29 @@ function actorScale(actor) { return 1 + lateralTowardCamera(actor) * LATERAL_SCA
 function actorDrop(actor) { return lateralTowardCamera(actor) * LATERAL_DROP_PER_CM; }
 
 /** Passe un point du repère local d'un acteur au repère du dojo. */
+/* En garde, le **prolongement** de la lame passe par la gorge d'en face : l'angle
+   du shinai est celui de la droite qui va du poing à cette gorge, et non une
+   constante écrite. Les deux kendokas se visent ainsi l'un l'autre.
+
+   La visée s'efface à mesure que la lame quitte la garde, si bien que l'armé et
+   la coupe restent ceux qui sont écrits. Le jeu applique la même règle, aux mêmes
+   nombres : c'est la garde elle-même qui se déduit, des deux côtés. */
+const AIM_HOLD_DEGREES = 6;
+const AIM_RELEASE_DEGREES = 25;
+
+function aimWeight(pose) {
+  const guard = attackCatalogue.men.keyframeList[0].pose.shinaiDegrees;
+  const share = (AIM_RELEASE_DEGREES - Math.abs(pose.shinaiDegrees - guard))
+    / (AIM_RELEASE_DEGREES - AIM_HOLD_DEGREES);
+  return Math.max(0, Math.min(1, share));
+}
+
+function aimAtThroat(pose, throat, weight) {
+  if (throat.x <= pose.gripX) return;
+  const aimed = Math.atan2(throat.y - pose.gripY, throat.x - pose.gripX) * 180 / Math.PI;
+  pose.shinaiDegrees += (aimed - pose.shinaiDegrees) * AIM_FOLLOW * weight;
+}
+
 function toWorld(actor, point) {
   const scale = actorScale(actor);
   return {
@@ -2420,7 +2444,25 @@ function render() {
   placement.attacker.lateral = attackerPose.lateralOffset || 0;
   placement.attacker.bladeFlex = bladeFlexAmount(frame);
   placement.attacker.cloth = clothOf(hakamaState(frame), placement.attacker.facesRight === sceneState.attackerFacesRight);
-  const menLocal = defenderTargetPoint(frame);
+
+  /* Chacun vise la gorge de l'autre, et chacun a besoin du corps d'en face pour
+     cela : une gorge tient au cou et non à la lame, un squelette par acteur
+     suffit donc avant que l'un ou l'autre ne tourne sa pointe. */
+  const attackerAim = aimWeight(attackerPose);
+  const defenderAim = aimWeight(defenderPose);
+  if (AIM_FOLLOW !== 0 && (attackerAim > 0 || defenderAim > 0)) {
+    const throatOf = targetResolverByName.throatFlap;
+    const hisThroat = toLocal(placement.attacker,
+      toWorld(placement.defender, throatOf(solveSkeleton(defenderPose))));
+    const myThroat = toLocal(placement.defender,
+      toWorld(placement.attacker, throatOf(solveSkeleton(attackerPose))));
+    aimAtThroat(attackerPose, hisThroat, attackerAim);
+    aimAtThroat(defenderPose, myThroat, defenderAim);
+  }
+
+  /* La cible se lit sur le défenseur tel qu'il vient d'être visé : le kote est
+     porté par le poignet, que l'angle de la lame déplace. */
+  const menLocal = currentAttack().targetLocal(solveSkeleton(defenderPose));
   const menWorld = toWorld(placement.defender, menLocal);
   /* Le men et le kote arrêtent la lame ; le dō se coupe en traversant,
      et l'estoc n'a pas de surface à heurter. */
