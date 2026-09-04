@@ -630,40 +630,44 @@ const targetResolverByName = {
 const attackCatalogue = {};
 
 
-/** Pose de garde, utilisée pour fabriquer les deux séquences de recul. */
-function guardPose(rootX, rightAnkleX, leftAnkleX, hipHeight) {
-  return {
-    rootX: rootX, rootY: hipHeight, torsoLeanDegrees: 6, headTiltDegrees: 0,
-    rightAnkleX: rightAnkleX, rightAnkleY: 6, rightFootDegrees: 0,
-    leftAnkleX: leftAnkleX, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: rootX + 22, gripY: hipHeight + 13.5, shinaiDegrees: 16,
-    leftElbowBias: -8, rightElbowBias: -15
-  };
+/** La kamae reprise en reculant : la vraie, celle qu'on porte en marchant vers
+    elle, et pas une garde propre à ce pas. Seuls le bassin et les deux pieds
+    voyagent ; la prise, les coudes et l'angle du shinai restent exactement là où
+    la référence les place, la main gauche gardant sa hauteur au-dessus du bassin
+    plutôt qu'une hauteur écrite — le bassin lui-même étant transitoirement plus
+    bas au milieu du pas. */
+function guardPose(rootX, rightAnkleX, leftAnkleX, hipHeight, reference) {
+  return Object.assign({}, reference, {
+    rootX: rootX, rootY: hipHeight,
+    rightAnkleX: rightAnkleX, leftAnkleX: leftAnkleX,
+    gripX: rootX + (reference.gripX - reference.rootX),
+    gripY: hipHeight + (reference.gripY - reference.rootY)
+  });
 }
 
 /** Un pas arrière : le pied arrière part, le bassin le suit de moitié,
     puis le pied avant rejoint et le bassin se relève. */
-function buildBackwardStep(startRootX, startRightAnkleX, startLeftAnkleX, travel) {
+function buildBackwardStep(startRootX, startRightAnkleX, startLeftAnkleX, travel, reference) {
   const steps = Math.max(1, Math.ceil(Math.abs(travel) / RETURN_MAXIMUM_STEP));
   const stepLength = travel / steps;
   const half = RETURN_FRAMES_PER_HALF_STEP;
   const sequence = [
     { frame: 0, easing: "easeInOutSine",
-      pose: guardPose(startRootX, startRightAnkleX, startLeftAnkleX, KAMAE_HIP_HEIGHT) }
+      pose: guardPose(startRootX, startRightAnkleX, startLeftAnkleX, KAMAE_HIP_HEIGHT, reference) }
   ];
   for (let step = 0; step < steps; step++) {
     const taken = -step * stepLength;
     const next = taken - stepLength;
     sequence.push({ frame: step * half * 2 + half, easing: "easeInOutSine",
       pose: guardPose(startRootX + taken - stepLength / 2, startRightAnkleX + taken,
-                      startLeftAnkleX + next, RETURN_LOW_HIP) });
+                      startLeftAnkleX + next, RETURN_LOW_HIP, reference) });
     sequence.push({ frame: (step + 1) * half * 2, easing: "easeInOutSine",
       pose: guardPose(startRootX + next, startRightAnkleX + next, startLeftAnkleX + next,
-                      RETURN_MID_HIP) });
+                      RETURN_MID_HIP, reference) });
   }
   sequence.push({ frame: steps * half * 2 + RETURN_SETTLE_FRAMES, easing: "linear",
     pose: guardPose(startRootX - travel, startRightAnkleX - travel, startLeftAnkleX - travel,
-                    KAMAE_HIP_HEIGHT) });
+                    KAMAE_HIP_HEIGHT, reference) });
   return sequence;
 }
 
@@ -702,10 +706,13 @@ function applyAttackData(attackDataList) {
     attack.returnTravel = gapToReopen / 2;
     attack.returnOffsetShift = attack.defenderRetreat + attack.returnTravel;
     attack.returnSequence = buildBackwardStep(
-      endPose.rootX, endPose.rightAnkleX, endPose.leftAnkleX, attack.returnTravel);
+      endPose.rootX, endPose.rightAnkleX, endPose.leftAnkleX, attack.returnTravel,
+      attack.keyframeList[0].pose);
     attack.defenderReturnSequence = buildBackwardStep(
-      -attack.defenderRetreat, -attack.defenderRetreat + 13, -attack.defenderRetreat - 15,
-      attack.returnTravel);
+      -attack.defenderRetreat,
+      -attack.defenderRetreat + motodachiSettings.guardPose.rightAnkleX,
+      -attack.defenderRetreat + motodachiSettings.guardPose.leftAnkleX,
+      attack.returnTravel, motodachiSettings.guardPose);
   });
 }
 
