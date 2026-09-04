@@ -7,6 +7,11 @@
       "defenderRetreat": 60,
       "retreatDelay": 0,
       "target": "menTop",
+      /* Kamae, seme et furikaburi sont le même geste pour les trois coupes qui
+         s'arment : en jeu le kendoka arme d'abord, et choisit ensuite. La
+         frappe reprend donc à la frame où l'armé est tenu. */
+      "requiresArming": true,
+      "armedFrame": 58,
       "keyframeList": [
         {
           /* Garde haute : bassin à 90,5 cm, la limite au-delà de laquelle le pied
@@ -259,6 +264,8 @@
       "defenderRetreat": 40,
       "retreatDelay": 0,
       "target": "rightForearm",
+      "requiresArming": true,
+      "armedFrame": 58,
       "keyframeList": [
         { "frame": 0, "easing": "linear", "poseRef": "men:0" },
         { "frame": 20, "easing": "easeInOutSine", "poseRef": "men:1" },
@@ -463,6 +470,12 @@
       "defenderRetreat": 55,
       "retreatDelay": 4,
       "target": "torsoLow",
+      /* Le dō entre de vingt centimètres de plus que le men avant d'armer. En
+         jeu l'armé est commun aux trois : ces vingt centimètres ne sont donc
+         plus pris pendant le seme, ils sont payés par une fente d'autant plus
+         longue. */
+      "requiresArming": true,
+      "armedFrame": 58,
       "keyframeList": [
         { "frame": 0, "easing": "linear", "poseRef": "men:0" },
         { "frame": 20, "easing": "easeInOutSine", "poseRef": "men:1" },
@@ -709,6 +722,10 @@
       "defenderRetreat": 25,
       "retreatDelay": 0,
       "target": "throatFlap",
+      /* Le seul coup sans furikaburi : il part de la garde, d'où son bouton
+         toujours disponible, à côté de celui qui arme. */
+      "requiresArming": false,
+      "armedFrame": 0,
       "keyframeList": [
         { "frame": 0, "easing": "linear", "poseRef": "men:0" },
         { "frame": 20, "easing": "easeInOutSine", "poseRef": "men:1" },

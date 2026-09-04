@@ -91,7 +91,46 @@
        ce qui se fait après une frappe. Le bassin descend à 82 cm pendant que
        le pied est en l'air, sans quoi l'appui restant serait hors de portée. */
     "framesPerHalfStep": 20, "settleFrames": 14, "lowHip": 82, "midHip": 88,
-    "kamaeHipHeight": 90.5
+    "kamaeHipHeight": 90.5,
+    /* Et il ne rouvre pas plus que cela : une jambe de 86 cm n'admet pas un
+       appui au-delà de 48 cm du bassin. Ce que le pas ne rend pas reste dû —
+       le frappeur se retrouve dedans, et c'est à lui de rompre au doigt. */
+    "maximumStepLength": 52
+  },
+  "movement": {
+    /* Déplacement libre du frappeur, commandé au doigt : un swipe vaut un pas
+       de suriashi. Vers l'avant, soixante centimètres suffisent à venir au
+       contact, le kote frappant déjà à 77. */
+    "stepLength": 16, "framesPerStep": 15, "hipDrop": 3,
+    /* Okuri-ashi : le pied de tête glisse, puis celui qui suit claque sous le
+       corps une fois et demie plus vite — il a le même chemin à faire dans les
+       deux cinquièmes du temps. C'est ce rattrapage qui fait le pas de kendo,
+       et non deux moitiés égales. */
+    "followFootSpeedRatio": 1.5,
+    /* Enchaîner les pas du même côté les accélère : chaque pas consécutif dure
+       ce facteur de moins, jusqu'à ce plancher. Un pas qui va jusqu'au bout sans
+       être relancé remet le compteur à zéro, si bien que la marche glissée
+       s'accélère sous le doigt et que le pas isolé garde son poids. */
+    "chainedStepSpeedUp": 0.82, "fastestStepFrames": 8,
+    "maximumApproach": 60,
+    /* Vers l'arrière il n'y a d'autre limite que le bord de l'image, la caméra
+       ne travellant pas : la valeur est recalculée à l'écran, et celle-ci ne
+       sert que hors écran (test de fumée, capture). `edgeMargin` est la marge
+       gardée au bord, `bodyRearReach` ce qui dépasse derrière le bassin — pied
+       arrière et hakama. */
+    "maximumRetreat": 120, "edgeMargin": 24, "bodyRearReach": 34,
+    /* La fenêtre d'où une coupe part juste. Elle n'est pas choisie : elle se lit
+       sur les deux lames en garde. À issoku-ittō les kissaki se croisent de
+       15,25 cm — on attaque de là, pointes déjà croisées. Reculer davantage les
+       décroise, et il n'y a plus de coup à porter : la lame passe dans le vide.
+       Avancer jusqu'à ce que le croisement dépasse le monouchi (27 cm, soit
+       11,7 cm d'avance) et l'on est dedans : la lame arrive au-delà de sa cible,
+       sur la garde plutôt que sur les trois derniers pouces.
+
+       La fenêtre fait donc la longueur du monouchi, 27 cm, et un pas de 16 en
+       sort des deux côtés : c'est ce qui rend la distance exigeante. Elle reste
+       plus large qu'un pas, si bien qu'on peut toujours y revenir. */
+    "strikeWindowFar": 15, "strikeWindowNear": 12
   },
   "camera": {
     /* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
@@ -171,6 +210,11 @@
       "leftAnkleY": 9.2, "leftFootDegrees": -14, "gripX": 33, "gripY": 93,
       "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -15
     },
+    /* Le motodachi ne rompt plus après la coupe : il tient sa place, et c'est au
+       frappeur de reprendre la distance. Remettre 1 pour retrouver la rupture
+       écrite attaque par attaque (`defenderRetreat` dans attacks.json), dont
+       tout le reste — longueur du pas de retour, décalage de scène — se déduit. */
+    "retreatAfterCut": 0,
     "retreatFrames": 52,
     "shockFrames": 24,
     "shockDecayFrames": 5,
