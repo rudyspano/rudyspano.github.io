@@ -1,0 +1,194 @@
+{
+  "framesPerSecond": 60,
+  "body": {
+    "torsoLength": 48, "neckLength": 8, "neckFollowsTorso": 0.2,
+    /* La tête bascule en arrière d'autant, sur toutes les poses : le rig la
+       tenait penchée vers l'avant. Négatif = vers l'arrière du kendoka. */
+    "headTiltOffsetDegrees": -10, "headRadiusHorizontal": 9.5, "headRadiusVertical": 12,
+    /* On regarde le kendoka depuis sa droite : le côté droit est donc le
+       côté proche, celui qui porte la main haute du shinai et le pied avant.
+       L'épaule et la hanche droites sont en outre légèrement avancées, le
+       corps étant de trois quarts. */
+    "rightShoulderForwardOffset": 6
+  },
+  "arms": {
+    "upperArmLength": 30, "forearmLength": 27, "wristToGripLength": 7,
+    /* Vu de profil, un coude s'écarte surtout sur le côté : la projection
+       raccourcit les os au lieu de sortir le coude du corps. On place donc
+       le coude sur le segment épaule-poignet, décalé de `elbowBias`
+       centimètres, valeur animable et continue. Le décalage se compte
+       perpendiculairement à ce segment : négatif = coude vers l'arrière-bas,
+       c'est-à-dire un bras qui pend, relâché, comme en chūdan. */
+    "elbowRatioAlongArm": 0.52
+  },
+  "legs": {
+    "thighLength": 44,
+    "shinLength": 42,
+    "toeLength": 7,
+    /* Rotation d'ensemble des deux pieds, dans le même sens que la main droite.
+       Négatif parce que le repère a l'axe vertical vers le haut : c'est le sens
+       horaire à l'écran, celui du talon qui se lève sur le pied arrière. */
+    "footRotationDegrees": -10,
+    /* Le genou n'a que deux solutions possibles en 2D : on fige le côté
+       vers lequel il plie (toujours vers l'avant). */
+    "kneeBendSign": 1,
+    "footHeelOffset": { "x": -7, "y": -6 },
+    "footBallOffset": { "x": 11, "y": -6 }
+  },
+  "shinai": {
+    /* Le manche ne déborde presque pas de la main gauche : le petit doigt est au
+       bout de la tsuka. À cinq centimètres le pommeau sortait du gant. */
+    "buttOverhang": 1, "lengthFromLeftGrip": 115, "gripSpacing": 28,
+    /* Poing droit contre la tsuba : 24 cm entre les deux mains, la garde
+       se trouve juste après le poing droit. */
+    "tsubaDistanceFromLeftGrip": 29, "monouchiStartFromLeftGrip": 88,
+    "nakayuiFromLeftGrip": 88, "slatCount": 3
+  },
+  "armour": {
+    /* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
+    "mendareBandTop": 0.56, "menSetbackCentimetres": 6, "armOverMendareDegrees": 15,
+    /* Le dō, placé le long du torse en fractions de la hauteur bassin-épaules, et
+       agrandi d'autant à partir de son bord haut. */
+    "doTopAlongTorso": 1.02, "doBottomAlongTorso": 0.06, "doScale": 1.05,
+    /* Profondeur du dō droit derrière le plan du corps : un torse de kendoka
+       fait trente-six centimètres de large, la tôle qu'on frappe est donc à
+       seize ou dix-huit centimètres de l'axe, du côté opposé à la caméra. */
+    "doSideDepth": 16, "doFrontFromAxis": 14, "koteLength": 33,
+    /* Rotation de la seule main droite, celle qui tient sous la tsuba. Négatif
+       parce que le repère a l'axe vertical vers le haut : c'est le sens horaire
+       à l'écran, celui du talon qui se lève sur le pied arrière. */
+    "rightKoteRotationDegrees": -10
+  },
+  "hakama": {
+    "gravity": -980,
+    "damping": 0.9,
+    /* Sans rappel, le pendule prend 47 cm de retard sur un fumikomi : un
+       hakama n'en prend pas la moitié. Le rappel tient lieu de raideur du
+       tissu et de poids réparti sur toute sa hauteur. */
+    "stiffness": 0.022,
+    "substeps": 3,
+    /* Le hakama pend d'aplomb sous la ceinture. Il ne suit ni l'inclinaison
+       du buste ni l'écartement des jambes : c'est une jupe lourde, et les
+       jambes passent dessous. Elles sont donc peintes de sa couleur, si bien
+       qu'aucune ne dépasse en peau nue quand elles s'écartent. */
+    "hemHeight": 9,
+    /* Débord du tissu de jambe vers l'axe du corps, sous la jupe. */
+    "legInnerExtra": 16,
+    "width": 46,
+    "panelList": [
+      { "anchor": "waistFront", "length": 78, "restForward": 0.35 },
+      { "anchor": "waistBack", "length": 76, "restForward": -0.3 },
+      { "anchor": "leftKnee", "length": 31, "restForward": 0 },
+      { "anchor": "rightKnee", "length": 31, "restForward": 0 }
+    ]
+  },
+  "returnStep": {
+    /* Retour à distance en un seul pas, de chaque côté. Rouvrir 101 cm en un
+       pas est impossible pour un seul homme : il faudrait que chaque pied
+       parcoure 101 cm, ce qui laisserait l'appui à 66 cm du bassin alors
+       qu'une jambe de 86 cm n'en admet que 48, même bassin bas. Les deux
+       partenaires rompent donc ensemble, d'un pas chacun, ce qui est aussi
+       ce qui se fait après une frappe. Le bassin descend à 82 cm pendant que
+       le pied est en l'air, sans quoi l'appui restant serait hors de portée. */
+    "framesPerHalfStep": 20, "settleFrames": 14, "lowHip": 82, "midHip": 88,
+    "kamaeHipHeight": 90.5
+  },
+  "camera": {
+    /* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
+       receveur recule d'un demi, et il faut de la marge pour les corps. Le
+       centre est compté depuis le décalage courant, et il est décalé vers
+       l'avant du frappeur, puisque c'est de ce côté que le terrain se gagne. */
+    "actionSpan": 430, "actionCentre": 152, "lateralDropPerCm": 0.16,
+    "lateralScalePerCm": 0.0008
+  },
+  "colors": {
+    "nearInk": "#12151f", "farInk": "#39405e", "nearSkin": "#e5bf98",
+    "farSkin": "#bd9270", "nearTorso": "#3b4878", "farTorso": "#2b3459",
+    /** La jambe entière est de la teinte du hakama : elle passe sous la jupe,
+       et ce qui en dépasse quand les appuis s'écartent se confond avec le
+       tissu au lieu de trancher en peau nue. Seul le pied reste nu. */
+    "nearHakama": "#243054", "farHakama": "#182448", "nearSleeve": "#232f52",
+    "farSleeve": "#18213f", "cord": "#141a33"
+  },
+  /* Points d'ancrage de chaque vignette, en fractions de sa propre image.
+     Ils ont été relevés sur les pièces dessinées : premier point sur la
+     base de l'os, second sur son extrémité. */
+  "pieceAnchors": {
+    "men": {
+      "from": [ 0.36, 0.6 ],
+      "to": [ 0.34, 0.02 ]
+    },
+    "keikogi": {
+      "from": [ 0.55, 0.06 ],
+      "to": [ 0.5, 0.96 ]
+    },
+    "do": {
+      "from": [ 0.58, 0.06 ],
+      "to": [ 0.46, 0.95 ]
+    },
+    "tare": {
+      "from": [ 0.42, 0.0 ],
+      "to": [ 0.42, 1.0 ]
+    },
+    "kote": {
+      "from": [ 0.07, 0.55 ],
+      "to": [ 0.9, 0.45 ]
+    },
+    "manche": {
+      "from": [ 0.52, 0.07 ],
+      "to": [ 0.44, 0.93 ]
+    },
+    "pied": {
+      "from": [ 0.24, 0.45 ],
+      "to": [ 0.93, 0.93 ]
+    },
+    "hakamaPanel": {
+      "from": [ 0.5, 0.03 ],
+      "to": [ 0.5, 0.97 ]
+    }
+  },
+  "motodachi": {
+    /* Motodachi : le partenaire qui reçoit le men. Il est construit avec le
+       même squelette, résolu en coordonnées locales tourné vers +x, puis
+       dessiné en miroir autour de cette abscisse — d'où `world = BASE - local`. */
+       /* Distance choisie pour issoku-ittō-no-maai : les deux kissaki se
+       croisent d'une dizaine de centimètres en garde. */
+    "baseX": 264,
+    /** Il tient le chūdan, puis abaisse la pointe pour ouvrir son men
+       pendant que le frappeur arme, et la remonte après la traversée. */
+       /* Garde chūdan : la main gauche est au bas du dō, et le shinai relève d'autant
+       pour que la pointe reste sur la gorge adverse. L'ouverture du motodachi va de
+       cet angle à -25 degrés. */
+    "guardShinaiDegrees": 22,
+    "openDegrees": -25,
+    /* Poings au-dessus du front et shinai rabattu dans le dos, comme un armé
+       tenu : c'est la position haute du motodachi. */
+    "liftHeight": 72,
+    "liftShinaiDegrees": 135,
+    "guardPose": {
+      "rootX": 0, "rootY": 89, "torsoLeanDegrees": 6, "headTiltDegrees": 0,
+      "rightAnkleX": 13, "rightAnkleY": 6, "rightFootDegrees": 0, "leftAnkleX": -15,
+      "leftAnkleY": 9.2, "leftFootDegrees": -14, "gripX": 33, "gripY": 93,
+      "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -15
+    },
+    "retreatFrames": 52,
+    "shockFrames": 24,
+    "shockDecayFrames": 5,
+    "shockWaveSpeed": 0.8,
+    "shockHipDrop": 2.5,
+    "shockLeanDegrees": 4,
+    "shockHeadDegrees": 8,
+    "openingStartFrame": 58,
+    "openingFrames": 18,
+    "openingHoldUntilFrame": 110,
+    "openingCloseFrames": 30,
+    "openingGripDrop": 8,
+    "liftStartFrame": 40,
+    "liftFrames": 26,
+    "liftHoldUntilFrame": 104,
+    "liftCloseFrames": 30,
+    "liftGripPullBack": 7,
+    "liftLeftElbowBias": 1,
+    "liftRightElbowBias": 7
+  }
+}

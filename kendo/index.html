@@ -282,90 +282,195 @@
    ne décrit que des angles et des cibles, jamais des longueurs.
    ============================================================ */
 
-const FRAMES_PER_SECOND = 60;
+/* Les proportions du rig, les teintes et les ancres des vignettes ne sont plus
+   écrites ici : elles vivent dans Assets/Shared/Data/rig.json, lu tel quel par
+   la maquette et par le projet Unity. Régler un chiffre là-bas le règle des
+   deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
+   lire : on les retire avant de parser. */
+const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
 
-const TORSO_LENGTH = 48;
-const NECK_LENGTH = 8;
-const NECK_FOLLOWS_TORSO = 0.2;
-/* La tête bascule en arrière d'autant, sur toutes les poses : le rig la
-   tenait penchée vers l'avant. Négatif = vers l'arrière du kendoka. */
-const HEAD_TILT_OFFSET_DEGREES = -10;
-/* Hauteur, dans la vignette du men, où l'épaulette commence à s'évaser. */
-const MENDARE_BAND_TOP = 0.56;
-/* Recul du men sur l'axe du regard. Le rig ne bouge pas : seule la vignette du
-   casque recule, épaulette comprise — elle est dessinée dedans, on ne peut pas
-   l'en détacher sans casser la pièce en deux.
-   C'est là tout le compromis : l'épaulette s'évase vers l'arrière, donc reculer
-   le men la fait saillir derrière le dos. Le bord arrière à hauteur d'épaule
-   passe de -4,3 cm à recul nul à -10,4 cm à six, contre -4 à -6 pour le reste
-   du dos. Au-delà de deux, ça se lit comme une bosse. */
-const MEN_SETBACK_CENTIMETRES = 6;
-/* Angle du bras au-delà duquel il passe devant l'épaulette. En dessous il est
-   en garde, et l'épaulette lui repasse devant. */
-const ARM_OVER_MENDARE_DEGREES = 15;
-const HEAD_RADIUS_HORIZONTAL = 9.5;
-const HEAD_RADIUS_VERTICAL = 12;
+/* Cadence */
+let FRAMES_PER_SECOND;
 
-const UPPER_ARM_LENGTH = 30;
-const FOREARM_LENGTH = 27;
-const WRIST_TO_GRIP_LENGTH = 7;
+/* Corps et tête */
+let TORSO_LENGTH, NECK_LENGTH, NECK_FOLLOWS_TORSO, HEAD_TILT_OFFSET_DEGREES,
+    HEAD_RADIUS_HORIZONTAL, HEAD_RADIUS_VERTICAL, RIGHT_SHOULDER_FORWARD_OFFSET;
 
-const THIGH_LENGTH = 44;
-const SHIN_LENGTH = 42;
-const FOOT_HEEL_OFFSET = { x: -7, y: -6 };
-const FOOT_BALL_OFFSET = { x: 11, y: -6 };
-const TOE_LENGTH = 7;
-/* Rotation d'ensemble des deux pieds, dans le même sens que la main droite.
-   Négatif parce que le repère a l'axe vertical vers le haut : c'est le sens
-   horaire à l'écran, celui du talon qui se lève sur le pied arrière. */
-const FOOT_ROTATION_DEGREES = -10;
+/* Bras */
+let UPPER_ARM_LENGTH, FOREARM_LENGTH, WRIST_TO_GRIP_LENGTH, ELBOW_RATIO_ALONG_ARM;
 
-/* Le manche ne déborde presque pas de la main gauche : le petit doigt est au
-   bout de la tsuka. À cinq centimètres le pommeau sortait du gant. */
-const SHINAI_BUTT_OVERHANG = 1;
-const SHINAI_LENGTH_FROM_LEFT_GRIP = 115;
-/* Écart des deux poignées sur le manche. La main droite vient au contact de la
-   tsuba : à 24 le gant s'arrêtait à 28 le long de la lame alors que la garde
-   est dessinée à 32,5, laissant quatre centimètres et demi de manche à nu. */
-const GRIP_SPACING = 28;
-/* Poing droit contre la tsuba : 24 cm entre les deux mains, la garde
-   se trouve juste après le poing droit. */
-const TSUBA_DISTANCE_FROM_LEFT_GRIP = 29;
-const MONOUCHI_START_FROM_LEFT_GRIP = 88;
+/* Jambes et pieds */
+let THIGH_LENGTH, SHIN_LENGTH, TOE_LENGTH, FOOT_ROTATION_DEGREES, KNEE_BEND_SIGN,
+    FOOT_HEEL_OFFSET, FOOT_BALL_OFFSET;
 
-/* Le genou n'a que deux solutions possibles en 2D : on fige le côté
-   vers lequel il plie (toujours vers l'avant). */
-const KNEE_BEND_SIGN = 1;
+/* Shinai */
+let SHINAI_BUTT_OVERHANG, SHINAI_LENGTH_FROM_LEFT_GRIP, GRIP_SPACING,
+    TSUBA_DISTANCE_FROM_LEFT_GRIP, MONOUCHI_START_FROM_LEFT_GRIP, NAKAYUI_FROM_LEFT_GRIP,
+    SHINAI_SLAT_COUNT;
 
-/* Vu de profil, un coude s'écarte surtout sur le côté : la projection
-   raccourcit les os au lieu de sortir le coude du corps. On place donc
-   le coude sur le segment épaule-poignet, décalé de `elbowBias`
-   centimètres, valeur animable et continue. Le décalage se compte
-   perpendiculairement à ce segment : négatif = coude vers l'arrière-bas,
-   c'est-à-dire un bras qui pend, relâché, comme en chūdan. */
-const ELBOW_RATIO_ALONG_ARM = 0.52;
+/* Armure */
+let MENDARE_BAND_TOP, MEN_SETBACK_CENTIMETRES, ARM_OVER_MENDARE_DEGREES, DO_TOP_ALONG_TORSO,
+    DO_BOTTOM_ALONG_TORSO, DO_SCALE, DO_SIDE_DEPTH, DO_FRONT_FROM_AXIS, KOTE_LENGTH,
+    RIGHT_KOTE_ROTATION_DEGREES;
 
-/* On regarde le kendoka depuis sa droite : le côté droit est donc le
-   côté proche, celui qui porte la main haute du shinai et le pied avant.
-   L'épaule et la hanche droites sont en outre légèrement avancées, le
-   corps étant de trois quarts. */
-const RIGHT_SHOULDER_FORWARD_OFFSET = 6;
+/* Hakama */
+let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_HEM_HEIGHT,
+    HAKAMA_LEG_INNER_EXTRA, HAKAMA_WIDTH, HAKAMA_PANELS;
 
-/* Motodachi : le partenaire qui reçoit le men. Il est construit avec le
-   même squelette, résolu en coordonnées locales tourné vers +x, puis
-   dessiné en miroir autour de cette abscisse — d'où `world = BASE - local`. */
-/* Distance choisie pour issoku-ittō-no-maai : les deux kissaki se
-   croisent d'une dizaine de centimètres en garde. */
-const MOTODACHI_BASE_X = 264;
+/* Retour à distance */
+let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES, RETURN_LOW_HIP, RETURN_MID_HIP,
+    KAMAE_HIP_HEIGHT;
 
-/* Profondeur du dō droit derrière le plan du corps : un torse de kendoka
-   fait trente-six centimètres de large, la tôle qu'on frappe est donc à
-   seize ou dix-huit centimètres de l'axe, du côté opposé à la caméra. */
-const DO_SIDE_DEPTH = 16;
-/* Distance de l'arête avant du plastron dessiné à l'axe du corps, mesurée
-   sur la silhouette réellement peinte : la vignette est plus large que le
-   contour analytique, qui donnait treize centimètres. */
-const DO_FRONT_FROM_AXIS = 14;
+/* Cadrage de la vue jeu */
+let GAME_ACTION_SPAN, GAME_ACTION_CENTRE, LATERAL_DROP_PER_CM, LATERAL_SCALE_PER_CM;
+
+/* Teintes de la vue jeu */
+let GAME_NEAR_INK, GAME_FAR_INK, GAME_VOLUME_NEAR, GAME_VOLUME_FAR, GAME_TORSO_NEAR,
+    GAME_TORSO_FAR, HAKAMA_CLOTH_NEAR, HAKAMA_CLOTH_FAR, SLEEVE_CLOTH_NEAR,
+    SLEEVE_CLOTH_FAR, CORD_INK;
+
+/* Ancres des vignettes */
+let PIECE_ANCHORS;
+
+/* Motodachi */
+let motodachiSettings;
+let MOTODACHI_BASE_X, GUARD_SHINAI_DEGREES, MOTODACHI_OPEN_DEGREES, MOTODACHI_LIFT_HEIGHT,
+    MOTODACHI_LIFT_SHINAI_DEGREES;
+/* Écart d'ouverture du motodachi : dérivé des deux angles ci-dessus. */
+let MOTODACHI_OPENING_SPAN;
+
+/** Installe les paramètres partagés dans les constantes du module. */
+function applyRigData(rig) {
+  /* Cadence */
+  FRAMES_PER_SECOND = rig.framesPerSecond;
+
+  /* Corps et tête */
+  TORSO_LENGTH = rig.body.torsoLength;
+  NECK_LENGTH = rig.body.neckLength;
+  NECK_FOLLOWS_TORSO = rig.body.neckFollowsTorso;
+  HEAD_TILT_OFFSET_DEGREES = rig.body.headTiltOffsetDegrees;
+  HEAD_RADIUS_HORIZONTAL = rig.body.headRadiusHorizontal;
+  HEAD_RADIUS_VERTICAL = rig.body.headRadiusVertical;
+  RIGHT_SHOULDER_FORWARD_OFFSET = rig.body.rightShoulderForwardOffset;
+
+  /* Bras */
+  UPPER_ARM_LENGTH = rig.arms.upperArmLength;
+  FOREARM_LENGTH = rig.arms.forearmLength;
+  WRIST_TO_GRIP_LENGTH = rig.arms.wristToGripLength;
+  ELBOW_RATIO_ALONG_ARM = rig.arms.elbowRatioAlongArm;
+
+  /* Jambes et pieds */
+  THIGH_LENGTH = rig.legs.thighLength;
+  SHIN_LENGTH = rig.legs.shinLength;
+  TOE_LENGTH = rig.legs.toeLength;
+  FOOT_ROTATION_DEGREES = rig.legs.footRotationDegrees;
+  KNEE_BEND_SIGN = rig.legs.kneeBendSign;
+  FOOT_HEEL_OFFSET = rig.legs.footHeelOffset;
+  FOOT_BALL_OFFSET = rig.legs.footBallOffset;
+
+  /* Shinai */
+  SHINAI_BUTT_OVERHANG = rig.shinai.buttOverhang;
+  SHINAI_LENGTH_FROM_LEFT_GRIP = rig.shinai.lengthFromLeftGrip;
+  GRIP_SPACING = rig.shinai.gripSpacing;
+  TSUBA_DISTANCE_FROM_LEFT_GRIP = rig.shinai.tsubaDistanceFromLeftGrip;
+  MONOUCHI_START_FROM_LEFT_GRIP = rig.shinai.monouchiStartFromLeftGrip;
+  NAKAYUI_FROM_LEFT_GRIP = rig.shinai.nakayuiFromLeftGrip;
+  SHINAI_SLAT_COUNT = rig.shinai.slatCount;
+
+  /* Armure */
+  MENDARE_BAND_TOP = rig.armour.mendareBandTop;
+  MEN_SETBACK_CENTIMETRES = rig.armour.menSetbackCentimetres;
+  ARM_OVER_MENDARE_DEGREES = rig.armour.armOverMendareDegrees;
+  DO_TOP_ALONG_TORSO = rig.armour.doTopAlongTorso;
+  DO_BOTTOM_ALONG_TORSO = rig.armour.doBottomAlongTorso;
+  DO_SCALE = rig.armour.doScale;
+  DO_SIDE_DEPTH = rig.armour.doSideDepth;
+  DO_FRONT_FROM_AXIS = rig.armour.doFrontFromAxis;
+  KOTE_LENGTH = rig.armour.koteLength;
+  RIGHT_KOTE_ROTATION_DEGREES = rig.armour.rightKoteRotationDegrees;
+
+  /* Hakama */
+  HAKAMA_GRAVITY = rig.hakama.gravity;
+  HAKAMA_DAMPING = rig.hakama.damping;
+  HAKAMA_STIFFNESS = rig.hakama.stiffness;
+  HAKAMA_SUBSTEPS = rig.hakama.substeps;
+  HAKAMA_HEM_HEIGHT = rig.hakama.hemHeight;
+  HAKAMA_LEG_INNER_EXTRA = rig.hakama.legInnerExtra;
+  HAKAMA_WIDTH = rig.hakama.width;
+  HAKAMA_PANELS = rig.hakama.panelList;
+
+  /* Retour à distance */
+  RETURN_FRAMES_PER_HALF_STEP = rig.returnStep.framesPerHalfStep;
+  RETURN_SETTLE_FRAMES = rig.returnStep.settleFrames;
+  RETURN_LOW_HIP = rig.returnStep.lowHip;
+  RETURN_MID_HIP = rig.returnStep.midHip;
+  KAMAE_HIP_HEIGHT = rig.returnStep.kamaeHipHeight;
+
+  /* Cadrage de la vue jeu */
+  GAME_ACTION_SPAN = rig.camera.actionSpan;
+  GAME_ACTION_CENTRE = rig.camera.actionCentre;
+  LATERAL_DROP_PER_CM = rig.camera.lateralDropPerCm;
+  LATERAL_SCALE_PER_CM = rig.camera.lateralScalePerCm;
+
+  /* Teintes de la vue jeu */
+  GAME_NEAR_INK = rig.colors.nearInk;
+  GAME_FAR_INK = rig.colors.farInk;
+  GAME_VOLUME_NEAR = rig.colors.nearSkin;
+  GAME_VOLUME_FAR = rig.colors.farSkin;
+  GAME_TORSO_NEAR = rig.colors.nearTorso;
+  GAME_TORSO_FAR = rig.colors.farTorso;
+  HAKAMA_CLOTH_NEAR = rig.colors.nearHakama;
+  HAKAMA_CLOTH_FAR = rig.colors.farHakama;
+  SLEEVE_CLOTH_NEAR = rig.colors.nearSleeve;
+  SLEEVE_CLOTH_FAR = rig.colors.farSleeve;
+  CORD_INK = rig.colors.cord;
+
+  /* Ancres des vignettes */
+  PIECE_ANCHORS = rig.pieceAnchors;
+
+  /* Motodachi : les réglages de son encaissement et de son ouverture restent
+     groupés, ils ne servent qu'à `buildDefenderPose` et à ses trois courbes. */
+  motodachiSettings = rig.motodachi;
+  MOTODACHI_BASE_X = rig.motodachi.baseX;
+  GUARD_SHINAI_DEGREES = rig.motodachi.guardShinaiDegrees;
+  MOTODACHI_OPEN_DEGREES = rig.motodachi.openDegrees;
+  MOTODACHI_LIFT_HEIGHT = rig.motodachi.liftHeight;
+  MOTODACHI_LIFT_SHINAI_DEGREES = rig.motodachi.liftShinaiDegrees;
+
+  MOTODACHI_OPENING_SPAN = GUARD_SHINAI_DEGREES - MOTODACHI_OPEN_DEGREES;
+}
+
+/** Retire les commentaires d'un JSON annoté, sans toucher à ceux qui se
+    trouveraient à l'intérieur d'une chaîne. */
+function stripJsonComments(text) {
+  let out = "";
+  let index = 0;
+  while (index < text.length) {
+    const character = text[index];
+    if (character === '"') {
+      const start = index;
+      index += 1;
+      while (text[index] !== '"') index += text[index] === "\\" ? 2 : 1;
+      out += text.slice(start, index + 1);
+      index += 1;
+    } else if (character === "/" && text[index + 1] === "*") {
+      index = text.indexOf("*/", index) + 2;
+    } else if (character === "/" && text[index + 1] === "/") {
+      const newline = text.indexOf("\n", index);
+      index = newline === -1 ? text.length : newline;
+    } else {
+      out += character;
+      index += 1;
+    }
+  }
+  return out;
+}
+
+async function loadSharedFile(name) {
+  const response = await fetch(SHARED_DATA_DIRECTORY + name);
+  if (!response.ok) throw new Error(name + " : " + response.status);
+  return JSON.parse(stripJsonComments(await response.text()));
+}
 
 /** Recul du motodachi : il rompt dès qu'il a encaissé, un peu plus vite
     que le frappeur n'avance, pour que la distance ne se referme jamais. */
@@ -379,7 +484,8 @@ function motodachiRetreat(frame) {
      sur un corps encore en place, sinon la lame poursuit une cible qui fuit
      et la traversee ne se voit jamais. */
   const delay = attack.retreatDelay || 0;
-  const progress = Math.max(0, Math.min(1, (frame - attack.impactFrame - delay) / 52));
+  const progress = Math.max(0, Math.min(1,
+    (frame - attack.impactFrame - delay) / motodachiSettings.retreatFrames));
   return attack.defenderRetreat * easingFunctions.easeOutCubic(progress);
 }
 
@@ -387,29 +493,22 @@ function motodachiRetreat(frame) {
     l'oscillation s'amortit. */
 function motodachiShock(frame) {
   const elapsed = frame - currentAttack().impactFrame;
-  if (elapsed < 0 || elapsed > 24) return 0;
-  return Math.exp(-elapsed / 5) * Math.cos(elapsed * 0.8);
+  if (elapsed < 0 || elapsed > motodachiSettings.shockFrames) return 0;
+  return Math.exp(-elapsed / motodachiSettings.shockDecayFrames)
+    * Math.cos(elapsed * motodachiSettings.shockWaveSpeed);
 }
 
-/** Il tient le chūdan, puis abaisse la pointe pour ouvrir son men
-    pendant que le frappeur arme, et la remonte après la traversée. */
-/* Garde chūdan : la main gauche est au bas du dō, et le shinai relève d'autant
-   pour que la pointe reste sur la gorge adverse. L'ouverture du motodachi va de
-   cet angle à -25 degrés. */
-const GUARD_SHINAI_DEGREES = 22;
-const MOTODACHI_OPEN_DEGREES = -25;
-const MOTODACHI_OPENING_SPAN = GUARD_SHINAI_DEGREES - MOTODACHI_OPEN_DEGREES;
-
 function motodachiShinaiDegrees(frame) {
+  const settings = motodachiSettings;
   if (!currentAttack().opensMen) return GUARD_SHINAI_DEGREES;
-  if (frame <= 58) return GUARD_SHINAI_DEGREES;
-  if (frame < 76) {
-    return GUARD_SHINAI_DEGREES
-      - MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine((frame - 58) / 18);
+  if (frame <= settings.openingStartFrame) return GUARD_SHINAI_DEGREES;
+  if (frame < settings.openingStartFrame + settings.openingFrames) {
+    return GUARD_SHINAI_DEGREES - MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine(
+      (frame - settings.openingStartFrame) / settings.openingFrames);
   }
-  if (frame <= 110) return MOTODACHI_OPEN_DEGREES;
-  return MOTODACHI_OPEN_DEGREES
-    + MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine(Math.min(1, (frame - 110) / 30));
+  if (frame <= settings.openingHoldUntilFrame) return MOTODACHI_OPEN_DEGREES;
+  return MOTODACHI_OPEN_DEGREES + MOTODACHI_OPENING_SPAN * easingFunctions.easeInOutSine(
+    Math.min(1, (frame - settings.openingHoldUntilFrame) / settings.openingCloseFrames));
 }
 
 /** Le motodachi lève les deux bras pour ouvrir son dō : c'est ainsi qu'on
@@ -417,17 +516,18 @@ function motodachiShinaiDegrees(frame) {
     de ses poings. Il monte pendant que le frappeur arme, tient pendant la
     coupe, et redescend une fois qu'on est passé. */
 function motodachiArmLift(frame) {
+  const settings = motodachiSettings;
   if (!currentAttack().raisesArms) return 0;
-  if (frame <= 40) return 0;
-  if (frame < 66) return easingFunctions.easeInOutSine((frame - 40) / 26);
-  if (frame <= 104) return 1;
-  return 1 - easingFunctions.easeInOutSine(Math.min(1, (frame - 104) / 30));
+  if (frame <= settings.liftStartFrame) return 0;
+  if (frame < settings.liftStartFrame + settings.liftFrames) {
+    return easingFunctions.easeInOutSine(
+      (frame - settings.liftStartFrame) / settings.liftFrames);
+  }
+  if (frame <= settings.liftHoldUntilFrame) return 1;
+  return 1 - easingFunctions.easeInOutSine(
+    Math.min(1, (frame - settings.liftHoldUntilFrame) / settings.liftCloseFrames));
 }
 
-/* Poings au-dessus du front et shinai rabattu dans le dos, comme un armé
-   tenu : c'est la position haute du motodachi. */
-const MOTODACHI_LIFT_HEIGHT = 72;
-const MOTODACHI_LIFT_SHINAI_DEGREES = 135;
 
 function buildDefenderPose(frame) {
   if (sceneState.sequence === "return") {
@@ -437,17 +537,21 @@ function buildDefenderPose(frame) {
   const shock = motodachiShock(frame);
   const openness = (GUARD_SHINAI_DEGREES - motodachiShinaiDegrees(frame)) / MOTODACHI_OPENING_SPAN;
   const lift = motodachiArmLift(frame);
-  return {
-    rootX: -retreat, rootY: 89 - shock * 2.5,
-    torsoLeanDegrees: 6 + shock * 4, headTiltDegrees: -shock * 8,
-    rightAnkleX: 13 - retreat, rightAnkleY: 6, rightFootDegrees: 0,
-    leftAnkleX: -15 - retreat, leftAnkleY: 9.2, leftFootDegrees: -14,
-    gripX: 33 - retreat - lift * 7,
-    gripY: 93 - openness * 8 + lift * MOTODACHI_LIFT_HEIGHT,
+  const settings = motodachiSettings;
+  const guard = settings.guardPose;
+  return Object.assign({}, guard, {
+    rootX: guard.rootX - retreat, rootY: guard.rootY - shock * settings.shockHipDrop,
+    torsoLeanDegrees: guard.torsoLeanDegrees + shock * settings.shockLeanDegrees,
+    headTiltDegrees: -shock * settings.shockHeadDegrees,
+    rightAnkleX: guard.rightAnkleX - retreat,
+    leftAnkleX: guard.leftAnkleX - retreat,
+    gripX: guard.gripX - retreat - lift * settings.liftGripPullBack,
+    gripY: guard.gripY - openness * settings.openingGripDrop + lift * MOTODACHI_LIFT_HEIGHT,
     shinaiDegrees: motodachiShinaiDegrees(frame)
       + lift * (MOTODACHI_LIFT_SHINAI_DEGREES - GUARD_SHINAI_DEGREES),
-    leftElbowBias: -8 + lift, rightElbowBias: -15 + lift * 7
-  };
+    leftElbowBias: guard.leftElbowBias + lift * settings.liftLeftElbowBias,
+    rightElbowBias: guard.rightElbowBias + lift * settings.liftRightElbowBias
+  });
 }
 
 /** Point visé sur le défenseur, dans son repère local : sommet du men
@@ -497,629 +601,32 @@ partCatalogue.forEach(part => { partColor[part.id] = part.color; });
    3. Poses clés
    Tout est en coordonnées monde : un pied posé garde sa position
    pendant que le bassin avance, ce qui donne le glissé correct.
+   Elles vivent désormais dans Assets/Shared/Data/attacks.json, avec
+   les phases et les repères de chaque attaque.
    ============================================================ */
-
-const menKeyframeList = [
-  /* Garde haute : bassin à 90,5 cm, la limite au-delà de laquelle le pied
-     avant ne toucherait plus le sol. La jambe gauche y est tendue à 95,6 %,
-     prête à propulser. */
-  { frame: 0, easing: "linear", pose: {
-      rootX: 4, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -11, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 33, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 20, easing: "easeInOutSine", pose: {
-      rootX: 4, rootY: 90, torsoLeanDegrees: 6.5, headTiltDegrees: 0,
-      rightAnkleX: 17, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -11, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 33, gripY: 92.5, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 44, easing: "easeOutCubic", pose: {
-      rootX: 10, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 23, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -5, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 39, gripY: 93, shinaiDegrees: 18,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  /* Mi-armé : les poings passent devant le corps, pas contre l'épaule.
-     Sans ce point, la trajectoire rectiligne les fait frôler l'épaule et
-     le bras gauche se replie brutalement au lieu de se dérouler. */
-  { frame: 50, easing: "easeInOutSine", pose: {
-      rootX: 13, rootY: 91, torsoLeanDegrees: 7, headTiltDegrees: -1,
-      rightAnkleX: 26, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: -2, leftAnkleY: 9.8, leftFootDegrees: -17,
-      gripX: 48, gripY: 140, shinaiDegrees: 75,
-      leftElbowBias: -8, rightElbowBias: -11 } },
-
-  /* Sommet de l'armé : keyframe de passage, jamais tenue. Le shinai
-     repart vers le bas dès la frame suivante. */
-  { frame: 58, easing: "easeInQuad", pose: {
-      rootX: 18, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
-      rightAnkleX: 30, rightAnkleY: 8, rightFootDegrees: 4,
-      leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 28, gripY: 179, shinaiDegrees: 142,
-      leftElbowBias: -7, rightElbowBias: -8 } },
-
-  /* Le talon gauche monte, l'orteil reste planté en x = 16,2 : c'est lui
-     le point d'appui de toute la poussée. Le genou droit part devant et
-     le shinai a déjà entamé sa descente. */
-  { frame: 66, easing: "linear", pose: {
-      rootX: 30, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: -1,
-      rightAnkleX: 52, rightAnkleY: 26, rightFootDegrees: 12,
-      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 60, gripY: 172, shinaiDegrees: 115,
-      leftElbowBias: -6.5, rightElbowBias: -8 } },
-
-  /* Décollage : jambe gauche tendue à 98 %, sur la pointe. */
-  { frame: 72, easing: "linear", pose: {
-      rootX: 42, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 62, rightAnkleY: 32, rightFootDegrees: 8,
-      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 80, gripY: 166, shinaiDegrees: 103,
-      leftElbowBias: -6, rightElbowBias: -7 } },
-
-  { frame: 76, easing: "linear", pose: {
-      rootX: 72, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 98, rightAnkleY: 30, rightFootDegrees: 4,
-      leftAnkleX: 26, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 116, gripY: 155, shinaiDegrees: 81,
-      leftElbowBias: -5, rightElbowBias: -6 } },
-
-  { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 101, rootY: 83, torsoLeanDegrees: 10, headTiltDegrees: 2,
-      rightAnkleX: 130, rightAnkleY: 14, rightFootDegrees: 2,
-      leftAnkleX: 52, leftAnkleY: 18, leftFootDegrees: -36,
-      gripX: 150, gripY: 144, shinaiDegrees: 49,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  /* Frappe. Jusqu'ici la lame est restée armée sur le poignet pendant que
-     l'avant-bras descendait : elle rattrape son retard dans les six
-     dernières frames, à 15°/frame, et le tenouchi l'arrête sur le men. */
-  { frame: 82, easing: "easeOutCubic", pose: {
-      rootX: 116, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 3,
-      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 64, leftAnkleY: 16, leftFootDegrees: -34,
-      gripX: 169, gripY: 138, shinaiDegrees: 18,
-      leftElbowBias: -1, rightElbowBias: -2 } },
-
-  /* Hikitsuke : le pied gauche revient sous le corps en 4 frames, soit
-     52 cm parcourus, presque 8 m/s. */
-  /* Rebond : la lame ne s'enfonce pas, elle repart de 10 cm vers le haut
-     dans les deux frames qui suivent le contact. */
-  { frame: 84, easing: "easeOutSine", pose: {
-      rootX: 118, rootY: 82.5, torsoLeanDegrees: 11, headTiltDegrees: 2.5,
-      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 90, leftAnkleY: 13, leftFootDegrees: -26,
-      gripX: 169.5, gripY: 138, shinaiDegrees: 25,
-      leftElbowBias: -3, rightElbowBias: -3.5 } },
-
-  { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 120, rootY: 85, torsoLeanDegrees: 10, headTiltDegrees: 2,
-      rightAnkleX: 140, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 116, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 170, gripY: 138, shinaiDegrees: 23,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 130, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 154, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 116, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 176, gripY: 134, shinaiDegrees: 20,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 140, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 164, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 126, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 186, gripY: 132, shinaiDegrees: 17,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 154, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 140, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 200, gripY: 132, shinaiDegrees: 15,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 134, easing: "linear", pose: {
-      rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 194, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 150, easing: "linear", pose: {
-      rootX: 165, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 178, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 150, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 194, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } }
-];
-
-const MEN_IMPACT_FRAME = 82;
-
-const menPhaseList = [
-  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. Poing gauche à un poing du corps, pied droit devant, jambe gauche quasiment tendue : c'est elle qui propulsera." },
-  { name: "Seme", startFrame: 20, endFrame: 44,
-    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
-  { name: "Furikaburi", startFrame: 44, endFrame: 58,
-    detail: "Armé grande amplitude : les poings montent à un poing au-dessus du crâne, shinai dressé, pas rabattu dans le dos." },
-  { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
-    detail: "Aucun temps d'arrêt en haut : le shinai redescend pendant que la jambe gauche se tend à 98 % sur la pointe." },
-  { name: "Envol", startFrame: 72, endFrame: 76,
-    detail: "Plus aucun appui au sol, le bassin file à 4,5 m/s. La lame reste armée sur le poignet, c'est l'avant-bras qui descend." },
-  { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Le poignet se déroule enfin, à 15°/frame : la lame rattrape l'avant-bras juste avant de toucher, pendant que le pied droit claque à plat." },
-  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
-    detail: "Le pied gauche revient sous le corps en 4 frames : 52 cm, près de 8 m/s." },
-  { name: "Zanshin", startFrame: 86, endFrame: 116,
-    detail: "Traversée en suriashi, bras et vigilance maintenus, le motodachi rompt." },
-  { name: "Retour kamae", startFrame: 116, endFrame: 150,
-    detail: "Redescente en chūdan, reprise de la garde." }
-];
-
-/* ------------------------------------------------------------
-   Kote : même geste que le men, mais visant l'avant-bras droit
-   de l'adversaire. Cible plus basse et plus proche de 28 cm, donc
-   armé plus court, avance réduite de 112 à 115 cm, et lame qui
-   finit inclinée vers le bas au lieu de monter vers la tête.
-   ------------------------------------------------------------ */
-const koteKeyframeList = [
-  { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
-  { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
-  { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
-  /* Armé identique au men : même passage devant le corps, mêmes poings
-     un poing au-dessus du crâne. Seule la descente diffère. */
-  { frame: 50, easing: "easeInOutSine", pose: menKeyframeList[3].pose },
-  { frame: 58, easing: "easeInQuad", pose: menKeyframeList[4].pose },
-
-  { frame: 66, easing: "linear", pose: {
-      rootX: 26, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 44, rightAnkleY: 20, rightFootDegrees: 10,
-      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 58, gripY: 168, shinaiDegrees: 110,
-      leftElbowBias: -6.5, rightElbowBias: -8 } },
-
-  { frame: 72, easing: "linear", pose: {
-      rootX: 36, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 54, rightAnkleY: 26, rightFootDegrees: 8,
-      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 78, gripY: 152, shinaiDegrees: 85,
-      leftElbowBias: -6, rightElbowBias: -7 } },
-
-  { frame: 76, easing: "linear", pose: {
-      rootX: 50, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 74, rightAnkleY: 22, rightFootDegrees: 4,
-      leftAnkleX: 20, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 100, gripY: 130, shinaiDegrees: 50,
-      leftElbowBias: -5, rightElbowBias: -6 } },
-
-  { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 66, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 92, rightAnkleY: 12, rightFootDegrees: 2,
-      leftAnkleX: 32, leftAnkleY: 16, leftFootDegrees: -36,
-      gripX: 116, gripY: 112, shinaiDegrees: 18,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  /* Frappe : les deux bras sont bas, le poing gauche revenu à sa hauteur
-     de chūdan, et la lame arrive presque à plat sur l'avant-bras. */
-  { frame: 82, easing: "easeOutCubic", pose: {
-      rootX: 77, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
-      rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 35, leftAnkleY: 14, leftFootDegrees: -34,
-      gripX: 127, gripY: 104, shinaiDegrees: 3,
-      leftElbowBias: -1, rightElbowBias: -2 } },
-
-  { frame: 84, easing: "easeOutSine", pose: {
-      rootX: 79, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 50, leftAnkleY: 12, leftFootDegrees: -26,
-      gripX: 127.5, gripY: 105, shinaiDegrees: 10,
-      leftElbowBias: -1, rightElbowBias: -2.5 } },
-
-  { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 82, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
-      rightAnkleX: 101, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 67, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 128, gripY: 105, shinaiDegrees: 8,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  { frame: 92, easing: "easeInOutSine", pose: {
-      rootX: 88, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 112, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 74, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 132, gripY: 106, shinaiDegrees: 8,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 98, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 122, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 84, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 142, gripY: 105, shinaiDegrees: 10,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 108, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 94, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 152, gripY: 105, shinaiDegrees: 12,
-      leftElbowBias: -3, rightElbowBias: -4 } },
-
-  { frame: 134, easing: "linear", pose: {
-      rootX: 119, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 104, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 148, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 150, easing: "linear", pose: {
-      rootX: 119, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 132, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 104, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 148, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } }
-];
-
-const kotePhaseList = [
-  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. Le kote visé est l'avant-bras droit adverse, 28 cm plus près et 63 cm plus bas que son men." },
-  { name: "Seme", startFrame: 20, endFrame: 44,
-    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
-  { name: "Furikaburi", startFrame: 44, endFrame: 58,
-    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne." },
-  { name: "Poussée sur les orteils", startFrame: 58, endFrame: 72,
-    detail: "Même poussée que pour le men, sur la pointe du pied gauche, mais pour une avance plus courte." },
-  { name: "Envol", startFrame: 72, endFrame: 76,
-    detail: "La lame reste armée sur le poignet pendant que l'avant-bras descend." },
-  { name: "Fumikomi (frappe)", startFrame: 76, endFrame: 82,
-    detail: "Les deux bras descendent, le poing gauche retrouve sa hauteur de chūdan et la lame arrive presque à plat sur l'avant-bras adverse." },
-  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
-    detail: "Le pied gauche revient sous le corps." },
-  { name: "Zanshin", startFrame: 86, endFrame: 116,
-    detail: "Traversée, pointe maintenue sur la ligne du kote." },
-  { name: "Retour kamae", startFrame: 116, endFrame: 150,
-    detail: "Redescente en chūdan, reprise de la garde." }
-];
-
-/* ------------------------------------------------------------
-   Dō : armé comme le men, mais la lame arrive sur l'arête avant du
-   plastron — celle qui est tournée vers le frappeur. Le geste se lit en
-   deux temps, et le second se joue dans la profondeur. D'abord la coupe
-   en diagonale : la lame entre dans le bas du plastron du côté droit du
-   motodachi, c'est-à-dire vers le fond de l'image. Partant d'une main
-   écartée vers la caméra par le pas en diagonale et visant une tôle
-   enfouie derrière le plan du corps, elle croise ce plan aux deux tiers
-   de sa course : au-delà, et pour autant qu'elle se projette dans sa
-   silhouette, elle est derrière lui et n'est plus dessinée. C'est ce
-   manque — vingt-neuf centimètres sur cent quinze — qui dit la
-   profondeur, faute de pouvoir tourner la caméra, et c'est pourquoi
-   l'impact ne se voit pas : il a lieu du côté caché. Ensuite le
-   glissement : le frappeur simule la coupe du corps entier en faisant
-   courir la lame sur le plastron jusqu'au côté opposé, sa droite à lui,
-   celle du spectateur. La part cachée fond alors jusqu'à zéro et le
-   shinai ressort tout entier. Les poses ne portent qu'une progression de
-   coupe, `cutProgress`, nulle à la frappe et pleine quand la lame est
-   sortie de l'autre côté ; le masquage, lui, se calcule, si bien qu'il
-   s'inverse tout seul en attaque adverse : le receveur présente alors son
-   dō droit à la caméra, la frappe se voit, et c'est la fin du glissement
-   qui passe derrière son corps.
-   ------------------------------------------------------------ */
-const doKeyframeList = [
-  { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
-  { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
-
-  /* Seme long : on entre de 26 cm avant même d'armer. Le dō se coupe de
-     près, sinon le contact se fait trop loin sur la lame. */
-  { frame: 44, easing: "easeOutCubic", pose: {
-      rootX: 30, rootY: 90.5, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 43, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 15, leftAnkleY: 9.4, leftFootDegrees: -15,
-      gripX: 59, gripY: 93, shinaiDegrees: 18,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 50, easing: "easeInOutSine", pose: {
-      rootX: 38, rootY: 91, torsoLeanDegrees: 7, headTiltDegrees: -1,
-      rightAnkleX: 51, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 23, leftAnkleY: 9.8, leftFootDegrees: -17,
-      gripX: 73, gripY: 140, shinaiDegrees: 75,
-      leftElbowBias: -8, rightElbowBias: -11 } },
-
-  { frame: 58, easing: "easeInQuad", pose: {
-      rootX: 44, rootY: 91, torsoLeanDegrees: 4, headTiltDegrees: -2,
-      rightAnkleX: 56, rightAnkleY: 8, rightFootDegrees: 4,
-      leftAnkleX: 27, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 54, gripY: 179, shinaiDegrees: 142,
-      leftElbowBias: -7, rightElbowBias: -8 } },
-
-  { frame: 66, easing: "linear", pose: {
-      rootX: 58, rootY: 91.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 76, rightAnkleY: 22, rightFootDegrees: 10,
-      leftAnkleX: 34.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 84, gripY: 168, shinaiDegrees: 108,
-      leftElbowBias: -6.5, rightElbowBias: -8, lateralOffset: 3 } },
-
-  /* Le pas part en diagonale : on quitte la ligne vers sa droite pour
-     ouvrir le plastron et passer à côté, pas dedans. */
-  { frame: 72, easing: "linear", pose: {
-      rootX: 76, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 96, rightAnkleY: 30, rightFootDegrees: 8,
-      leftAnkleX: 45.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 100, gripY: 158, shinaiDegrees: 92,
-      leftElbowBias: -6, rightElbowBias: -7, lateralOffset: 9 } },
-
-  { frame: 76, easing: "linear", pose: {
-      rootX: 94, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 1,
-      rightAnkleX: 118, rightAnkleY: 26, rightFootDegrees: 4,
-      leftAnkleX: 68, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 128, gripY: 148, shinaiDegrees: 74,
-      leftElbowBias: -5, rightElbowBias: -6, lateralOffset: 16 } },
-
-  /* La lame reste redressée : la pointe descend devant l'adversaire, pas
-     au-dessus de lui, et c'est de là qu'elle plonge en diagonale. */
-  { frame: 80, easing: "linear", pose: {
-      rootX: 112, rootY: 83, torsoLeanDegrees: 11, headTiltDegrees: 2,
-      rightAnkleX: 136, rightAnkleY: 12, rightFootDegrees: 2,
-      leftAnkleX: 80, leftAnkleY: 17, leftFootDegrees: -36,
-      gripX: 142, gripY: 118, shinaiDegrees: 40,
-      leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 24, cutProgress: 0 } },
-
-  /* Frappe : main gauche au nombril, treize centimètres au-dessus du
-     bassin, et lame presque à plat — c'est la conséquence, non un choix :
-     le dō visé est à peu près à la hauteur de ce poing, donc toute la
-     diagonale du coup part dans la profondeur et non dans le plan de
-     l'image. La lame entre dans le bas du plastron du côté droit du
-     motodachi ; passé l'arête avant elle est derrière lui, et le contact
-     lui-même est caché — c'est bien le but. */
-  { frame: 82, easing: "linear", pose: {
-      rootX: 128, rootY: 80, torsoLeanDegrees: 12, headTiltDegrees: 2,
-      rightAnkleX: 152, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 96, leftAnkleY: 15, leftFootDegrees: -34,
-      gripX: 156, gripY: 93.5, shinaiDegrees: 3,
-      leftElbowBias: -1, rightElbowBias: -2, lateralOffset: 28, cutProgress: 0 } },
-
-  /* Glissement sur le plastron : la lame ressort de la profondeur en
-     courant sur la tôle, vers la droite du frappeur. La part cachée fond,
-     donc la pointe réapparaît en glissant sur le dō. */
-  { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 137, rootY: 84, torsoLeanDegrees: 10, headTiltDegrees: 1,
-      rightAnkleX: 152, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 126, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 164, gripY: 97.5, shinaiDegrees: 3,
-      leftElbowBias: -2, rightElbowBias: -3, lateralOffset: 34, cutProgress: 0.25 } },
-
-  { frame: 90, easing: "easeInOutSine", pose: {
-      rootX: 148, rootY: 87, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 172, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 134, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 173, gripY: 100.5, shinaiDegrees: 0.5,
-      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 40, cutProgress: 0.5 } },
-
-  /* Le shinai est ressorti tout entier du côté du spectateur : la coupe
-     est finie, plus rien n'est caché. */
-  { frame: 96, easing: "easeInOutSine", pose: {
-      rootX: 162, rootY: 89, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 186, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 148, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 186, gripY: 102.5, shinaiDegrees: -2,
-      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 44, cutProgress: 1 } },
-
-  { frame: 104, easing: "easeInOutSine", pose: {
-      rootX: 177, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 201, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 163, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 196, gripY: 102, shinaiDegrees: -20,
-      leftElbowBias: -3, rightElbowBias: -4, lateralOffset: 48, cutProgress: 1 } },
-
-  { frame: 116, easing: "easeInOutCubic", pose: {
-      rootX: 187, rootY: 89, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 211, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 173, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 204, gripY: 100, shinaiDegrees: -16,
-      leftElbowBias: -3, rightElbowBias: -6, lateralOffset: 50, cutProgress: 1 } },
-
-  { frame: 134, easing: "linear", pose: {
-      rootX: 195, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 208, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 180, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 224, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50, cutProgress: 1 } },
-
-  { frame: 150, easing: "linear", pose: {
-      rootX: 195, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 208, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 180, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 224, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15, lateralOffset: 50, cutProgress: 1 } }
-];
-
-const doPhaseList = [
-  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. La cible est le bas de l'arête avant du plastron, celle qui est tournée vers soi, vers 110 cm du sol." },
-  { name: "Seme d'entrée", startFrame: 20, endFrame: 44,
-    detail: "On entre de 26 cm avant d'armer : le dō se coupe de près, sinon le contact se fait trop loin sur la lame." },
-  { name: "Furikaburi", startFrame: 44, endFrame: 58,
-    detail: "Armé identique au men : les poings montent à un poing au-dessus du crâne. En face, le motodachi lève les deux bras pour ouvrir son dō — c'est ainsi qu'on présente la cible, et c'est ce qui dégage le plastron de ses poings." },
-  { name: "Poussée en diagonale", startFrame: 58, endFrame: 72,
-    detail: "Le pas quitte la ligne vers la droite : on ouvre le plastron et on passe à côté, pas dedans." },
-  { name: "Descente devant la cible", startFrame: 72, endFrame: 80,
-    detail: "La lame reste redressée à 40° et les mains tombent déjà vers le nombril : la pointe descend devant l'adversaire, jamais au-dessus de lui." },
-  { name: "Fumikomi (frappe)", startFrame: 80, endFrame: 82,
-    detail: "Le poignet se déroule d'un coup, 37° en deux frames, et la main gauche arrive au nombril, treize centimètres au-dessus du bassin. La lame entre dans le bas du plastron du côté droit du motodachi, c'est-à-dire vers le fond : vingt-huit centimètres de shinai passent derrière lui et disparaissent, l'impact compris. Elle est presque à plat, et ce n'est pas un défaut : le dō visé est à la hauteur de ce poing, donc la diagonale du coup est tout entière dans la profondeur. En attaque adverse, le receveur présente ce même dō droit à la caméra : rien n'est caché et la frappe se voit." },
-  { name: "Glissement sur le dō", startFrame: 82, endFrame: 92,
-    detail: "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La main gauche reste au nombril et suit la remontée du bassin. La part cachée fond de 37 à 22 puis 0 cm, si bien que la lame ressort peu à peu de derrière le corps — et l'inverse en attaque adverse, où elle s'y enfonce jusqu'à 18 cm. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit." },
-  { name: "Dégagement", startFrame: 92, endFrame: 104,
-    detail: "Le shinai est ressorti tout entier du côté du spectateur, la coupe est finie. Libérée, la lame plonge : c'est là que se lit la diagonale." },
-  { name: "Zanshin", startFrame: 104, endFrame: 116,
-    detail: "On traverse vite après un dō, sans rester devant l'adversaire." },
-  { name: "Retour kamae", startFrame: 116, endFrame: 150,
-    detail: "Redescente en chūdan, reprise de la garde." }
-];
-
-/* ------------------------------------------------------------
-   Tsuki : aucun armé, la pointe reste sur le centre et part droit au
-   tsuki-dare. C'est la seule technique où l'on ne traverse pas : le
-   shinai est ramené en chūdan sur place, et le contact se fait avec la
-   pointe, pas avec le monouchi.
-   ------------------------------------------------------------ */
-const tsukiKeyframeList = [
-  { frame: 0, easing: "linear", pose: menKeyframeList[0].pose },
-  { frame: 20, easing: "easeInOutSine", pose: menKeyframeList[1].pose },
-  { frame: 44, easing: "easeOutCubic", pose: menKeyframeList[2].pose },
-
-  /* Aucun armé : les poings restent sur la ligne, la pointe descend
-     juste assez pour viser la gorge. */
-  { frame: 58, easing: "easeInQuad", pose: {
-      rootX: 18, rootY: 90.5, torsoLeanDegrees: 7, headTiltDegrees: 0,
-      rightAnkleX: 30, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 1, leftAnkleY: 10.4, leftFootDegrees: -20,
-      gripX: 40, gripY: 106, shinaiDegrees: 14,
-      leftElbowBias: -8, rightElbowBias: -13 } },
-
-  { frame: 66, easing: "linear", pose: {
-      rootX: 26, rootY: 91, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 44, rightAnkleY: 20, rightFootDegrees: 10,
-      leftAnkleX: 2.8, leftAnkleY: 12.2, leftFootDegrees: -30,
-      gripX: 52, gripY: 110, shinaiDegrees: 14,
-      leftElbowBias: -7, rightElbowBias: -11 } },
-
-  { frame: 72, easing: "linear", pose: {
-      rootX: 38, rootY: 90, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 56, rightAnkleY: 26, rightFootDegrees: 8,
-      leftAnkleX: 5.8, leftAnkleY: 14.1, leftFootDegrees: -44,
-      gripX: 72, gripY: 116, shinaiDegrees: 12,
-      leftElbowBias: -6, rightElbowBias: -9 } },
-
-  { frame: 76, easing: "linear", pose: {
-      rootX: 54, rootY: 88, torsoLeanDegrees: 10, headTiltDegrees: 0,
-      rightAnkleX: 78, rightAnkleY: 22, rightFootDegrees: 4,
-      leftAnkleX: 22, leftAnkleY: 20, leftFootDegrees: -40,
-      gripX: 98, gripY: 120, shinaiDegrees: 10,
-      leftElbowBias: -4, rightElbowBias: -6 } },
-
-  { frame: 80, easing: "easeOutSine", pose: {
-      rootX: 72, rootY: 82, torsoLeanDegrees: 11, headTiltDegrees: 1,
-      rightAnkleX: 98, rightAnkleY: 10, rightFootDegrees: 2,
-      leftAnkleX: 40, leftAnkleY: 16, leftFootDegrees: -36,
-      gripX: 124, gripY: 124, shinaiDegrees: 9,
-      leftElbowBias: -2, rightElbowBias: -3 } },
-
-  /* Touche : la pointe atteint le tsuki-dare, les deux bras tendus. */
-  { frame: 82, easing: "easeOutCubic", pose: {
-      rootX: 82, rootY: 80, torsoLeanDegrees: 10, headTiltDegrees: 0,
-      rightAnkleX: 106, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 46, leftAnkleY: 14, leftFootDegrees: -34,
-      gripX: 134, gripY: 124, shinaiDegrees: 6.5,
-      leftElbowBias: -1, rightElbowBias: -1 } },
-
-  { frame: 86, easing: "easeOutSine", pose: {
-      rootX: 84, rootY: 84, torsoLeanDegrees: 9, headTiltDegrees: 0,
-      rightAnkleX: 106, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 69, leftAnkleY: 10.2, leftFootDegrees: -18,
-      gripX: 130, gripY: 122, shinaiDegrees: 11,
-      leftElbowBias: -2, rightElbowBias: -4 } },
-
-  /* On ne traverse pas : le shinai revient en chūdan sur place. */
-  { frame: 96, easing: "easeInOutSine", pose: {
-      rootX: 84, rootY: 88, torsoLeanDegrees: 8, headTiltDegrees: 0,
-      rightAnkleX: 100, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 69, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 114, gripY: 112, shinaiDegrees: 14,
-      leftElbowBias: -5, rightElbowBias: -10 } },
-
-  { frame: 112, easing: "easeInOutSine", pose: {
-      rootX: 80, rootY: 90, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 93, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 65, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 102, gripY: 105, shinaiDegrees: 16,
-      leftElbowBias: -8, rightElbowBias: -14 } },
-
-  { frame: 134, easing: "linear", pose: {
-      rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 105, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } },
-
-  { frame: 150, easing: "linear", pose: {
-      rootX: 76, rootY: 90.5, torsoLeanDegrees: 6, headTiltDegrees: 0,
-      rightAnkleX: 89, rightAnkleY: 6, rightFootDegrees: 0,
-      leftAnkleX: 61, leftAnkleY: 9.2, leftFootDegrees: -14,
-      gripX: 105, gripY: 93, shinaiDegrees: 22,
-      leftElbowBias: -8, rightElbowBias: -15 } }
-];
-
-const tsukiPhaseList = [
-  { name: "Kamae (chūdan)", startFrame: 0, endFrame: 20,
-    detail: "Garde. La cible est le tsuki-dare, le rabat de gorge, à 141 cm du sol." },
-  { name: "Seme", startFrame: 20, endFrame: 44,
-    detail: "Pression : le centre de gravité avance, la jambe gauche se charge." },
-  { name: "Aucun armé", startFrame: 44, endFrame: 66,
-    detail: "Le seul coup sans furikaburi : la pointe reste sur le centre et descend juste assez pour viser la gorge." },
-  { name: "Poussée sur les orteils", startFrame: 66, endFrame: 76,
-    detail: "Même poussée, mais c'est le bassin qui porte le coup : les bras ne font que se tendre." },
-  { name: "Tsuki (touche)", startFrame: 76, endFrame: 82,
-    detail: "La pointe atteint le tsuki-dare, les deux bras tendus. Contact avec la pointe, pas avec le monouchi." },
-  { name: "Hikitsuke", startFrame: 82, endFrame: 86,
-    detail: "Le pied gauche revient sous le corps." },
-  { name: "Retrait en chūdan", startFrame: 86, endFrame: 112,
-    detail: "On ne traverse pas : le shinai est ramené en garde sur place, face à l'adversaire." },
-  { name: "Retour kamae", startFrame: 112, endFrame: 150,
-    detail: "Reprise de la garde, un pas en arrière pour rétablir la ligne." }
-];
 
 /* Catalogue des attaques : la logique de mouvement, le rig et le rendu
    sont communs, seules changent les poses clés, la cible sur le
    défenseur et l'ampleur du recul qu'elle provoque. */
-const attackCatalogue = {
-  men: {
-    label: "MEN", keyframes: menKeyframeList, phases: menPhaseList,
-    impactFrame: MEN_IMPACT_FRAME, defenderRetreat: 60, opensMen: true,
-    targetLocal: skeleton => ({ x: skeleton.headCenter.x, y: skeleton.headCenter.y + HEAD_RADIUS_VERTICAL + 3 })
-  },
-  kote: {
-    label: "KOTE", keyframes: koteKeyframeList, phases: kotePhaseList,
-    impactFrame: 82, defenderRetreat: 40, opensMen: false,
-    targetLocal: skeleton => pointAlong(skeleton.rightWrist, skeleton.rightElbow, 0.3)
-  },
-  do: {
-    label: "DŌ", keyframes: doKeyframeList, phases: doPhaseList,
-    impactFrame: 82, defenderRetreat: 55, retreatDelay: 4, opensMen: false, cutsThrough: true,
-    raisesArms: true,
-    /* Le contact est sur le dō droit du motodachi, donc de l'autre côté de
-       son corps : de profil il se projette au milieu de sa silhouette, et
-       il est caché. C'est le point que la lame vise, pas celui où elle
-       disparaît. */
-    targetLocal: skeleton => pointAlong(skeleton.root, skeleton.shoulderCenter, 0.2)
-  },
-  tsuki: {
-    label: "TSUKI", keyframes: tsukiKeyframeList, phases: tsukiPhaseList,
-    impactFrame: 82, defenderRetreat: 25, opensMen: false, thrust: true,
-    /* Rabat de gorge, sous le menton du men. */
-    targetLocal: skeleton => {
-      const forward = skeleton.forwardDirection;
-      const up = skeleton.torsoDirection;
-      return { x: skeleton.neckTop.x + forward.x * 8 - up.x * 3,
-               y: skeleton.neckTop.y + forward.y * 8 - up.y * 3 };
-    }
+/* Catalogue des attaques : la logique de mouvement, le rig et le rendu sont
+   communs. Les poses clés, la cible visée et l'ampleur du recul viennent du
+   fichier partagé ; seule la résolution de la cible sur le squelette du
+   défenseur reste du code, une fonction ne se sérialisant pas. */
+const targetResolverByName = {
+  menTop: skeleton => ({ x: skeleton.headCenter.x,
+                         y: skeleton.headCenter.y + HEAD_RADIUS_VERTICAL + 3 }),
+  rightForearm: skeleton => pointAlong(skeleton.rightWrist, skeleton.rightElbow, 0.3),
+  torsoLow: skeleton => pointAlong(skeleton.root, skeleton.shoulderCenter, 0.2),
+  throatFlap: skeleton => {
+    const forward = skeleton.forwardDirection;
+    const up = skeleton.torsoDirection;
+    return { x: skeleton.neckTop.x + forward.x * 8 - up.x * 3,
+             y: skeleton.neckTop.y + forward.y * 8 - up.y * 3 };
   }
 };
 
-/* Retour à distance en un seul pas, de chaque côté. Rouvrir 101 cm en un
-   pas est impossible pour un seul homme : il faudrait que chaque pied
-   parcoure 101 cm, ce qui laisserait l'appui à 66 cm du bassin alors
-   qu'une jambe de 86 cm n'en admet que 48, même bassin bas. Les deux
-   partenaires rompent donc ensemble, d'un pas chacun, ce qui est aussi
-   ce qui se fait après une frappe. Le bassin descend à 82 cm pendant que
-   le pied est en l'air, sans quoi l'appui restant serait hors de portée. */
-const RETURN_FRAMES_PER_HALF_STEP = 20;
-const RETURN_SETTLE_FRAMES = 14;
-const RETURN_LOW_HIP = 82;
-const RETURN_MID_HIP = 88;
-const KAMAE_HIP_HEIGHT = 90.5;
+const attackCatalogue = {};
+
 
 /** Pose de garde, utilisée pour fabriquer les deux séquences de recul. */
 function guardPose(rootX, rightAnkleX, leftAnkleX, hipHeight) {
@@ -1148,21 +655,43 @@ function buildBackwardStep(startRootX, startRightAnkleX, startLeftAnkleX, stepLe
   ];
 }
 
-/* Chaque attaque connaît l'écart qu'elle a refermé, donc la longueur du
-   pas qui le rouvre : la moitié pour chacun des deux partenaires. */
-Object.keys(attackCatalogue).forEach(id => {
-  const attack = attackCatalogue[id];
-  const endPose = attack.keyframes[attack.keyframes.length - 1].pose;
-  const kamaeRootX = menKeyframeList[0].pose.rootX;
-  const gapToReopen = endPose.rootX - attack.defenderRetreat - kamaeRootX;
-  attack.returnStepLength = gapToReopen / 2;
-  attack.returnOffsetShift = attack.defenderRetreat + attack.returnStepLength;
-  attack.returnSequence = buildBackwardStep(
-    endPose.rootX, endPose.rightAnkleX, endPose.leftAnkleX, attack.returnStepLength);
-  attack.defenderReturnSequence = buildBackwardStep(
-    -attack.defenderRetreat, -attack.defenderRetreat + 13, -attack.defenderRetreat - 15,
-    attack.returnStepLength);
-});
+/** Installe les attaques lues dans le fichier partagé.
+
+    Les listes kote / dō / tsuki reprennent le kamae et le seme du men par
+    référence (`poseRef: "men:1"`) : régler la garde une fois la règle pour les
+    quatre attaques. Chaque attaque connaît ensuite l'écart qu'elle a refermé,
+    donc la longueur du pas qui le rouvre : la moitié pour chacun des deux
+    partenaires. */
+function applyAttackData(attackDataList) {
+  attackDataList.forEach(attackData => {
+    attackCatalogue[attackData.id] = Object.assign({}, attackData, {
+      targetLocal: targetResolverByName[attackData.target]
+    });
+  });
+
+  attackDataList.forEach(attackData => {
+    attackCatalogue[attackData.id].keyframeList = attackData.keyframeList.map(keyframe => {
+      if (!keyframe.poseRef) return keyframe;
+      const [sourceId, index] = keyframe.poseRef.split(":");
+      return { frame: keyframe.frame, easing: keyframe.easing,
+               pose: attackCatalogue[sourceId].keyframeList[Number(index)].pose };
+    });
+  });
+
+  Object.keys(attackCatalogue).forEach(id => {
+    const attack = attackCatalogue[id];
+    const endPose = attack.keyframeList[attack.keyframeList.length - 1].pose;
+    const kamaeRootX = attackCatalogue.men.keyframeList[0].pose.rootX;
+    const gapToReopen = endPose.rootX - attack.defenderRetreat - kamaeRootX;
+    attack.returnStepLength = gapToReopen / 2;
+    attack.returnOffsetShift = attack.defenderRetreat + attack.returnStepLength;
+    attack.returnSequence = buildBackwardStep(
+      endPose.rootX, endPose.rightAnkleX, endPose.leftAnkleX, attack.returnStepLength);
+    attack.defenderReturnSequence = buildBackwardStep(
+      -attack.defenderRetreat, -attack.defenderRetreat + 13, -attack.defenderRetreat - 15,
+      attack.returnStepLength);
+  });
+}
 
 /* ============================================================
    4. Interpolation
@@ -1179,7 +708,7 @@ const easingFunctions = {
 };
 
 function interpolatePose(frame, sequence) {
-  const list = sequence || currentAttack().keyframes;
+  const list = sequence || currentAttack().keyframeList;
   const clampedFrame = Math.max(0, Math.min(list[list.length - 1].frame, frame));
   let previousKeyframe = list[0];
   let nextKeyframe = list[list.length - 1];
@@ -1207,7 +736,7 @@ function interpolatePose(frame, sequence) {
 /* Une frame frontière appartient à la phase qui s'y termine : la frame
    82 est l'instant de la frappe, pas le début du hikitsuke. */
 function findPhase(frame) {
-  const phases = currentAttack().phases;
+  const phases = currentAttack().phaseList;
   for (let index = 0; index < phases.length; index++) {
     if (frame <= phases[index].endFrame) return phases[index];
   }
@@ -1367,10 +896,12 @@ function solveSkeleton(pose) {
 
 /* Décor de scène, dans l'esprit des jeux de combat Neo Geo : il défile
    moins vite que les combattants, ce qui donne la profondeur. */
+const SHARED_ART_DIRECTORY = "Assets/Resources/Shared/Art/";
+
 const stageImage = new Image();
 let stageImageReady = false;
 stageImage.addEventListener("load", () => { stageImageReady = true; });
-stageImage.src = "assets/dojo-stage.png";
+stageImage.src = SHARED_ART_DIRECTORY + "dojo-stage.png";
 
 /* Le décor ne bouge pas. Il a été découpé un temps en deux bandes défilant
    à des vitesses différentes, plancher et salle, pour donner de la
@@ -1384,7 +915,7 @@ const pieceImages = {};
    "shinai", "keikogi"]
   .forEach(name => {
   const image = new Image();
-  image.src = "assets/pieces/" + name + ".png";
+  image.src = SHARED_ART_DIRECTORY + "pieces/" + name + ".png";
   pieceImages[name] = image;
 });
 
@@ -1475,12 +1006,6 @@ function drawShinaiPiece(centreLine) {
   return true;
 }
 
-/* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
-   receveur recule d'un demi, et il faut de la marge pour les corps. Le
-   centre est compté depuis le décalage courant, et il est décalé vers
-   l'avant du frappeur, puisque c'est de ce côté que le terrain se gagne. */
-const GAME_ACTION_SPAN = 430;
-const GAME_ACTION_CENTRE = 152;
 
 const canvas = document.getElementById("scene");
 const context = canvas.getContext("2d");
@@ -1488,8 +1013,6 @@ const camera = { scale: 3, originX: 0, originY: 0 };
 
 const PAPER_NEAR_INK = "#232323";
 const PAPER_FAR_INK = "#7b7b7b";
-const GAME_NEAR_INK = "#12151f";
-const GAME_FAR_INK = "#39405e";
 
 function nearInk() { return isGameView() ? GAME_NEAR_INK : PAPER_NEAR_INK; }
 function farInk() { return isGameView() ? GAME_FAR_INK : PAPER_FAR_INK; }
@@ -1605,24 +1128,8 @@ function drawSleeve(from, to, widthAtStart, widthAtEnd, color, ink, seed) {
 
 const BODY_VOLUME_NEAR = "#f1ecde";
 const BODY_VOLUME_FAR = "#ddd7c6";
-/* En vue jeu, les volumes ne sont plus du papier mais du keikogi indigo. */
-/* En vue jeu, les membres nus prennent une carnation, pas de l'indigo :
-   les manches et le hakama couvrent le reste. */
-const GAME_VOLUME_NEAR = "#e5bf98";
-const GAME_VOLUME_FAR = "#bd9270";
-const GAME_TORSO_NEAR = "#3b4878";
-const GAME_TORSO_FAR = "#2b3459";
 
-/** La jambe entière est de la teinte du hakama : elle passe sous la jupe,
-    et ce qui en dépasse quand les appuis s'écartent se confond avec le
-    tissu au lieu de trancher en peau nue. Seul le pied reste nu. */
-const HAKAMA_CLOTH_NEAR = "#243054";
-const HAKAMA_CLOTH_FAR = "#182448";
 
-/** Même raison pour le bras : la manche est un quadrilatère droit, le coude
-    plié en déborde, et ce qui dépassait tranchait en peau nue. */
-const SLEEVE_CLOTH_NEAR = "#232f52";
-const SLEEVE_CLOTH_FAR = "#18213f";
 
 /** Une bande de tissu posée sur un tronçon de jambe. Elle déborde vers l'axe
     du corps, où elle passe sous la jupe : sans ce recouvrement les deux
@@ -1784,27 +1291,6 @@ function drawTorsoAndHead(skeleton) {
 
 /* ---------- pièces d'armure ---------- */
 
-/* Points d'ancrage de chaque vignette, en fractions de sa propre image.
-   Ils ont été relevés sur les pièces dessinées : premier point sur la
-   base de l'os, second sur son extrémité. */
-const PIECE_ANCHORS = {
-  /* L'axe du crâne va du sommet du dôme à sa base, en arrière de la
-     grille. Mes premières ancres traversaient la face : le casque
-     s'en trouvait basculé de plus de vingt degrés. */
-  men: { from: [0.36, 0.60], to: [0.34, 0.02] },
-  keikogi: { from: [0.55, 0.06], to: [0.50, 0.96] },
-  do: { from: [0.58, 0.06], to: [0.46, 0.95] },
-  /* Vignette de profil. L'axe du corps passe au milieu de la CEINTURE, pas
-     au milieu de l'image : le pan avant déborde vers l'avant, d'où 0,42. */
-  tare: { from: [0.42, 0.00], to: [0.42, 1.00] },
-  kote: { from: [0.07, 0.55], to: [0.90, 0.45] },
-  /* Avant-bras plus poing : la mesure ne dépend pas de la pose. */
-  manche: { from: [0.52, 0.07], to: [0.44, 0.93] },
-  /* Ancré sur la cheville : posé sur le talon, le pied flottait à côté
-     de la jambe, l'articulation ne tombant pas au même endroit. */
-  pied: { from: [0.24, 0.45], to: [0.93, 0.93] },
-  hakamaPanel: { from: [0.50, 0.03], to: [0.50, 0.97] }
-};
 
 /** Axe du crâne : du haut du cou au sommet du dôme, sur lequel le men se pose. */
 function skullAxis(skeleton) {
@@ -1968,10 +1454,6 @@ function drawDo(skeleton) {
   }
 }
 
-/* Les cordons et le zekken sont des détails de finition : ils tiennent en
-   quelques traits, et n'existent que dans les vues dessinées. Le calque,
-   lui, montre le squelette et n'a que faire d'un nœud de himo. */
-const CORD_INK = "#141a33";
 
 /** Himo du men : deux cordons partent de l'arrière de la coque et se nouent
     derrière la nuque. De profil on n'en voit que ce qui en dépasse. */
@@ -2185,19 +1667,6 @@ function offsetAlongNormal(point, normal, amount) {
    revenir en arrière dans le curseur donnerait un tissu différent.
    ============================================================ */
 
-const HAKAMA_GRAVITY = -980;
-const HAKAMA_DAMPING = 0.90;
-/* Sans rappel, le pendule prend 47 cm de retard sur un fumikomi : un
-   hakama n'en prend pas la moitié. Le rappel tient lieu de raideur du
-   tissu et de poids réparti sur toute sa hauteur. */
-const HAKAMA_STIFFNESS = 0.022;
-const HAKAMA_SUBSTEPS = 3;
-const HAKAMA_PANELS = [
-  { anchor: "waistFront", length: 78, restForward: 0.35 },
-  { anchor: "waistBack", length: 76, restForward: -0.3 },
-  { anchor: "leftKnee", length: 31, restForward: 0 },
-  { anchor: "rightKnee", length: 31, restForward: 0 }
-];
 
 function hakamaAnchors(skeleton) {
   const forward = skeleton.forwardDirection;
@@ -2296,23 +1765,7 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
     { color: partColor.hakama, width: 0.35, single: true, alpha: 0.6, seed: seed + 11 });
 }
 
-/* Un shinai n'est pas un bâton : quatre lattes de bambou liées par le
-   cuir de la poignée, la tsuba, le nakayui au tiers de la lame et le
-   sakigawa au bout. La corde (tsuru) court sur le dos, à l'opposé du
-   tranchant : c'est elle qui dit de quel côté on frappe. */
-const SHINAI_SLAT_COUNT = 3;
-const NAKAYUI_FROM_LEFT_GRIP = 88;
-/* Le dō, placé le long du torse en fractions de la hauteur bassin-épaules, et
-   agrandi d'autant à partir de son bord haut. */
-const DO_TOP_ALONG_TORSO = 1.02;
-const DO_BOTTOM_ALONG_TORSO = 0.06;
-const DO_SCALE = 1.05;
 
-const KOTE_LENGTH = 33;
-/* Rotation de la seule main droite, celle qui tient sous la tsuba. Négatif
-   parce que le repère a l'axe vertical vers le haut : c'est le sens horaire
-   à l'écran, celui du talon qui se lève sur le pied arrière. */
-const RIGHT_KOTE_ROTATION_DEGREES = -10;
 
 /** Flèche de la lame, en centimètres, comptée perpendiculairement.
     Deux causes : le retard de la pointe quand la lame accélère, et le
@@ -2444,14 +1897,6 @@ function legPointAtHeight(hip, knee, ankle, height) {
   return pointAlong(knee, ankle, Math.max(0, Math.min(1, ratio)));
 }
 
-/* Le hakama pend d'aplomb sous la ceinture. Il ne suit ni l'inclinaison
-   du buste ni l'écartement des jambes : c'est une jupe lourde, et les
-   jambes passent dessous. Elles sont donc peintes de sa couleur, si bien
-   qu'aucune ne dépasse en peau nue quand elles s'écartent. */
-const HAKAMA_HEM_HEIGHT = 9;
-/* Débord du tissu de jambe vers l'axe du corps, sous la jupe. */
-const HAKAMA_LEG_INNER_EXTRA = 16;
-const HAKAMA_WIDTH = 46;
 
 function drawHakamaSheet(skeleton) {
   if (!pieceReady("hakama-pan")) return false;
@@ -2822,7 +2267,7 @@ const sceneState = {
 
 function currentSequence() {
   const attack = currentAttack();
-  return sceneState.sequence === "return" ? attack.returnSequence : attack.keyframes;
+  return sceneState.sequence === "return" ? attack.returnSequence : attack.keyframeList;
 }
 
 function currentLastFrame() {
@@ -2831,7 +2276,7 @@ function currentLastFrame() {
 }
 
 function attackLastFrame() {
-  const list = currentAttack().keyframes;
+  const list = currentAttack().keyframeList;
   return list[list.length - 1].frame;
 }
 
@@ -2845,13 +2290,6 @@ function actorPlacement() {
     : { attacker: facingLeftActor, defender: facingRightActor };
 }
 
-/* Un pas en diagonale ne se voit pas dans une vue de profil strict : le
-   déplacement latéral est donc rendu comme un rapprochement de la
-   caméra. On regarde le frappeur depuis sa droite, donc un pas vers sa
-   droite le fait descendre dans l'image et grossir légèrement, comme
-   tout ce qui passe devant. */
-const LATERAL_DROP_PER_CM = 0.16;
-const LATERAL_SCALE_PER_CM = 0.0008;
 
 /* On regarde chaque acteur depuis son propre côté droit. Un pas vers sa
    droite rapproche donc celui qui va vers la droite de l'image, et
@@ -3218,7 +2656,7 @@ function startReturn() {
 function buildPhaseTable() {
   const table = document.getElementById("phaseTable");
   table.innerHTML = "";
-  currentAttack().phases.forEach(phase => {
+  currentAttack().phaseList.forEach(phase => {
     const row = document.createElement("tr");
     row.dataset.phaseName = phase.name;
     const frameCount = phase.endFrame - phase.startFrame;
@@ -3325,12 +2763,28 @@ function applyFrameFromQueryString() {
   setPlayButtonLabel();
 }
 
-buildPhaseTable();
-buildLegend();
-bindControls();
-applyFrameFromQueryString();
-resizeCanvas();
-requestAnimationFrame(animationTick);
+/** Le démarrage attend les données : tout le reste en dépend. */
+async function start() {
+  try {
+    const [rig, attacks] = await Promise.all([
+      loadSharedFile("rig.json"), loadSharedFile("attacks.json")]);
+    applyRigData(rig);
+    applyAttackData(attacks.attackList);
+  } catch (error) {
+    document.getElementById("stage").textContent =
+      "Données introuvables (" + error.message + "). Servir le dossier en HTTP :"
+      + " python3 -m http.server, puis ouvrir http://localhost:8000/.";
+    return;
+  }
+  buildPhaseTable();
+  buildLegend();
+  bindControls();
+  applyFrameFromQueryString();
+  resizeCanvas();
+  requestAnimationFrame(animationTick);
+}
+
+start();
 </script>
 </body>
 </html>
