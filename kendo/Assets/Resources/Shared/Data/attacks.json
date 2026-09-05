@@ -12,6 +12,19 @@
          frappe reprend donc à la frame où l'armé est tenu. */
       "requiresArming": true,
       "armedFrame": 58,
+      /* Petite amplitude : appuyée pendant la montée, la touche arrête l'armé et
+         reprend la coupe ici, la main gauche à 150 cm au lieu des 179 du sommet.
+         La frame se lit sur la descente, seul endroit où la main repasse par une
+         hauteur d'armé écourté ; celle-ci a été choisie à l'image, entre f76 (lame
+         encore verticale) et l'impact. */
+      "smallAmplitudeFrame": 78,
+      /* En jeu la touche Armer ne joue pas la frame 0 : elle joue la montée, qui
+         commence à la frame où les mains quittent la garde. Les quarante-quatre
+         frames de kamae et de seme qui précèdent sont écrites pour la coupe jouée
+         d'un bloc, où elles racontent l'entrée ; sous le doigt du joueur elles ne
+         sont qu'un délai avant que quoi que ce soit bouge. Et le seme qu'elles
+         contiennent est le déplacement du joueur, qui l'a déjà fait au swipe. */
+      "raiseFrame": 44,
       "keyframeList": [
         {
           /* Garde haute : bassin à 90,5 cm, la limite au-delà de laquelle le pied
@@ -222,15 +235,15 @@
           "detail": "Armé grande amplitude : les poings montent à un poing au-dessus du crâne, shinai dressé, pas rabattu dans le dos."
         },
         {
-          "name": "Poussée sur les orteils", "startFrame": 58, "endFrame": 72,
+          "name": "Push off the toes", "startFrame": 58, "endFrame": 72,
           "detail": "Aucun temps d'arrêt en haut : le shinai redescend pendant que la jambe gauche se tend à 98 % sur la pointe."
         },
         {
-          "name": "Envol", "startFrame": 72, "endFrame": 76,
+          "name": "Flight", "startFrame": 72, "endFrame": 76,
           "detail": "Plus aucun appui au sol, le bassin file à 4,5 m/s. La lame reste armée sur le poignet, c'est l'avant-bras qui descend."
         },
         {
-          "name": "Fumikomi (frappe)", "startFrame": 76, "endFrame": 82,
+          "name": "Fumikomi (strike)", "startFrame": 76, "endFrame": 82,
           "detail": "Le poignet se déroule enfin, à 15°/frame : la lame rattrape l'avant-bras juste avant de toucher, pendant que le pied droit claque à plat."
         },
         {
@@ -242,7 +255,7 @@
           "detail": "Traversée en suriashi, bras et vigilance maintenus, le motodachi rompt."
         },
         {
-          "name": "Retour kamae", "startFrame": 116, "endFrame": 150,
+          "name": "Back to kamae", "startFrame": 116, "endFrame": 150,
           "detail": "Redescente en chūdan, reprise de la garde."
         }
       ],
@@ -266,6 +279,15 @@
       "target": "rightForearm",
       "requiresArming": true,
       "armedFrame": 58,
+      /* Petite amplitude : main gauche à 130 cm, la pointe déjà piquée vers le
+         kote. Le kote finissant bas, il en reste vingt-sept centimètres de fente
+         écrits, contre trente au men. */
+      "smallAmplitudeFrame": 76,
+      /* Le kote est le coup court : la lame a moitié moins de chemin à tomber que
+         sur un men, et autant de frames pour le faire. Écrit tel quel il traîne.
+         La coupe — de l'armé au contact, pas le zanshin — est donc jouée une fois
+         et demie plus vite, et le coup claque au lieu de balancer. */
+      "cutSpeedUp": 1.5,
       "keyframeList": [
         { "frame": 0, "easing": "linear", "poseRef": "men:0" },
         { "frame": 20, "easing": "easeInOutSine", "poseRef": "men:1" },
@@ -411,15 +433,15 @@
           "detail": "Armé identique au men : les poings montent à un poing au-dessus du crâne."
         },
         {
-          "name": "Poussée sur les orteils", "startFrame": 58, "endFrame": 72,
+          "name": "Push off the toes", "startFrame": 58, "endFrame": 72,
           "detail": "Même poussée que pour le men, sur la pointe du pied gauche, mais pour une avance plus courte."
         },
         {
-          "name": "Envol", "startFrame": 72, "endFrame": 76,
+          "name": "Flight", "startFrame": 72, "endFrame": 76,
           "detail": "La lame reste armée sur le poignet pendant que l'avant-bras descend."
         },
         {
-          "name": "Fumikomi (frappe)", "startFrame": 76, "endFrame": 82,
+          "name": "Fumikomi (strike)", "startFrame": 76, "endFrame": 82,
           "detail": "Les deux bras descendent, le poing gauche retrouve sa hauteur de chūdan et la lame arrive presque à plat sur l'avant-bras adverse."
         },
         {
@@ -431,7 +453,7 @@
           "detail": "Traversée, pointe maintenue sur la ligne du kote."
         },
         {
-          "name": "Retour kamae", "startFrame": 116, "endFrame": 150,
+          "name": "Back to kamae", "startFrame": 116, "endFrame": 150,
           "detail": "Redescente en chūdan, reprise de la garde."
         }
       ],
@@ -668,7 +690,7 @@
           "detail": "Garde. La cible est le bas de l'arête avant du plastron, celle qui est tournée vers soi, vers 110 cm du sol."
         },
         {
-          "name": "Seme d'entrée", "startFrame": 20, "endFrame": 44,
+          "name": "Seme, entering", "startFrame": 20, "endFrame": 44,
           "detail": "On entre de 26 cm avant d'armer : le dō se coupe de près, sinon le contact se fait trop loin sur la lame."
         },
         {
@@ -676,23 +698,23 @@
           "detail": "Armé identique au men : les poings montent à un poing au-dessus du crâne. En face, le motodachi lève les deux bras pour ouvrir son dō — c'est ainsi qu'on présente la cible, et c'est ce qui dégage le plastron de ses poings."
         },
         {
-          "name": "Poussée en diagonale", "startFrame": 58, "endFrame": 72,
+          "name": "Diagonal push", "startFrame": 58, "endFrame": 72,
           "detail": "Le pas quitte la ligne vers la droite : on ouvre le plastron et on passe à côté, pas dedans."
         },
         {
-          "name": "Descente devant la cible", "startFrame": 72, "endFrame": 80,
+          "name": "Drop before the target", "startFrame": 72, "endFrame": 80,
           "detail": "La lame reste redressée à 40° et les mains tombent déjà vers le nombril : la pointe descend devant l'adversaire, jamais au-dessus de lui."
         },
         {
-          "name": "Fumikomi (frappe)", "startFrame": 80, "endFrame": 82,
+          "name": "Fumikomi (strike)", "startFrame": 80, "endFrame": 82,
           "detail": "Le poignet se déroule d'un coup, 37° en deux frames, et la main gauche arrive au nombril, treize centimètres au-dessus du bassin. La lame entre dans le bas du plastron du côté droit du motodachi, c'est-à-dire vers le fond : vingt-huit centimètres de shinai passent derrière lui et disparaissent, l'impact compris. Elle est presque à plat, et ce n'est pas un défaut : le dō visé est à la hauteur de ce poing, donc la diagonale du coup est tout entière dans la profondeur. En attaque adverse, le receveur présente ce même dō droit à la caméra : rien n'est caché et la frappe se voit."
         },
         {
-          "name": "Glissement sur le dō", "startFrame": 82, "endFrame": 92,
+          "name": "Slide across the dō", "startFrame": 82, "endFrame": 92,
           "detail": "L'attaquant simule la coupe du corps entier : le shinai glisse sur le plastron jusqu'au côté opposé, vers sa droite à lui, donc vers le spectateur. La main gauche reste au nombril et suit la remontée du bassin. La part cachée fond de 37 à 22 puis 0 cm, si bien que la lame ressort peu à peu de derrière le corps — et l'inverse en attaque adverse, où elle s'y enfonce jusqu'à 18 cm. Le motodachi ne cède qu'au bout de quatre frames, sinon la lame poursuivrait une cible qui fuit."
         },
         {
-          "name": "Dégagement", "startFrame": 92, "endFrame": 104,
+          "name": "Clearing away", "startFrame": 92, "endFrame": 104,
           "detail": "Le shinai est ressorti tout entier du côté du spectateur, la coupe est finie. Libérée, la lame plonge : c'est là que se lit la diagonale."
         },
         {
@@ -700,7 +722,7 @@
           "detail": "On traverse vite après un dō, sans rester devant l'adversaire."
         },
         {
-          "name": "Retour kamae", "startFrame": 116, "endFrame": 150,
+          "name": "Back to kamae", "startFrame": 116, "endFrame": 150,
           "detail": "Redescente en chūdan, reprise de la garde."
         }
       ],
@@ -859,15 +881,15 @@
           "detail": "Pression : le centre de gravité avance, la jambe gauche se charge."
         },
         {
-          "name": "Aucun armé", "startFrame": 44, "endFrame": 66,
+          "name": "No raise", "startFrame": 44, "endFrame": 66,
           "detail": "Le seul coup sans furikaburi : la pointe reste sur le centre et descend juste assez pour viser la gorge."
         },
         {
-          "name": "Poussée sur les orteils", "startFrame": 66, "endFrame": 76,
+          "name": "Push off the toes", "startFrame": 66, "endFrame": 76,
           "detail": "Même poussée, mais c'est le bassin qui porte le coup : les bras ne font que se tendre."
         },
         {
-          "name": "Tsuki (touche)", "startFrame": 76, "endFrame": 82,
+          "name": "Tsuki (touch)", "startFrame": 76, "endFrame": 82,
           "detail": "La pointe atteint le tsuki-dare, les deux bras tendus. Contact avec la pointe, pas avec le monouchi."
         },
         {
@@ -875,11 +897,11 @@
           "detail": "Le pied gauche revient sous le corps."
         },
         {
-          "name": "Retrait en chūdan", "startFrame": 86, "endFrame": 112,
+          "name": "Back to chūdan", "startFrame": 86, "endFrame": 112,
           "detail": "On ne traverse pas : le shinai est ramené en garde sur place, face à l'adversaire."
         },
         {
-          "name": "Retour kamae", "startFrame": 112, "endFrame": 150,
+          "name": "Back to kamae", "startFrame": 112, "endFrame": 150,
           "detail": "Reprise de la garde, un pas en arrière pour rétablir la ligne."
         }
       ],

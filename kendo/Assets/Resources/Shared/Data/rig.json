@@ -153,8 +153,13 @@
   "playback": {
     /* Vitesse de lecture du combat, plus lente que le temps réel : la coupe vaut
        d'être regardée. L'armé se joue plus vite qu'elle — attendre lame en l'air,
-       cible non nommée, est du temps mort et non de la tension. */
-    "speed": 0.6, "armingSpeedUp": 1.75
+       cible non nommée, est du temps mort et non de la tension.
+
+       Mais pas trop vite : la montée est aussi la fenêtre où l'on peut lancer une
+       petite amplitude, et elle dure ce que dure la montée. Ce facteur a été
+       ramené d'un quart (1,75 -> 1,3125) le jour où cette fenêtre s'est révélée
+       injouable : 0,30 s au lieu de 0,22 pour poser le second pouce. */
+    "speed": 0.6, "armingSpeedUp": 1.3125
   },
   "camera": {
     /* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
