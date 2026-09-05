@@ -128,6 +128,11 @@
        aussi loin qu'on aille. Sans cette borne, une coupe lancée de loin dans la
        distance emporte son propre dépassement et traverse l'homme qu'elle vise. */
     "closestToPartner": 56,
+    /* Et il faut de la place pour armer : collé à son partenaire, les gardes
+       croisées, on ne monte pas le shinai au-dessus de la tête. En dessous de
+       cet écart entre les deux bassins, la touche d'armé s'éteint — il faut
+       rompre d'abord, ce qui est exactement ce qu'on fait sur un tatami. */
+    "raiseNeedsRoom": 80,
     /* La fenêtre d'où une coupe part juste. Elle n'est pas choisie : elle se lit
        sur les deux lames en garde, aux deux repères qu'un kendoka regarde.
 
@@ -163,7 +168,7 @@
        ne part ; chaque coupe en dépense dix. On ne coupe donc pas sans avoir de
        quoi, et il faut donner de la voix pour frapper vite — ce qui est aussi ce
        que le kiai fait dans un dojo. */
-    "startingLevel": 0.5, "kiaiGain": 0.1, "strikeCost": 0.1, "kiaiSeconds": 2,
+    "startingLevel": 0.5, "kiaiGain": 0.2, "strikeCost": 0.1, "kiaiSeconds": 2,
     /* Mais jamais en dessous d'un cinquième : à jauge vide une coupe mettrait
        trois secondes à traverser, ce qui n'est plus une punition mais une panne. */
     "minimumPace": 0.2
