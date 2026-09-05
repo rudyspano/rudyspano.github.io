@@ -747,6 +747,10 @@
       /* Le seul coup sans furikaburi : il part de la garde, d'où son bouton
          toujours disponible, à côté de celui qui arme. */
       "requiresArming": false,
+      /* Le tsuki n'a pas d'armé à jouer : il ne lui reste que le corps qui part, et
+         écrit à la vitesse des autres il traîne. Sa coupe est donc jouée une fois et
+         demie plus vite, comme celle du kote. */
+      "cutSpeedUp": 1.5,
       "armedFrame": 0,
       "keyframeList": [
         { "frame": 0, "easing": "linear", "poseRef": "men:0" },
