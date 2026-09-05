@@ -122,6 +122,12 @@
        gardée au bord, `bodyRearReach` ce qui dépasse derrière le bassin — pied
        arrière et hakama. */
     "maximumRetreat": 120, "edgeMargin": 24, "bodyRearReach": 34,
+    /* Et devant, on ne passe pas au travers de son partenaire : distance minimale
+       entre les deux bassins. Un torse fait trente-six centimètres de large, donc
+       à cinquante-six les deux hakama se touchent — c'est le tsubazeriai, et c'est
+       aussi loin qu'on aille. Sans cette borne, une coupe lancée de loin dans la
+       distance emporte son propre dépassement et traverse l'homme qu'elle vise. */
+    "closestToPartner": 56,
     /* La fenêtre d'où une coupe part juste. Elle n'est pas choisie : elle se lit
        sur les deux lames en garde, aux deux repères qu'un kendoka regarde.
 
