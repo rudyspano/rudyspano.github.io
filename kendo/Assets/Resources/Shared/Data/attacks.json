@@ -25,6 +25,11 @@
          sont qu'un délai avant que quoi que ce soit bouge. Et le seme qu'elles
          contiennent est le déplacement du joueur, qui l'a déjà fait au swipe. */
       "raiseFrame": 44,
+      /* Le men part de plus haut que les autres et retombe de toute cette hauteur :
+         un quart de vitesse en plus suffit à lui donner du nerf sans lui retirer
+         l'ampleur qui fait sa lecture. */
+      "cutSpeedUp": 1.25,
+
       "keyframeList": [
         {
           /* Garde haute : bassin à 90,5 cm, la limite au-delà de laquelle le pied

@@ -150,6 +150,15 @@
        écrite — mais alors les croisements ci-dessus sont faux. */
     "aimFollow": 1
   },
+  "spirit": {
+    /* Le ki. La jauge part à la moitié et multiplie la vitesse de toute attaque :
+       à cinquante pour cent une coupe se joue au ralenti, à cent elle claque. Le
+       kiai la remonte de dix points et coûte deux secondes pendant lesquelles rien
+       ne part ; chaque coupe en dépense dix. On ne coupe donc pas sans avoir de
+       quoi, et il faut donner de la voix pour frapper vite — ce qui est aussi ce
+       que le kiai fait dans un dojo. */
+    "startingLevel": 0.5, "kiaiGain": 0.1, "strikeCost": 0.1, "kiaiSeconds": 2
+  },
   "playback": {
     /* Vitesse de lecture du combat, plus lente que le temps réel : la coupe vaut
        d'être regardée. L'armé se joue plus vite qu'elle — attendre lame en l'air,
