@@ -2289,6 +2289,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
     drawKote(far.elbow, far.wrist, far.grip, far.koteColor, 96, false, farKoteRotation);
   }
   drawArm(far.shoulder, far.elbow, far.wrist, far.grip, farInk(), 14);
+  /* Le poing éloigné suit la lame qu'il tient. Laissé où il se peint pour une
+     garde — par-dessus le corps, puisqu'il y dépasse devant la poitrine — il
+     flottait sur le hakama alors que le shinai qu'il serre passait derrière. */
+  if (bladeUnderBody && showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
 
   if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
   if (isGameView() && pieceReady("keikogi")) {
@@ -2327,8 +2331,10 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
      tout ce qui est au-delà du point d'entrée lui est caché. La frontière
      est donnée dans le repère du frappeur, où l'avant est toujours +x, si
      bien que le masquage fonctionne dans les deux sens de jeu. */
-  if (!bladeUnderBody) paintShinai();
-  if (showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
+  if (!bladeUnderBody) {
+    paintShinai();
+    if (showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
+  }
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6],
