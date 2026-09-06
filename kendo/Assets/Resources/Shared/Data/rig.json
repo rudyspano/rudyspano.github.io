@@ -165,28 +165,26 @@
     /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas.
        C'est le protocole du tachiai, dans l'ordre :
 
-       - **sagetō** : debout, shinai dans la main gauche seule, bras droit pendant
-         le long du corps. La main tient la tsuka **juste sous la tsuba**
+       - **sagetō** : debout, shinai dans la seule main gauche, bras droit pendant
+         le long du corps. La main tient la tsuka **sous la tsuba**
          (`gripAlongShinai` à 29) et non le pommeau : la lame part en avant et vers
-         le bas, pointe près du sol, tandis que la poignée ressort derrière et
-         au-dessus de la main. `rightHandFree` à 1 décroche la main droite ; tout
-         le côté droit se dessine sur elle, si bien que la manche, le kote et le
-         poing suivent, et que le shinai — dessiné sur la main gauche — ne bouge
-         pas.
-       - **rei** : le salut de quinze degrés, plié aux hanches, la main gauche
-         portée en avant d'autant que l'épaule (48 cm de buste × sin 15°).
+         le bas, pointe près du sol, la poignée ressortant derrière et au-dessus de
+         la main. Elle est portée à gauche, donc **du côté opposé à la caméra** :
+         `shinaiBehindBody` la fait peindre sous le corps, qui en cache une partie.
+       - **rei** : le salut, trente degrés, plié aux hanches. La main gauche est
+         portée en avant d'autant que l'épaule — 48 cm de buste × sin 30°.
        - **sagetō** de nouveau : on se redresse.
-       - **taitō** : le shinai vient à la hanche gauche comme un sabre porté, le
-         pouce sur la tsuba, la poignée en avant et un peu basse, la lame balayant
-         en arrière et légèrement haute. L'angle est écrit -190
-         et non 170, qui est pourtant la même direction : l'interpolation prend le
-         chemin court entre deux nombres, et depuis les -26 du sagetō le chemin
-         court vers 170 fait passer la lame par-dessus la tête. Vers -190 elle
-         balaie vers le bas et l'arrière, comme une main le ferait.
-       - **sanpo** : les trois pas d'approche, dans cette position. Les pieds sont
+       - **taitō** : le shinai monte à la hanche gauche comme un sabre porté, le
+         pouce sur la tsuba, poignée en avant, lame balayant en arrière.
+       - **saisie** : la main droite vient sur la tsuka au-dessus de la tsuba.
+         `rightHandShift` la ramène de trente-sept centimètres vers le pommeau,
+         faute de quoi l'écartement des poings d'une garde la poserait sur la lame.
+       - **sanpo** : les trois pas d'approche, la prise déjà faite. Les pieds sont
          animés par le cycle de marche du jeu, celui-là même qui sert au swipe.
-       - **sonkyo** : l'accroupissement, bassin à 54 cm, talons levés, les deux
-         mains revenues sur la lame en chūdan.
+       - **nuki** : le dégainé. La pointe quitte la ceinture par l'arrière, passe
+         par le bas et remonte devant en un petit arc, la main gauche glissant au
+         pommeau ; c'est là que la lame passe devant le corps.
+       - **sankyo** : l'accroupissement, bassin à 54 cm, talons levés.
        - **kamae** : on se relève, et la pose est exactement celle de la garde
          écrite, si bien que la main est rendue sans que rien ne saute.
 
@@ -197,76 +195,109 @@
       {
         "name": "Sagetō", "seconds": 0.9, "separation": 144,
         "pose": {
-          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
-          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 10, "gripY": 82, "shinaiDegrees": -45,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
-          "gripAlongShinai": 29
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0,
+          "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 10, "gripY": 82,
+          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "shinaiBehindBody": 1
         }
       },
       {
-        "name": "Rei", "seconds": 1.0, "separation": 144,
+        "name": "Rei", "seconds": 1.1, "separation": 144,
         "pose": {
-          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 15, "headTiltDegrees": 10,
-          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 22, "gripY": 80, "shinaiDegrees": -45,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
-          "gripAlongShinai": 29
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 30,
+          "headTiltDegrees": 20, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 32, "gripY": 76,
+          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "shinaiBehindBody": 1
         }
       },
       {
-        "name": "Rei", "seconds": 0.9, "separation": 144,
+        "name": "Sagetō", "seconds": 0.9, "separation": 144,
         "pose": {
-          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
-          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 10, "gripY": 82, "shinaiDegrees": -45,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
-          "gripAlongShinai": 29
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0,
+          "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 10, "gripY": 82,
+          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "shinaiBehindBody": 1
         }
       },
       {
         "name": "Taitō", "seconds": 1.0, "separation": 144,
         "pose": {
-          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
-          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 14, "gripY": 88, "shinaiDegrees": -188,
-          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1,
-          "gripAlongShinai": 29
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4,
+          "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
+          "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
+          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "shinaiBehindBody": 1
         }
       },
       {
-        "name": "Sanpo", "seconds": 2.6, "separation": 0, "walks": true,
+        "name": "Saisie", "seconds": 0.7, "separation": 144,
         "pose": {
-          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
-          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 14, "gripY": 88, "shinaiDegrees": -188,
-          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1,
-          "gripAlongShinai": 29
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4,
+          "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
+          "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
+          "rightHandFree": 0, "gripAlongShinai": 29, "rightHandShift": -37,
+          "shinaiBehindBody": 1
         }
       },
       {
-        "name": "Sonkyo", "seconds": 1.3, "separation": 0,
+        "name": "Sanpo", "seconds": 2.4, "separation": 0, "walks": true,
         "pose": {
-          "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2, "headTiltDegrees": 0,
-          "rightAnkleX": 20, "rightAnkleY": 10, "rightFootDegrees": -20,
-          "leftAnkleX": -8, "leftAnkleY": 10, "leftFootDegrees": -20,
-          "gripX": 30, "gripY": 62, "shinaiDegrees": 22,
-          "leftElbowBias": -8, "rightElbowBias": -12, "rightHandFree": 0
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4,
+          "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
+          "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
+          "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
+          "rightHandFree": 0, "gripAlongShinai": 29, "rightHandShift": -37,
+          "shinaiBehindBody": 1
+        }
+      },
+      {
+        "name": "Nuki", "seconds": 0.9, "separation": 0,
+        "pose": {
+          "rootX": 4, "rootY": 72, "torsoLeanDegrees": 3,
+          "headTiltDegrees": 0, "rightAnkleX": 16, "rightAnkleY": 8,
+          "rightFootDegrees": -12, "leftAnkleX": -6, "leftAnkleY": 8,
+          "leftFootDegrees": -12, "gripX": 26, "gripY": 58,
+          "shinaiDegrees": 10, "leftElbowBias": -6, "rightElbowBias": -10,
+          "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
+          "shinaiBehindBody": 0
+        }
+      },
+      {
+        "name": "Sankyo", "seconds": 1.0, "separation": 0,
+        "pose": {
+          "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
+          "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
+          "rightFootDegrees": -20, "leftAnkleX": -8, "leftAnkleY": 10,
+          "leftFootDegrees": -20, "gripX": 30, "gripY": 62,
+          "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -12,
+          "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
+          "shinaiBehindBody": 0
         }
       },
       {
         "name": "Kamae", "seconds": 1.0, "separation": 0,
         "pose": {
-          "rootX": 4, "rootY": 90.5, "torsoLeanDegrees": 6, "headTiltDegrees": 0,
-          "rightAnkleX": 17, "rightAnkleY": 6, "rightFootDegrees": 0,
-          "leftAnkleX": -11, "leftAnkleY": 9.2, "leftFootDegrees": -14,
-          "gripX": 33, "gripY": 93, "shinaiDegrees": 22,
-          "leftElbowBias": -8, "rightElbowBias": -15, "rightHandFree": 0
+          "rootX": 4, "rootY": 90.5, "torsoLeanDegrees": 6,
+          "headTiltDegrees": 0, "rightAnkleX": 17, "rightAnkleY": 6,
+          "rightFootDegrees": 0, "leftAnkleX": -11, "leftAnkleY": 9.2,
+          "leftFootDegrees": -14, "gripX": 33, "gripY": 93,
+          "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -15,
+          "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
+          "shinaiBehindBody": 0
         }
       }
     ]
