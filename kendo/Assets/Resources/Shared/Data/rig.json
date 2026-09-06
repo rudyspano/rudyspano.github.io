@@ -187,11 +187,12 @@
          au-dessus de la tsuba. `rightHandShift` la ramène de trente-sept
          centimètres vers le pommeau, faute de quoi l'écartement des poings d'une
          garde la poserait sur la lame.
-       - **nuki** : le dégainé. La pointe quitte la ceinture **par le haut** —
-         d'où l'angle écrit -350 et non 10, qui est pourtant la même direction :
-         l'interpolation prend le chemin court entre deux nombres, et vers 10 la
-         pointe passerait par le bas. La main gauche glisse au pommeau, et c'est là
-         que la lame passe devant le corps.
+       - le **dégainé se fait d'un seul mouvement**, à l'intérieur du sankyo : la
+         pointe quitte la ceinture par le haut et vient se poser en chūdan pendant
+         que le corps descend. D'où l'angle du sankyo écrit -338 et non 22, qui est
+         pourtant la même direction : l'interpolation prend le chemin court entre
+         deux nombres, et vers 22 la pointe passerait par le bas. Une étape
+         intermédiaire faisait de ce dégainé deux gestes ; un seul suffit.
        - **sankyo** : l'accroupissement, bassin à 54 cm, talons levés.
        - **kamae** : on se relève, et la pose est exactement celle de la garde
          écrite, si bien que la main est rendue sans que rien ne saute.
@@ -273,25 +274,13 @@
         }
       },
       {
-        "name": "Nuki", "seconds": 0.9, "separation": 0,
-        "pose": {
-          "rootX": 4, "rootY": 72, "torsoLeanDegrees": 3,
-          "headTiltDegrees": 0, "rightAnkleX": 16, "rightAnkleY": 8,
-          "rightFootDegrees": -12, "leftAnkleX": -6, "leftAnkleY": 8,
-          "leftFootDegrees": -12, "gripX": 26, "gripY": 58,
-          "shinaiDegrees": -350, "leftElbowBias": -6, "rightElbowBias": -10,
-          "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
-          "shinaiBehindBody": 0
-        }
-      },
-      {
-        "name": "Sankyo", "seconds": 1.0, "separation": 0,
+        "name": "Sankyo", "seconds": 1.6, "separation": 0,
         "pose": {
           "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
           "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
           "rightFootDegrees": -20, "leftAnkleX": -8, "leftAnkleY": 10,
           "leftFootDegrees": -20, "gripX": 30, "gripY": 62,
-          "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -12,
+          "shinaiDegrees": -338, "leftElbowBias": -8, "rightElbowBias": -12,
           "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
           "shinaiBehindBody": 0
         }
@@ -303,7 +292,7 @@
           "headTiltDegrees": 0, "rightAnkleX": 17, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -11, "leftAnkleY": 9.2,
           "leftFootDegrees": -14, "gripX": 33, "gripY": 93,
-          "shinaiDegrees": 22, "leftElbowBias": -8, "rightElbowBias": -15,
+          "shinaiDegrees": -338, "leftElbowBias": -8, "rightElbowBias": -15,
           "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
           "shinaiBehindBody": 0
         }
