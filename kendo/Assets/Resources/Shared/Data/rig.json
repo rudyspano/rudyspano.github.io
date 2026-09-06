@@ -167,10 +167,12 @@
 
        - **sagetō** : debout, shinai dans la seule main gauche, bras droit pendant
          le long du corps. La main tient la tsuka **sous la tsuba**
-         (`gripAlongShinai` à 29) et non le pommeau : la lame part en avant et vers
-         le bas, pointe près du sol, la poignée ressortant derrière et au-dessus de
-         la main. Elle est portée à gauche, donc **du côté opposé à la caméra** :
-         `shinaiBehindBody` la fait peindre sous le corps, qui en cache une partie.
+         (`gripAlongShinai` à 29) et non le pommeau, poignée en avant et lame
+         balayant en arrière — c'est l'orientation du taitō, tenue plus bas, à la
+         hauteur où un bras pend. `shinaiBehindBody` dit qu'elle est portée à
+         gauche ; celui qui va vers la droite est vu de sa droite et la lame passe
+         donc sous son corps, celui d'en face est vu de sa gauche et l'a au premier
+         plan. Les deux se saluent en miroir et ne se lisent pas pareil.
        - **rei** : le salut, trente degrés, plié aux hanches. La main gauche est
          portée en avant d'autant que l'épaule — 48 cm de buste × sin 30°.
        - **sagetō** de nouveau : on se redresse.
@@ -181,9 +183,11 @@
          faute de quoi l'écartement des poings d'une garde la poserait sur la lame.
        - **sanpo** : les trois pas d'approche, la prise déjà faite. Les pieds sont
          animés par le cycle de marche du jeu, celui-là même qui sert au swipe.
-       - **nuki** : le dégainé. La pointe quitte la ceinture par l'arrière, passe
-         par le bas et remonte devant en un petit arc, la main gauche glissant au
-         pommeau ; c'est là que la lame passe devant le corps.
+       - **nuki** : le dégainé. La pointe quitte la ceinture **par le haut** —
+         d'où l'angle écrit -350 et non 10, qui est pourtant la même direction :
+         l'interpolation prend le chemin court entre deux nombres, et vers 10 la
+         pointe passerait par le bas. La main gauche glisse au pommeau, et c'est là
+         que la lame passe devant le corps.
        - **sankyo** : l'accroupissement, bassin à 54 cm, talons levés.
        - **kamae** : on se relève, et la pose est exactement celle de la garde
          écrite, si bien que la main est rendue sans que rien ne saute.
@@ -198,8 +202,8 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0,
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
-          "leftFootDegrees": 0, "gripX": 10, "gripY": 82,
-          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
+          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -210,8 +214,8 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 30,
           "headTiltDegrees": 20, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
-          "leftFootDegrees": 0, "gripX": 32, "gripY": 76,
-          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "leftFootDegrees": 0, "gripX": 34, "gripY": 74,
+          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -222,8 +226,8 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0,
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
-          "leftFootDegrees": 0, "gripX": 10, "gripY": 82,
-          "shinaiDegrees": -45, "leftElbowBias": -4, "rightElbowBias": -4,
+          "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
+          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -271,7 +275,7 @@
           "headTiltDegrees": 0, "rightAnkleX": 16, "rightAnkleY": 8,
           "rightFootDegrees": -12, "leftAnkleX": -6, "leftAnkleY": 8,
           "leftFootDegrees": -12, "gripX": 26, "gripY": 58,
-          "shinaiDegrees": 10, "leftElbowBias": -6, "rightElbowBias": -10,
+          "shinaiDegrees": -350, "leftElbowBias": -6, "rightElbowBias": -10,
           "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
           "shinaiBehindBody": 0
         }
