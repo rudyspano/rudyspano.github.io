@@ -165,24 +165,28 @@
     /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas.
        C'est le protocole du tachiai, dans l'ordre :
 
-       - **sagetō** : debout, shinai dans la seule main gauche, bras droit pendant
-         le long du corps. La main tient la tsuka **sous la tsuba**
+       - **sagetō** : debout, shinai dans la seule main gauche, main droite à plat
+         sur le tare. La main gauche tient la tsuka **sous la tsuba**
          (`gripAlongShinai` à 29) et non le pommeau, poignée en avant et lame
          balayant en arrière — c'est l'orientation du taitō, tenue plus bas, à la
          hauteur où un bras pend. `shinaiBehindBody` dit qu'elle est portée à
          gauche ; celui qui va vers la droite est vu de sa droite et la lame passe
          donc sous son corps, celui d'en face est vu de sa gauche et l'a au premier
          plan. Les deux se saluent en miroir et ne se lisent pas pareil.
-       - **rei** : le salut, trente degrés, plié aux hanches. La main gauche est
-         portée en avant d'autant que l'épaule — 48 cm de buste × sin 30°.
+       - **rei** : le salut, trente degrés. **Seul le buste s'incline** : le poing
+         gauche et l'angle du shinai sont ceux du sagetō, sans un chiffre de
+         changé, et la main droite tient à la ceinture et non à l'épaule, donc
+         elle ne bouge pas non plus.
        - **sagetō** de nouveau : on se redresse.
        - **taitō** : le shinai monte à la hanche gauche comme un sabre porté, le
          pouce sur la tsuba, poignée en avant, lame balayant en arrière.
-       - **saisie** : la main droite vient sur la tsuka au-dessus de la tsuba.
-         `rightHandShift` la ramène de trente-sept centimètres vers le pommeau,
-         faute de quoi l'écartement des poings d'une garde la poserait sur la lame.
-       - **sanpo** : les trois pas d'approche, la prise déjà faite. Les pieds sont
-         animés par le cycle de marche du jeu, celui-là même qui sert au swipe.
+       - **sanpo** : les trois pas d'approche, main droite toujours au tare. Les
+         pieds sont animés par le cycle de marche du jeu, celui-là même qui sert
+         au swipe.
+       - **saisie** : les pas faits, la main droite quitte le tare pour la tsuka,
+         au-dessus de la tsuba. `rightHandShift` la ramène de trente-sept
+         centimètres vers le pommeau, faute de quoi l'écartement des poings d'une
+         garde la poserait sur la lame.
        - **nuki** : le dégainé. La pointe quitte la ceinture **par le haut** —
          d'où l'angle écrit -350 et non 10, qui est pourtant la même direction :
          l'interpolation prend le chemin court entre deux nombres, et vers 10 la
@@ -203,7 +207,7 @@
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
-          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
+          "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -214,8 +218,8 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 30,
           "headTiltDegrees": 20, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
-          "leftFootDegrees": 0, "gripX": 34, "gripY": 74,
-          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
+          "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
+          "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -227,7 +231,7 @@
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
-          "shinaiDegrees": -184, "leftElbowBias": -4, "rightElbowBias": -4,
+          "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
           "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
@@ -245,19 +249,19 @@
         }
       },
       {
-        "name": "Saisie", "seconds": 0.7, "separation": 144,
+        "name": "Sanpo", "seconds": 2.4, "separation": 0, "walks": true,
         "pose": {
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4,
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
-          "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
-          "rightHandFree": 0, "gripAlongShinai": 29, "rightHandShift": -37,
+          "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
+          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
       {
-        "name": "Sanpo", "seconds": 2.4, "separation": 0, "walks": true,
+        "name": "Saisie", "seconds": 0.7, "separation": 0,
         "pose": {
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4,
           "headTiltDegrees": 0, "rightAnkleX": 8, "rightAnkleY": 6,

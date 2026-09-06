@@ -953,17 +953,18 @@ function solveSkeleton(pose) {
     x: forwardDirection.x * 3, y: forwardDirection.y * 3
   });
 
-  /* Une main lâchée du shinai pend à son épaule au lieu de suivre la lame. Tout
-     le côté droit se dessine sur ces deux points, si bien que la manche, le kote
-     et le poing suivent — et que le shinai, dessiné sur la main gauche, ne bouge
-     pas. C'est ce que le salut demande : il se fait d'une seule main. */
+  /* Une main lâchée du shinai se plaque sur le tare au lieu de suivre la lame :
+     c'est là que la droite attend pendant tout le salut. Elle tient à la ceinture
+     et non à l'épaule, si bien que s'incliner ne la déplace pas. Tout le côté
+     droit se dessine sur ces deux points — manche, kote et poing suivent — et le
+     shinai, dessiné sur la main gauche, ne bouge pas. */
   const handFree = pose.rightHandFree || 0;
-  const hangingWrist = addPointOffset(addPoints(rightShoulder, 0, -HANGING_ARM_LENGTH), {
-    x: forwardDirection.x * HANGING_ARM_FORWARD, y: forwardDirection.y * HANGING_ARM_FORWARD
+  const onTare = addPointOffset(addPoints(root, 0, -TARE_HAND_DROP), {
+    x: forwardDirection.x * TARE_HAND_FORWARD, y: forwardDirection.y * TARE_HAND_FORWARD
   });
-  const rightWrist = mixPoints(rightWristOnBlade, hangingWrist, handFree);
-  const rightGrip = mixPoints(rightGripOnBlade,
-    addPoints(hangingWrist, 0, -WRIST_TO_GRIP_LENGTH), handFree);
+  const tareWrist = addPoints(onTare, 0, WRIST_ABOVE_TARE_HAND);
+  const rightWrist = mixPoints(rightWristOnBlade, tareWrist, handFree);
+  const rightGrip = mixPoints(rightGripOnBlade, onTare, handFree);
 
   const leftElbow = solveElbow(leftShoulder, leftWrist, pose.leftElbowBias);
   const rightElbow = solveElbow(rightShoulder, rightWrist,
@@ -984,10 +985,11 @@ function solveSkeleton(pose) {
   };
 }
 
-/* Où pend un bras libre : pas tout à fait sa longueur, un bras au repos gardant
-   un peu de pli, et un rien en avant de l'épaule plutôt qu'à l'aplomb. */
-const HANGING_ARM_LENGTH = 50;
-const HANGING_ARM_FORWARD = 4;
+/* Où attend une main lâchée du shinai : à plat sur le devant du tare, une largeur
+   de main en avant des hanches et un peu dessous, le poignet au-dessus d'elle. */
+const TARE_HAND_FORWARD = 13;
+const TARE_HAND_DROP = 3;
+const WRIST_ABOVE_TARE_HAND = 7;
 const HANGING_ELBOW_BIAS = -3;
 
 function mixPoints(from, to, ratio) {
