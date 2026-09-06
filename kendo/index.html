@@ -2440,19 +2440,16 @@ function ceremonyWalked(seconds) {
 }
 
 /* La marche d'approche : autant de pas que les données en demandent, pied droit
-   d'abord, en alternance. C'est de l'ayumi-ashi et non le suriashi du combat —
-   un combat se glisse, une cérémonie se marche, et le cycle du jeu ferait
-   traîner au sol des pieds qu'il faut lever et poser.
+   d'abord, les pieds se dépassant l'un l'autre. Ils se croisent comme en
+   ayumi-ashi, mais ne quittent jamais le sol — un kendoka ne lève pas les pieds,
+   il les glisse, et cela vaut pendant la cérémonie comme pendant le combat.
 
    Tout est rendu en décalages sur la pose de l'étape, dans le repère du kendoka :
    le déplacement du corps est porté ailleurs, donc ici un pied posé recule
    exactement à l'allure dont le corps avance. C'est ce qui le fait paraître
    posé. */
-const CEREMONY_STEP_LIFT = 4;
-const CEREMONY_HIP_DIP = 1.5;
-
 function ceremonyStepOffsets(covered, distance, steps) {
-  const offset = { rightAnkleX: 0, rightAnkleY: 0, leftAnkleX: 0, leftAnkleY: 0, rootY: 0 };
+  const offset = { rightAnkleX: 0, leftAnkleX: 0 };
   if (distance <= 0 || steps <= 0) return offset;
   const each = distance / steps;
   const progress = Math.max(0, Math.min(1, covered / distance));
@@ -2476,11 +2473,10 @@ function ceremonyStepOffsets(covered, distance, steps) {
   right -= covered + progress * each;
   left -= covered - progress * each;
 
+  /* Les abscisses seulement : rien ne se lève. Un pied qui quitterait le sol
+     ferait une marche, et c'est une glissade où les pieds se croisent. */
   offset.rightAnkleX = right;
   offset.leftAnkleX = left;
-  const lift = Math.sin(Math.PI * through) * CEREMONY_STEP_LIFT;
-  if (rightSwings) offset.rightAnkleY = lift; else offset.leftAnkleY = lift;
-  offset.rootY = -Math.sin(Math.PI * through) * CEREMONY_HIP_DIP;
   return offset;
 }
 
@@ -2670,11 +2666,8 @@ function render() {
       const step = ceremonyStepOffsets(walked, ceremonySettings.openingGap / 2,
         ceremonySettings.walkSteps);
       attackerPose = Object.assign({}, attackerPose, {
-        rootY: attackerPose.rootY + step.rootY,
         rightAnkleX: attackerPose.rightAnkleX + step.rightAnkleX,
-        rightAnkleY: attackerPose.rightAnkleY + step.rightAnkleY,
-        leftAnkleX: attackerPose.leftAnkleX + step.leftAnkleX,
-        leftAnkleY: attackerPose.leftAnkleY + step.leftAnkleY
+        leftAnkleX: attackerPose.leftAnkleX + step.leftAnkleX
       });
     }
   }
