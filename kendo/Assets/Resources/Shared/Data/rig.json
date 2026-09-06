@@ -165,16 +165,20 @@
     /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas.
        C'est le protocole du tachiai, dans l'ordre :
 
-       - **sagetō** : debout, shinai dans la main gauche seule, bras droit le long
-         du corps, la lame tenue à la hanche gauche pointe en avant et légèrement
-         basse. `rightHandFree` à 1 décroche la main droite de la lame ; tout le
-         côté droit se dessine sur elle, si bien que la manche, le kote et le poing
-         suivent, et que le shinai — dessiné sur la main gauche — ne bouge pas.
+       - **sagetō** : debout, shinai dans la main gauche seule, bras droit pendant
+         le long du corps. La main tient la tsuka **juste sous la tsuba**
+         (`gripAlongShinai` à 29) et non le pommeau : la lame part en avant et vers
+         le bas, pointe près du sol, tandis que la poignée ressort derrière et
+         au-dessus de la main. `rightHandFree` à 1 décroche la main droite ; tout
+         le côté droit se dessine sur elle, si bien que la manche, le kote et le
+         poing suivent, et que le shinai — dessiné sur la main gauche — ne bouge
+         pas.
        - **rei** : le salut de quinze degrés, plié aux hanches, la main gauche
          portée en avant d'autant que l'épaule (48 cm de buste × sin 15°).
        - **sagetō** de nouveau : on se redresse.
-       - **taitō** : le shinai vient à la hanche gauche comme un sabre porté,
-         poignée en avant, lame en arrière et un peu haute. L'angle est écrit -190
+       - **taitō** : le shinai vient à la hanche gauche comme un sabre porté, le
+         pouce sur la tsuba, la poignée en avant et un peu basse, la lame balayant
+         en arrière et légèrement haute. L'angle est écrit -190
          et non 170, qui est pourtant la même direction : l'interpolation prend le
          chemin court entre deux nombres, et depuis les -26 du sagetō le chemin
          court vers 170 fait passer la lame par-dessus la tête. Vers -190 elle
@@ -196,8 +200,9 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
           "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
           "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 12, "gripY": 84, "shinaiDegrees": -26,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+          "gripX": 10, "gripY": 82, "shinaiDegrees": -45,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
+          "gripAlongShinai": 29
         }
       },
       {
@@ -206,8 +211,9 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 15, "headTiltDegrees": 10,
           "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
           "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 24, "gripY": 82, "shinaiDegrees": -12,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+          "gripX": 22, "gripY": 80, "shinaiDegrees": -45,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
+          "gripAlongShinai": 29
         }
       },
       {
@@ -216,8 +222,9 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
           "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
           "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 12, "gripY": 84, "shinaiDegrees": -26,
-          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+          "gripX": 10, "gripY": 82, "shinaiDegrees": -45,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1,
+          "gripAlongShinai": 29
         }
       },
       {
@@ -226,8 +233,9 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
           "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
           "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 18, "gripY": 88, "shinaiDegrees": -190,
-          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1
+          "gripX": 14, "gripY": 88, "shinaiDegrees": -188,
+          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1,
+          "gripAlongShinai": 29
         }
       },
       {
@@ -236,8 +244,9 @@
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
           "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
           "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
-          "gripX": 18, "gripY": 88, "shinaiDegrees": -190,
-          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1
+          "gripX": 14, "gripY": 88, "shinaiDegrees": -188,
+          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1,
+          "gripAlongShinai": 29
         }
       },
       {
