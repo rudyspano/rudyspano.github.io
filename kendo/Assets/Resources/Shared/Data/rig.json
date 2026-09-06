@@ -161,6 +161,19 @@
        écrite — mais alors les croisements ci-dessus sont faux. */
     "aimFollow": 1
   },
+  "ceremony": {
+    /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas :
+       les deux kendokas se saluent, puis marchent l'un vers l'autre jusqu'à ce
+       que les pointes soient à un pas l'une de l'autre, et attendent. Un rei
+       qu'on pourrait passer ne serait pas un rei, donc rien n'y répond au doigt.
+
+       `openingGap` est l'écart supplémentaire auquel ils se saluent — neuf pas
+       de seize, la distance de salut d'un dojo. Il se referme en entier ; ce qui
+       reste ensuite est calculé, pas écrit : l'écart pour lequel les kissaki se
+       trouvent à un pas, mesuré sur le rig au démarrage. */
+    "bowDegrees": 15, "bowSeconds": 1.8, "holdSeconds": 0.6, "approachSeconds": 2.6,
+    "openingGap": 144
+  },
   "spirit": {
     /* Le ki. La jauge part à la moitié et multiplie la vitesse de toute attaque :
        à cinquante pour cent une coupe se joue au ralenti, à cent elle claque. Le
