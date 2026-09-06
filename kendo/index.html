@@ -2573,6 +2573,22 @@ function aimWeight(pose) {
   return Math.max(0, Math.min(1, share));
 }
 
+/** La lame a-t-elle quitté la garde pour couper ? Une coupe qui redescend
+    repasse par l'angle de la garde : visée là, sa pointe est tirée sur la gorge
+    et la lame s'aplatit de 49° à 17,6° en une demi-frame, pour se poser sur la
+    cible une frame et demie avant que la fente n'arrive. Le coup se voit alors
+    arriver à côté de la coupe qu'on lance, à plat et en avance, le corps le
+    rejoignant ensuite — et lancé en petite amplitude, où ces frames sont jouées
+    six fois plus lentement, cela saute aux yeux.
+
+    La visée est celle de la garde : abandonnée dès que la lame monte, elle n'est
+    pas reprise en descendant. Le tsuki fait exception et n'en est pas une : il ne
+    quitte jamais la garde, et cette visée est toute sa technique. */
+function bladeHasLeftTheGuard(frame) {
+  return sceneState.sequence === "attack" && currentAttack().requiresArming
+    && frame >= attackCatalogue.men.raiseFrame;
+}
+
 function aimAtThroat(pose, throat, weight) {
   if (throat.x <= pose.gripX) return;
   const aimed = Math.atan2(throat.y - pose.gripY, throat.x - pose.gripX) * 180 / Math.PI;
@@ -2715,7 +2731,8 @@ function render() {
   /* Chacun vise la gorge de l'autre, et chacun a besoin du corps d'en face pour
      cela : une gorge tient au cou et non à la lame, un squelette par acteur
      suffit donc avant que l'un ou l'autre ne tourne sa pointe. */
-  const attackerAim = ceremony ? 0 : aimWeight(attackerPose);
+  const attackerAim = ceremony || bladeHasLeftTheGuard(frame)
+    ? 0 : aimWeight(attackerPose);
   const defenderAim = ceremony ? 0 : aimWeight(defenderPose);
   if (AIM_FOLLOW !== 0 && (attackerAim > 0 || defenderAim > 0)) {
     const throatOf = targetResolverByName.throatFlap;
