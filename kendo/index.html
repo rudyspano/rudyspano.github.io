@@ -69,6 +69,21 @@
     border-left: 2px solid #000;
   }
   #quickControls .row { margin-top: 0; }
+  #ceremonyEditor { margin-top: 18px; }
+  #ceremonyEditor .hint { color: #8b93a1; font-size: 12px; line-height: 1.5; margin: 6px 0 12px; }
+  #ceremonyEditor .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  #ceremonyEditor label { color: #8b93a1; font-size: 12px; min-width: 76px; }
+  #ceremonyEditor input, #ceremonyEditor select {
+    background: #12161f; color: #e6e9f0; border: 1px solid #2a3140;
+    border-radius: 4px; padding: 4px 6px; font: inherit; font-size: 12px; width: 82px;
+  }
+  #ceremonyEditor select { width: auto; flex: 1; }
+  #ceremonyFields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-bottom: 12px; }
+  #ceremonyFields label { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  #ceremonyFields span { color: #8b93a1; font-size: 11px; flex: 1; }
+  #ceremonyFields input { width: 66px; }
+  #ceremonyCopied { color: #35c07a; font-size: 12px; }
+
   #phaseName {
     font-size: 12px;
     color: var(--accent);
@@ -199,6 +214,7 @@
         <button id="doButton">DŌ</button>
         <button id="tsukiButton">TSUKI</button>
       </div>
+      <button id="ceremonyButton" class="secondary">Salut d'ouverture<small>sagetō, rei, taitō, sanpo, sankyo</small></button>
       <button id="returnButton" class="secondary">Revenir à distance<small>un grand pas, des deux côtés</small></button>
       <button id="counterStrikeButton" class="secondary">Attaque adverse<small>le motodachi porte le même coup</small></button>
 
@@ -249,6 +265,28 @@
 
     <h2>Décomposition du mouvement</h2>
     <table id="phaseTable"></table>
+
+    <div id="ceremonyEditor" hidden>
+      <h2>Salut — réglage</h2>
+      <p class="hint">Chaque étape est une pose et une durée. On retouche à
+        chaud, on rejoue, et « Copier le JSON » rend le bloc prêt à coller dans
+        <code>rig.json</code>.</p>
+      <div class="row">
+        <label for="ceremonyStage">Étape</label>
+        <select id="ceremonyStage"></select>
+      </div>
+      <div class="row">
+        <label for="ceremonySecondsField">Durée (s)</label>
+        <input type="number" id="ceremonySecondsField" step="0.1" min="0.1">
+        <label for="ceremonyGapField">Écart</label>
+        <input type="number" id="ceremonyGapField" step="1">
+      </div>
+      <div id="ceremonyFields"></div>
+      <div class="row">
+        <button id="ceremonyCopyButton" class="secondary">Copier le JSON</button>
+        <span id="ceremonyCopied"></span>
+      </div>
+    </div>
 
     <h2>Affichage</h2>
     <div class="toggleGrid">
@@ -338,6 +376,10 @@ let MOTODACHI_BASE_X, GUARD_SHINAI_DEGREES, MOTODACHI_OPEN_DEGREES, MOTODACHI_LI
     MOTODACHI_LIFT_SHINAI_DEGREES;
 /* Écart d'ouverture du motodachi : dérivé des deux angles ci-dessus. */
 let MOTODACHI_OPENING_SPAN;
+
+/* Salut d'ouverture : ses étapes sont recopiées et non référencées, la maquette
+   servant à les retoucher. */
+let ceremonySettings;
 
 /** Installe les paramètres partagés dans les constantes du module. */
 function applyRigData(rig) {
@@ -440,6 +482,12 @@ function applyRigData(rig) {
   MOTODACHI_LIFT_SHINAI_DEGREES = rig.motodachi.liftShinaiDegrees;
 
   MOTODACHI_OPENING_SPAN = GUARD_SHINAI_DEGREES - MOTODACHI_OPEN_DEGREES;
+
+  ceremonySettings = rig.ceremony;
+  ceremonyStages = rig.ceremony.stageList.map(stage => ({
+    name: stage.name, seconds: stage.seconds, separation: stage.separation,
+    walks: stage.walks || false, pose: Object.assign({}, stage.pose)
+  }));
 }
 
 /** Retire les commentaires d'un JSON annoté, sans toucher à ceux qui se
@@ -856,26 +904,36 @@ function solveSkeleton(pose) {
   const shinaiRadians = toRadians(pose.shinaiDegrees);
   const shinaiDirection = { x: Math.cos(shinaiRadians), y: Math.sin(shinaiRadians) };
   const leftGrip = { x: pose.gripX, y: pose.gripY };
-  const rightGrip = addPointOffset(leftGrip, {
-    x: shinaiDirection.x * GRIP_SPACING, y: shinaiDirection.y * GRIP_SPACING
+  /* Toutes les pièces du shinai se mesurent depuis le poing gauche d'une garde,
+     au tsuka-gashira. Quand la main est remontée sur la poignée — sous la tsuba,
+     comme le sagetō et le taitō le demandent — l'arme entière coulisse d'autant
+     sous elle, si bien que la poignée ressort derrière la main au lieu que la
+     lame entière se dresse devant. */
+  const gripAlong = pose.gripAlongShinai || 0;
+  const shinaiOrigin = addPointOffset(leftGrip, {
+    x: -shinaiDirection.x * gripAlong, y: -shinaiDirection.y * gripAlong
   });
-  const shinaiButt = addPointOffset(leftGrip, {
+  const handSpacing = GRIP_SPACING + (pose.rightHandShift || 0);
+  const rightGripOnBlade = addPointOffset(leftGrip, {
+    x: shinaiDirection.x * handSpacing, y: shinaiDirection.y * handSpacing
+  });
+  const shinaiButt = addPointOffset(shinaiOrigin, {
     x: -shinaiDirection.x * SHINAI_BUTT_OVERHANG, y: -shinaiDirection.y * SHINAI_BUTT_OVERHANG
   });
-  const shinaiTip = addPointOffset(leftGrip, {
+  const shinaiTip = addPointOffset(shinaiOrigin, {
     x: shinaiDirection.x * SHINAI_LENGTH_FROM_LEFT_GRIP, y: shinaiDirection.y * SHINAI_LENGTH_FROM_LEFT_GRIP
   });
-  const tsuba = addPointOffset(leftGrip, {
+  const tsuba = addPointOffset(shinaiOrigin, {
     x: shinaiDirection.x * TSUBA_DISTANCE_FROM_LEFT_GRIP, y: shinaiDirection.y * TSUBA_DISTANCE_FROM_LEFT_GRIP
   });
-  const monouchiStart = addPointOffset(leftGrip, {
+  const monouchiStart = addPointOffset(shinaiOrigin, {
     x: shinaiDirection.x * MONOUCHI_START_FROM_LEFT_GRIP, y: shinaiDirection.y * MONOUCHI_START_FROM_LEFT_GRIP
   });
 
   const leftWrist = addPointOffset(leftGrip, {
     x: -shinaiDirection.x * WRIST_TO_GRIP_LENGTH, y: -shinaiDirection.y * WRIST_TO_GRIP_LENGTH
   });
-  const rightWrist = addPointOffset(rightGrip, {
+  const rightWristOnBlade = addPointOffset(rightGripOnBlade, {
     x: -shinaiDirection.x * WRIST_TO_GRIP_LENGTH, y: -shinaiDirection.y * WRIST_TO_GRIP_LENGTH
   });
 
@@ -895,8 +953,21 @@ function solveSkeleton(pose) {
     x: forwardDirection.x * 3, y: forwardDirection.y * 3
   });
 
+  /* Une main lâchée du shinai pend à son épaule au lieu de suivre la lame. Tout
+     le côté droit se dessine sur ces deux points, si bien que la manche, le kote
+     et le poing suivent — et que le shinai, dessiné sur la main gauche, ne bouge
+     pas. C'est ce que le salut demande : il se fait d'une seule main. */
+  const handFree = pose.rightHandFree || 0;
+  const hangingWrist = addPointOffset(addPoints(rightShoulder, 0, -HANGING_ARM_LENGTH), {
+    x: forwardDirection.x * HANGING_ARM_FORWARD, y: forwardDirection.y * HANGING_ARM_FORWARD
+  });
+  const rightWrist = mixPoints(rightWristOnBlade, hangingWrist, handFree);
+  const rightGrip = mixPoints(rightGripOnBlade,
+    addPoints(hangingWrist, 0, -WRIST_TO_GRIP_LENGTH), handFree);
+
   const leftElbow = solveElbow(leftShoulder, leftWrist, pose.leftElbowBias);
-  const rightElbow = solveElbow(rightShoulder, rightWrist, pose.rightElbowBias);
+  const rightElbow = solveElbow(rightShoulder, rightWrist,
+    pose.rightElbowBias + (HANGING_ELBOW_BIAS - pose.rightElbowBias) * handFree);
 
   const leftAnkle = { x: pose.leftAnkleX, y: pose.leftAnkleY };
   const rightAnkle = { x: pose.rightAnkleX, y: pose.rightAnkleY };
@@ -909,8 +980,18 @@ function solveSkeleton(pose) {
     rightShoulder, rightElbow, rightWrist, rightGrip,
     leftHip, leftKnee, leftFoot: solveFoot(leftAnkle, pose.leftFootDegrees),
     rightHip, rightKnee, rightFoot: solveFoot(rightAnkle, pose.rightFootDegrees),
-    shinaiDirection, shinaiButt, shinaiTip, tsuba, monouchiStart
+    shinaiDirection, shinaiOrigin, shinaiButt, shinaiTip, tsuba, monouchiStart
   };
+}
+
+/* Où pend un bras libre : pas tout à fait sa longueur, un bras au repos gardant
+   un peu de pli, et un rien en avant de l'épaule plutôt qu'à l'aplomb. */
+const HANGING_ARM_LENGTH = 50;
+const HANGING_ARM_FORWARD = 4;
+const HANGING_ELBOW_BIAS = -3;
+
+function mixPoints(from, to, ratio) {
+  return { x: from.x + (to.x - from.x) * ratio, y: from.y + (to.y - from.y) * ratio };
 }
 
 /* ============================================================
@@ -1825,8 +1906,8 @@ function shinaiCentreLine(skeleton, flex) {
       / (SHINAI_LENGTH_FROM_LEFT_GRIP - TSUBA_DISTANCE_FROM_LEFT_GRIP));
     const bend = flex * beyondGuard * beyondGuard;
     points.push({
-      x: skeleton.leftGrip.x + direction.x * along + normal.x * bend,
-      y: skeleton.leftGrip.y + direction.y * along + normal.y * bend
+      x: skeleton.shinaiOrigin.x + direction.x * along + normal.x * bend,
+      y: skeleton.shinaiOrigin.y + direction.y * along + normal.y * bend
     });
   }
   return points;
@@ -2158,7 +2239,8 @@ function limbSet(skeleton, side) {
    présenté à la caméra dépend du sens dans lequel le personnage regarde :
    le frappeur est vu de sa droite, le motodachi, tourné vers lui, de sa
    gauche. */
-function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare, bladeClipX) {
+function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare, bladeClipX,
+    shinaiBehindBody) {
   const solid = isSolidView();
   const showArmour = viewState.showArmour;
   const near = limbSet(skeleton, nearSideName);
@@ -2166,6 +2248,23 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   /* La rotation ne vaut que pour la main droite, qu'elle soit proche ou
      éloignée selon le sens dans lequel le kendoka regarde. */
   const nearIsRightHand = nearSideName === "right";
+  /* Portée à la hanche gauche, la lame est du côté opposé à la caméra pour celui
+     qu'on regarde de sa droite, et au premier plan pour celui d'en face : la
+     paire se salue en miroir et les deux ne se lisent pas pareil. */
+  const bladeUnderBody = shinaiBehindBody > 0.5 && nearIsRightHand;
+  const paintShinai = () => {
+    if (bladeClipX === undefined || bladeClipX === null) {
+      drawShinai(skeleton, bladeFlex);
+      return;
+    }
+    context.save();
+    context.beginPath();
+    context.rect(-400, -60, bladeClipX + 400, 420);
+    context.clip();
+    drawShinai(skeleton, bladeFlex);
+    context.restore();
+  };
+  if (bladeUnderBody) paintShinai();
   const nearKoteRotation = nearIsRightHand ? RIGHT_KOTE_ROTATION_DEGREES : 0;
   const farKoteRotation = nearIsRightHand ? 0 : RIGHT_KOTE_ROTATION_DEGREES;
   const nearHem = cloth && (nearSideName === "left" ? cloth.leftHem : cloth.rightHem);
@@ -2230,16 +2329,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
      tout ce qui est au-delà du point d'entrée lui est caché. La frontière
      est donnée dans le repère du frappeur, où l'avant est toujours +x, si
      bien que le masquage fonctionne dans les deux sens de jeu. */
-  if (bladeClipX === undefined || bladeClipX === null) {
-    drawShinai(skeleton, bladeFlex);
-  } else {
-    context.save();
-    context.beginPath();
-    context.rect(-400, -60, bladeClipX + 400, 420);
-    context.clip();
-    drawShinai(skeleton, bladeFlex);
-    context.restore();
-  }
+  if (!bladeUnderBody) paintShinai();
   if (showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
 
   if (solid) {
@@ -2288,12 +2378,79 @@ const sceneState = {
   attackId: "men"
 };
 
+/* ============================================================
+   Le salut d'ouverture, réglé ici
+   ============================================================
+
+   La cérémonie vit dans `rig.json` sous forme d'étapes : un nom, une durée, un
+   écart restant, et la pose sur laquelle l'étape se termine. La maquette la
+   rejoue au dixième de seconde et laisse retoucher chaque nombre à chaud — c'est
+   à cela qu'elle sert, le tour par le jeu coûtant une minute de compilation pour
+   voir un degré. Le bouton « Copier le JSON » rend le bloc prêt à coller. */
+let ceremonyStages = [];
+
+function isCeremony() { return sceneState.sequence === "ceremony"; }
+
+function ceremonySeconds() {
+  return ceremonyStages.reduce((total, stage) => total + stage.seconds, 0);
+}
+
+/** L'étape jouée à cette seconde, et l'avancement dedans. */
+function ceremonyAt(seconds) {
+  let remaining = seconds;
+  for (let index = 0; index < ceremonyStages.length; index++) {
+    const stage = ceremonyStages[index];
+    if (remaining < stage.seconds) {
+      return { index, through: stage.seconds > 0 ? remaining / stage.seconds : 1 };
+    }
+    remaining -= stage.seconds;
+  }
+  return { index: ceremonyStages.length - 1, through: 1 };
+}
+
+function ceremonyPose(seconds) {
+  const at = ceremonyAt(seconds);
+  const stage = ceremonyStages[at.index];
+  if (at.index === 0) return stage.pose;
+  return blendPoses(ceremonyStages[at.index - 1].pose, stage.pose,
+    easingFunctions.easeInOutSine(at.through));
+}
+
+/** Ce qui reste de l'écart de marche, partagé en deux. */
+function ceremonySeparation(seconds) {
+  const at = ceremonyAt(seconds);
+  const stage = ceremonyStages[at.index];
+  const from = at.index === 0 ? ceremonySettings.openingGap
+    : ceremonyStages[at.index - 1].separation;
+  return from + (stage.separation - from) * easingFunctions.easeInOutSine(at.through);
+}
+
+function ceremonyWalked(seconds) {
+  const at = ceremonyAt(seconds);
+  if (!ceremonyStages[at.index].walks) return 0;
+  return (ceremonySettings.openingGap - ceremonySeparation(seconds)) / 2;
+}
+
 function currentSequence() {
   const attack = currentAttack();
   return sceneState.sequence === "return" ? attack.returnSequence : attack.keyframeList;
 }
 
+/** Mélange deux poses champ par champ, comme le fait l'interpolateur de frames. */
+function blendPoses(start, end, progress) {
+  const pose = {};
+  for (const fieldName in start) {
+    const from = start[fieldName] || 0;
+    const to = end[fieldName] === undefined ? from : end[fieldName];
+    pose[fieldName] = from + (to - from) * progress;
+  }
+  return pose;
+}
+
 function currentLastFrame() {
+  /* Le salut se compte en secondes et non en frames : la réglette en couvre la
+     durée au soixantième, ce qui donne le même geste sous le doigt. */
+  if (isCeremony()) return Math.round(ceremonySeconds() * FRAMES_PER_SECOND);
   const list = currentSequence();
   return list[list.length - 1].frame;
 }
@@ -2395,7 +2552,7 @@ function drawActor(actor, skeleton) {
   context.translate(actor.originX, -actorDrop(actor));
   context.scale(actor.facesRight ? scale : -scale, scale);
   drawCharacter(skeleton, actor.facesRight ? "right" : "left", actor.bladeFlex || 0, actor.cloth,
-    actor.armOverMendare || false, actor.bladeClipX);
+    actor.armOverMendare || false, actor.bladeClipX, actor.shinaiBehindBody || 0);
   context.restore();
 }
 
@@ -2446,17 +2603,31 @@ function render() {
   const isAttackSequence = sceneState.sequence === "attack";
   const placement = actorPlacement();
 
-  const attackerPose = interpolatePose(frame, currentSequence());
-  const defenderPose = buildDefenderPose(frame);
+  /* Le salut se joue à deux, la même pose en miroir, et rien n'y est visé ni
+     coupé : il court-circuite donc tout ce qui suit de la mécanique de combat,
+     et n'emprunte que le cadrage et le dessin. */
+  const ceremony = isCeremony();
+  const seconds = frame / FRAMES_PER_SECOND;
+  const attackerPose = ceremony ? ceremonyPose(seconds)
+    : interpolatePose(frame, currentSequence());
+  const defenderPose = ceremony ? attackerPose : buildDefenderPose(frame);
+  if (ceremony) {
+    const standOff = ceremonySeparation(seconds) / 2;
+    placement.attacker.originX -= standOff * (placement.attacker.facesRight ? 1 : -1);
+    placement.defender.originX -= standOff * (placement.defender.facesRight ? 1 : -1);
+    placement.attacker.shinaiBehindBody = attackerPose.shinaiBehindBody || 0;
+    placement.defender.shinaiBehindBody = attackerPose.shinaiBehindBody || 0;
+  }
   placement.attacker.lateral = attackerPose.lateralOffset || 0;
-  placement.attacker.bladeFlex = bladeFlexAmount(frame);
-  placement.attacker.cloth = clothOf(hakamaState(frame), placement.attacker.facesRight === sceneState.attackerFacesRight);
+  placement.attacker.bladeFlex = ceremony ? 0 : bladeFlexAmount(frame);
+  placement.attacker.cloth = ceremony ? null
+    : clothOf(hakamaState(frame), placement.attacker.facesRight === sceneState.attackerFacesRight);
 
   /* Chacun vise la gorge de l'autre, et chacun a besoin du corps d'en face pour
      cela : une gorge tient au cou et non à la lame, un squelette par acteur
      suffit donc avant que l'un ou l'autre ne tourne sa pointe. */
-  const attackerAim = aimWeight(attackerPose);
-  const defenderAim = aimWeight(defenderPose);
+  const attackerAim = ceremony ? 0 : aimWeight(attackerPose);
+  const defenderAim = ceremony ? 0 : aimWeight(defenderPose);
   if (AIM_FOLLOW !== 0 && (attackerAim > 0 || defenderAim > 0)) {
     const throatOf = targetResolverByName.throatFlap;
     const hisThroat = toLocal(placement.attacker,
@@ -2473,7 +2644,8 @@ function render() {
   const menWorld = toWorld(placement.defender, menLocal);
   /* Le men et le kote arrêtent la lame ; le dō se coupe en traversant,
      et l'estoc n'a pas de surface à heurter. */
-  if (viewState.showMotodachi && !currentAttack().thrust && !currentAttack().cutsThrough) {
+  if (!ceremony && viewState.showMotodachi && !currentAttack().thrust
+      && !currentAttack().cutsThrough) {
     const targetInAttackerFrame = toLocal(placement.attacker, menWorld);
     clampBladeOnMen(attackerPose, targetInAttackerFrame.x, targetInAttackerFrame.y);
   }
@@ -2484,7 +2656,8 @@ function render() {
      quand elle en est ressortie tout entière du côté du spectateur. Le
      point où elle disparaît part du contact et court jusqu'au-delà de la
      pointe : c'est ce déplacement qui donne le glissement sur le dō. */
-  placement.attacker.bladeClipX = bladeHiddenBeyond(attackerPose, skeleton, placement, menWorld);
+  placement.attacker.bladeClipX = ceremony ? null
+    : bladeHiddenBeyond(attackerPose, skeleton, placement, menWorld);
   const attackerRootWorldX = toWorld(placement.attacker, { x: attackerPose.rootX, y: 0 }).x;
 
   const ratio = camera.pixelRatio || 1;
@@ -2492,7 +2665,8 @@ function render() {
   context.fillStyle = "#f4f1e8";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  const framesSinceImpact = isAttackSequence ? frame - currentAttack().impactFrame : -1;
+  const framesSinceImpact = isAttackSequence && !ceremony
+    ? frame - currentAttack().impactFrame : -1;
   const shakeAmount = framesSinceImpact >= 0 && framesSinceImpact < 8
     ? (1 - framesSinceImpact / 8) * 3 * ratio : 0;
   const shakeY = Math.sin(framesSinceImpact * 2.7) * shakeAmount;
@@ -2649,7 +2823,9 @@ function updateReadout(frame, pose, placement, defenderPose) {
   const defenderWorldX = toWorld(placement.defender, { x: defenderPose.rootX, y: 0 }).x;
   document.getElementById("distanceReadout").textContent = Math.round(Math.abs(defenderWorldX - attackerWorldX));
 
-  const phaseName = sceneState.sequence === "return" ? "Retour à distance" : findPhase(roundedFrame).name;
+  const phaseName = isCeremony()
+    ? ceremonyStages[ceremonyAt(roundedFrame / FRAMES_PER_SECOND).index].name
+    : sceneState.sequence === "return" ? "Retour à distance" : findPhase(roundedFrame).name;
   document.getElementById("phaseName").textContent = phaseName;
   document.querySelectorAll("#phaseTable tr").forEach(row => {
     row.classList.toggle("active", row.dataset.phaseName === phaseName);
@@ -2706,7 +2882,99 @@ function startAttack(facesRight, attackId) {
   sceneState.sequence = "attack";
   viewState.currentFrame = 0;
   viewState.isPlaying = true;
+  showCeremonyEditor();
   setPlayButtonLabel();
+}
+
+/* ============================================================
+   Le réglage du salut
+   ============================================================ */
+
+const CEREMONY_POSE_FIELDS = [
+  ["rootX", "bassin x"], ["rootY", "bassin y"],
+  ["torsoLeanDegrees", "buste °"], ["headTiltDegrees", "tête °"],
+  ["rightAnkleX", "pied D x"], ["rightAnkleY", "pied D y"],
+  ["rightFootDegrees", "pied D °"], ["leftAnkleX", "pied G x"],
+  ["leftAnkleY", "pied G y"], ["leftFootDegrees", "pied G °"],
+  ["gripX", "poing x"], ["gripY", "poing y"],
+  ["shinaiDegrees", "shinai °"], ["leftElbowBias", "coude G"],
+  ["rightElbowBias", "coude D"], ["rightHandFree", "main D libre"],
+  ["gripAlongShinai", "prise sur tsuka"], ["rightHandShift", "écart poings"],
+  ["shinaiBehindBody", "lame derrière"]
+];
+
+function startCeremony() {
+  if (sceneState.sequence === "return") finishReturn();
+  sceneState.sequence = "ceremony";
+  sceneState.attackerFacesRight = true;
+  viewState.currentFrame = 0;
+  viewState.isPlaying = true;
+  showCeremonyEditor();
+  setPlayButtonLabel();
+}
+
+function editedStage() {
+  return ceremonyStages[Number(document.getElementById("ceremonyStage").value) || 0];
+}
+
+function showCeremonyEditor() {
+  const editor = document.getElementById("ceremonyEditor");
+  editor.hidden = !isCeremony();
+  document.getElementById("phaseTable").hidden = isCeremony();
+  if (isCeremony()) refreshCeremonyEditor();
+}
+
+/** Recharge les champs depuis l'étape choisie. */
+function refreshCeremonyEditor() {
+  const stage = editedStage();
+  document.getElementById("ceremonySecondsField").value = stage.seconds;
+  document.getElementById("ceremonyGapField").value = stage.separation;
+  const fields = document.getElementById("ceremonyFields");
+  fields.innerHTML = "";
+  CEREMONY_POSE_FIELDS.forEach(([fieldName, label]) => {
+    const holder = document.createElement("label");
+    holder.innerHTML = `<span>${label}</span>`;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.step = "0.5";
+    input.value = stage.pose[fieldName] === undefined ? 0 : stage.pose[fieldName];
+    input.addEventListener("input", () => {
+      stage.pose[fieldName] = Number(input.value);
+      /* On se pose sur l'étape qu'on règle, sinon on retouche un chiffre sans
+         le voir : la réglette saute à sa fin, où la pose est celle-ci. */
+      viewState.currentFrame = Math.round(secondsAtEndOf(stage) * FRAMES_PER_SECOND);
+      viewState.isPlaying = false;
+      setPlayButtonLabel();
+      render();
+    });
+    holder.appendChild(input);
+    fields.appendChild(holder);
+  });
+}
+
+function secondsAtEndOf(stage) {
+  let total = 0;
+  for (const each of ceremonyStages) {
+    total += each.seconds;
+    if (each === stage) break;
+  }
+  return Math.max(0, total - 0.001);
+}
+
+/** Le bloc `ceremony` tel qu'il s'écrit dans rig.json, prêt à coller. */
+function ceremonyJson() {
+  const stages = ceremonyStages.map(stage => {
+    const head = `        "name": "${stage.name}", "seconds": ${stage.seconds},`
+      + ` "separation": ${stage.separation}` + (stage.walks ? ', "walks": true' : '') + ',';
+    const rows = [];
+    for (let index = 0; index < CEREMONY_POSE_FIELDS.length; index += 3) {
+      rows.push('          ' + CEREMONY_POSE_FIELDS.slice(index, index + 3)
+        .map(([fieldName]) => `"${fieldName}": ${stage.pose[fieldName] || 0}`).join(', '));
+    }
+    return `      {\n${head}\n        "pose": {\n${rows.join(',\n')}\n        }\n      }`;
+  });
+  return `"openingGap": ${ceremonySettings.openingGap},\n`
+    + `"stageList": [\n${stages.join(',\n')}\n    ]`;
 }
 
 function startReturn() {
@@ -2714,6 +2982,7 @@ function startReturn() {
   sceneState.sequence = "return";
   viewState.currentFrame = 0;
   viewState.isPlaying = true;
+  showCeremonyEditor();
   setPlayButtonLabel();
 }
 
@@ -2753,6 +3022,37 @@ function bindControls() {
   document.getElementById("tsukiButton").addEventListener("click", () => startAttack(true, "tsuki"));
   document.getElementById("counterStrikeButton").addEventListener("click", () => startAttack(false));
   document.getElementById("returnButton").addEventListener("click", startReturn);
+  document.getElementById("ceremonyButton").addEventListener("click", startCeremony);
+
+  const stagePicker = document.getElementById("ceremonyStage");
+  ceremonyStages.forEach((stage, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${index + 1}. ${stage.name}`;
+    stagePicker.appendChild(option);
+  });
+  stagePicker.addEventListener("change", () => {
+    refreshCeremonyEditor();
+    viewState.currentFrame = Math.round(
+      secondsAtEndOf(editedStage()) * FRAMES_PER_SECOND);
+    viewState.isPlaying = false;
+    setPlayButtonLabel();
+    render();
+  });
+  document.getElementById("ceremonySecondsField").addEventListener("input", event => {
+    editedStage().seconds = Math.max(0.1, Number(event.target.value));
+    render();
+  });
+  document.getElementById("ceremonyGapField").addEventListener("input", event => {
+    editedStage().separation = Number(event.target.value);
+    render();
+  });
+  document.getElementById("ceremonyCopyButton").addEventListener("click", () => {
+    navigator.clipboard.writeText(ceremonyJson());
+    const said = document.getElementById("ceremonyCopied");
+    said.textContent = "copié";
+    setTimeout(() => { said.textContent = ""; }, 1600);
+  });
 
   const playButton = document.getElementById("playButton");
   playButton.addEventListener("click", () => {
