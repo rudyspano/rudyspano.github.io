@@ -162,17 +162,105 @@
     "aimFollow": 1
   },
   "ceremony": {
-    /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas :
-       les deux kendokas se saluent, puis marchent l'un vers l'autre jusqu'à ce
-       que les pointes soient à un pas l'une de l'autre, et attendent. Un rei
-       qu'on pourrait passer ne serait pas un rei, donc rien n'y répond au doigt.
+    /* L'ouverture d'un niveau d'histoire, qu'on regarde et qu'on ne joue pas.
+       C'est le protocole du tachiai, dans l'ordre :
 
-       `openingGap` est l'écart supplémentaire auquel ils se saluent — neuf pas
-       de seize, la distance de salut d'un dojo. Il se referme en entier ; ce qui
-       reste ensuite est calculé, pas écrit : l'écart pour lequel les kissaki se
-       trouvent à un pas, mesuré sur le rig au démarrage. */
-    "bowDegrees": 15, "bowSeconds": 1.8, "holdSeconds": 0.6, "approachSeconds": 2.6,
-    "openingGap": 144
+       - **sagetō** : debout, shinai dans la main gauche seule, bras droit le long
+         du corps, la lame tenue à la hanche gauche pointe en avant et légèrement
+         basse. `rightHandFree` à 1 décroche la main droite de la lame ; tout le
+         côté droit se dessine sur elle, si bien que la manche, le kote et le poing
+         suivent, et que le shinai — dessiné sur la main gauche — ne bouge pas.
+       - **rei** : le salut de quinze degrés, plié aux hanches, la main gauche
+         portée en avant d'autant que l'épaule (48 cm de buste × sin 15°).
+       - **sagetō** de nouveau : on se redresse.
+       - **taitō** : le shinai vient à la hanche gauche comme un sabre porté,
+         poignée en avant, lame en arrière et un peu haute. L'angle est écrit -190
+         et non 170, qui est pourtant la même direction : l'interpolation prend le
+         chemin court entre deux nombres, et depuis les -26 du sagetō le chemin
+         court vers 170 fait passer la lame par-dessus la tête. Vers -190 elle
+         balaie vers le bas et l'arrière, comme une main le ferait.
+       - **sanpo** : les trois pas d'approche, dans cette position. Les pieds sont
+         animés par le cycle de marche du jeu, celui-là même qui sert au swipe.
+       - **sonkyo** : l'accroupissement, bassin à 54 cm, talons levés, les deux
+         mains revenues sur la lame en chūdan.
+       - **kamae** : on se relève, et la pose est exactement celle de la garde
+         écrite, si bien que la main est rendue sans que rien ne saute.
+
+       `separation` est l'écart restant à la fin de l'étape, en centimètres au-delà
+       de la distance d'ouverture ; il se referme à deux, moitié chacun. */
+    "openingGap": 144,
+    "stageList": [
+      {
+        "name": "Sagetō", "seconds": 0.9, "separation": 144,
+        "pose": {
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
+          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
+          "gripX": 12, "gripY": 84, "shinaiDegrees": -26,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+        }
+      },
+      {
+        "name": "Rei", "seconds": 1.0, "separation": 144,
+        "pose": {
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 15, "headTiltDegrees": 10,
+          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
+          "gripX": 24, "gripY": 82, "shinaiDegrees": -12,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+        }
+      },
+      {
+        "name": "Rei", "seconds": 0.9, "separation": 144,
+        "pose": {
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 0, "headTiltDegrees": 0,
+          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
+          "gripX": 12, "gripY": 84, "shinaiDegrees": -26,
+          "leftElbowBias": -4, "rightElbowBias": -4, "rightHandFree": 1
+        }
+      },
+      {
+        "name": "Taitō", "seconds": 1.0, "separation": 144,
+        "pose": {
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
+          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
+          "gripX": 18, "gripY": 88, "shinaiDegrees": -190,
+          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1
+        }
+      },
+      {
+        "name": "Sanpo", "seconds": 2.6, "separation": 0, "walks": true,
+        "pose": {
+          "rootX": 4, "rootY": 90, "torsoLeanDegrees": 4, "headTiltDegrees": 0,
+          "rightAnkleX": 8, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -2, "leftAnkleY": 6, "leftFootDegrees": 0,
+          "gripX": 18, "gripY": 88, "shinaiDegrees": -190,
+          "leftElbowBias": -6, "rightElbowBias": -4, "rightHandFree": 1
+        }
+      },
+      {
+        "name": "Sonkyo", "seconds": 1.3, "separation": 0,
+        "pose": {
+          "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2, "headTiltDegrees": 0,
+          "rightAnkleX": 20, "rightAnkleY": 10, "rightFootDegrees": -20,
+          "leftAnkleX": -8, "leftAnkleY": 10, "leftFootDegrees": -20,
+          "gripX": 30, "gripY": 62, "shinaiDegrees": 22,
+          "leftElbowBias": -8, "rightElbowBias": -12, "rightHandFree": 0
+        }
+      },
+      {
+        "name": "Kamae", "seconds": 1.0, "separation": 0,
+        "pose": {
+          "rootX": 4, "rootY": 90.5, "torsoLeanDegrees": 6, "headTiltDegrees": 0,
+          "rightAnkleX": 17, "rightAnkleY": 6, "rightFootDegrees": 0,
+          "leftAnkleX": -11, "leftAnkleY": 9.2, "leftFootDegrees": -14,
+          "gripX": 33, "gripY": 93, "shinaiDegrees": 22,
+          "leftElbowBias": -8, "rightElbowBias": -15, "rightHandFree": 0
+        }
+      }
+    ]
   },
   "spirit": {
     /* Le ki. La jauge part à la moitié et multiplie la vitesse de toute attaque :
