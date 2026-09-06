@@ -2435,8 +2435,53 @@ function ceremonySeparation(seconds) {
 
 function ceremonyWalked(seconds) {
   const at = ceremonyAt(seconds);
-  if (!ceremonyStages[at.index].walks) return 0;
+  if (!ceremonyStages[at.index].walks) return null;
   return (ceremonySettings.openingGap - ceremonySeparation(seconds)) / 2;
+}
+
+/* La marche d'approche : autant de pas que les données en demandent, pied droit
+   d'abord, en alternance. C'est de l'ayumi-ashi et non le suriashi du combat —
+   un combat se glisse, une cérémonie se marche, et le cycle du jeu ferait
+   traîner au sol des pieds qu'il faut lever et poser.
+
+   Tout est rendu en décalages sur la pose de l'étape, dans le repère du kendoka :
+   le déplacement du corps est porté ailleurs, donc ici un pied posé recule
+   exactement à l'allure dont le corps avance. C'est ce qui le fait paraître
+   posé. */
+const CEREMONY_STEP_LIFT = 4;
+const CEREMONY_HIP_DIP = 1.5;
+
+function ceremonyStepOffsets(covered, distance, steps) {
+  const offset = { rightAnkleX: 0, rightAnkleY: 0, leftAnkleX: 0, leftAnkleY: 0, rootY: 0 };
+  if (distance <= 0 || steps <= 0) return offset;
+  const each = distance / steps;
+  const progress = Math.max(0, Math.min(1, covered / distance));
+  const placeInWalk = progress * steps;
+  const step = Math.min(steps - 1, Math.floor(placeInWalk));
+  const through = Math.max(0, Math.min(1, placeInWalk - step));
+  const rightSwings = step % 2 === 0;
+
+  /* Un pied qui a balancé est deux longueurs de pas plus loin : il part d'un pas
+     derrière le corps et finit d'un pas devant. */
+  let right = Math.ceil(step / 2) * 2 * each;
+  let left = Math.floor(step / 2) * 2 * each;
+  const eased = easingFunctions.easeInOutSine(through);
+  if (rightSwings) right += 2 * each * eased; else left += 2 * each * eased;
+
+  /* Le sol ne bouge pas : les deux pieds reviennent à l'allure du corps. Un
+     nombre impair de pas laisserait la garde ouverte d'une longueur de pas à la
+     fin, le pied de tête ayant balancé une fois de plus que l'autre ; cette
+     dérive est reprise sur toute la marche, et les pieds finissent exactement où
+     la pose les met. */
+  right -= covered + progress * each;
+  left -= covered - progress * each;
+
+  offset.rightAnkleX = right;
+  offset.leftAnkleX = left;
+  const lift = Math.sin(Math.PI * through) * CEREMONY_STEP_LIFT;
+  if (rightSwings) offset.rightAnkleY = lift; else offset.leftAnkleY = lift;
+  offset.rootY = -Math.sin(Math.PI * through) * CEREMONY_HIP_DIP;
+  return offset;
 }
 
 function currentSequence() {
@@ -2617,9 +2662,23 @@ function render() {
      et n'emprunte que le cadrage et le dessin. */
   const ceremony = isCeremony();
   const seconds = frame / FRAMES_PER_SECOND;
-  const attackerPose = ceremony ? ceremonyPose(seconds)
+  let attackerPose = ceremony ? ceremonyPose(seconds)
     : interpolatePose(frame, currentSequence());
-  const defenderPose = ceremony ? attackerPose : buildDefenderPose(frame);
+  if (ceremony) {
+    const walked = ceremonyWalked(seconds);
+    if (walked !== null) {
+      const step = ceremonyStepOffsets(walked, ceremonySettings.openingGap / 2,
+        ceremonySettings.walkSteps);
+      attackerPose = Object.assign({}, attackerPose, {
+        rootY: attackerPose.rootY + step.rootY,
+        rightAnkleX: attackerPose.rightAnkleX + step.rightAnkleX,
+        rightAnkleY: attackerPose.rightAnkleY + step.rightAnkleY,
+        leftAnkleX: attackerPose.leftAnkleX + step.leftAnkleX,
+        leftAnkleY: attackerPose.leftAnkleY + step.leftAnkleY
+      });
+    }
+  }
+  let defenderPose = ceremony ? attackerPose : buildDefenderPose(frame);
   if (ceremony) {
     const standOff = ceremonySeparation(seconds) / 2;
     placement.attacker.originX -= standOff * (placement.attacker.facesRight ? 1 : -1);

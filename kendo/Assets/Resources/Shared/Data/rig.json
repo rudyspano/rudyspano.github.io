@@ -167,7 +167,9 @@
 
        - **sagetō** : debout, shinai dans la seule main gauche, main droite à plat
          sur le tare. La main gauche tient la tsuka **sous la tsuba**
-         (`gripAlongShinai` à 29) et non le pommeau, poignée en avant et lame
+         (`gripAlongShinai` à 22, soit sept centimètres **sous** la tsuba, qui est
+         à 29 : posée dessus, la main la recouvrait et paraissait au-dessus d'elle)
+         et non le pommeau, poignée en avant et lame
          balayant en arrière — c'est l'orientation du taitō, tenue plus bas, à la
          hauteur où un bras pend. `shinaiBehindBody` dit qu'elle est portée à
          gauche ; celui qui va vers la droite est vu de sa droite et la lame passe
@@ -180,7 +182,8 @@
        - **sagetō** de nouveau : on se redresse.
        - **taitō** : le shinai monte à la hanche gauche comme un sabre porté, le
          pouce sur la tsuba, poignée en avant, lame balayant en arrière.
-       - **sanpo** : les trois pas d'approche, main droite toujours au tare. Les
+       - **sanpo** : les cinq pas d'approche, droite d'abord, main droite libre le
+         long du corps. Les
          pieds sont animés par le cycle de marche du jeu, celui-là même qui sert
          au swipe.
        - **saisie** : les pas faits, la main droite quitte le tare pour la tsuka,
@@ -199,7 +202,7 @@
 
        `separation` est l'écart restant à la fin de l'étape, en centimètres au-delà
        de la distance d'ouverture ; il se referme à deux, moitié chacun. */
-    "openingGap": 144,
+    "openingGap": 144, "walkSteps": 5,
     "stageList": [
       {
         "name": "Sagetō", "seconds": 0.9, "separation": 144,
@@ -209,7 +212,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 22, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -221,7 +224,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 22, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -233,7 +236,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 22, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -245,7 +248,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 22, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -257,7 +260,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 29, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 22, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -269,7 +272,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
-          "rightHandFree": 0, "gripAlongShinai": 29, "rightHandShift": -37,
+          "rightHandFree": 0, "gripAlongShinai": 22, "rightHandShift": -37,
           "shinaiBehindBody": 1
         }
       },
