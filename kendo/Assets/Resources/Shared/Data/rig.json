@@ -167,9 +167,11 @@
 
        - **sagetō** : debout, shinai dans la seule main gauche, bras droit pendant
          le long du corps. La main gauche tient le shinai **derrière la tsuba**
-         (`gripAlongShinai` à 36, soit sept centimètres **au-delà** de la tsuba, qui
-         est à 29 : la main serre le bambou et non le cuir, la tsuba lui servant
-         de butée) et non le pommeau, poignée en avant et lame
+         (`gripAlongShinai` à 46, soit dix-sept centimètres **au-delà** de la tsuba,
+         qui est à 29 : la main serre le bambou et non le cuir, la tsuba lui
+         servant de butée. À sept centimètres elle était bien derrière la tsuba,
+         mais le poing la recouvrait et rien ne se lisait) et non le pommeau,
+         poignée en avant et lame
          balayant en arrière — c'est l'orientation du taitō, tenue plus bas, à la
          hauteur où un bras pend. `shinaiBehindBody` dit qu'elle est portée à
          gauche ; celui qui va vers la droite est vu de sa droite et la lame passe
@@ -212,7 +214,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 36, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 46, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -224,7 +226,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 36, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 46, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -236,7 +238,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 12, "gripY": 80,
           "shinaiDegrees": -155, "leftElbowBias": -4, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 36, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 46, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -248,7 +250,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 36, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 46, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -260,7 +262,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -4,
-          "rightHandFree": 1, "gripAlongShinai": 36, "rightHandShift": 0,
+          "rightHandFree": 1, "gripAlongShinai": 46, "rightHandShift": 0,
           "shinaiBehindBody": 1
         }
       },
@@ -272,7 +274,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
-          "rightHandFree": 0, "gripAlongShinai": 36, "rightHandShift": -37,
+          "rightHandFree": 0, "gripAlongShinai": 46, "rightHandShift": -37,
           "shinaiBehindBody": 1
         }
       },
