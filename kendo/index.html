@@ -2238,7 +2238,7 @@ function limbSet(skeleton, side) {
    le frappeur est vu de sa droite, le motodachi, tourné vers lui, de sa
    gauche. */
 function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare, bladeClipX,
-    shinaiBehindBody) {
+    shinaiBehindBody, rightHandFree) {
   const solid = isSolidView();
   const showArmour = viewState.showArmour;
   const near = limbSet(skeleton, nearSideName);
@@ -2250,6 +2250,12 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
      qu'on regarde de sa droite, et au premier plan pour celui d'en face : la
      paire se salue en miroir et les deux ne se lisent pas pareil. */
   const bladeUnderBody = shinaiBehindBody > 0.5 && nearIsRightHand;
+  /* Le poing éloigné passe sous le corps dès qu'il n'a rien à dépasser devant la
+     poitrine : soit la lame qu'il tient est elle-même derrière, soit cette main
+     est lâchée de la lame — et la main libre est la droite, donc le côté éloigné
+     de celui qui regarde dans l'autre sens. */
+  const farFistUnderBody = bladeUnderBody
+    || ((rightHandFree || 0) > 0.5 && !nearIsRightHand);
   const paintShinai = () => {
     if (bladeClipX === undefined || bladeClipX === null) {
       drawShinai(skeleton, bladeFlex);
@@ -2292,7 +2298,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   /* Le poing éloigné suit la lame qu'il tient. Laissé où il se peint pour une
      garde — par-dessus le corps, puisqu'il y dépasse devant la poitrine — il
      flottait sur le hakama alors que le shinai qu'il serre passait derrière. */
-  if (bladeUnderBody && showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
+  if (farFistUnderBody && showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
 
   if (solid) drawTorsoVolume(skeleton, isGameView() ? GAME_TORSO_NEAR : nearVolume());
   if (isGameView() && pieceReady("keikogi")) {
@@ -2331,10 +2337,8 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
      tout ce qui est au-delà du point d'entrée lui est caché. La frontière
      est donnée dans le repère du frappeur, où l'avant est toujours +x, si
      bien que le masquage fonctionne dans les deux sens de jeu. */
-  if (!bladeUnderBody) {
-    paintShinai();
-    if (showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
-  }
+  if (!bladeUnderBody) paintShinai();
+  if (!farFistUnderBody && showArmour) drawFarKoteGrip(far.elbow, far.grip, farKoteRotation);
 
   if (solid) {
     drawLimbVolume([near.shoulder, near.elbow, near.wrist, near.grip], [5.5, 4, 3.2, 3.6],
@@ -2556,7 +2560,8 @@ function drawActor(actor, skeleton) {
   context.translate(actor.originX, -actorDrop(actor));
   context.scale(actor.facesRight ? scale : -scale, scale);
   drawCharacter(skeleton, actor.facesRight ? "right" : "left", actor.bladeFlex || 0, actor.cloth,
-    actor.armOverMendare || false, actor.bladeClipX, actor.shinaiBehindBody || 0);
+    actor.armOverMendare || false, actor.bladeClipX, actor.shinaiBehindBody || 0,
+    actor.rightHandFree || 0);
   context.restore();
 }
 
@@ -2621,6 +2626,8 @@ function render() {
     placement.defender.originX -= standOff * (placement.defender.facesRight ? 1 : -1);
     placement.attacker.shinaiBehindBody = attackerPose.shinaiBehindBody || 0;
     placement.defender.shinaiBehindBody = attackerPose.shinaiBehindBody || 0;
+    placement.attacker.rightHandFree = attackerPose.rightHandFree || 0;
+    placement.defender.rightHandFree = attackerPose.rightHandFree || 0;
   }
   placement.attacker.lateral = attackerPose.lateralOffset || 0;
   placement.attacker.bladeFlex = ceremony ? 0 : bladeFlexAmount(frame);
