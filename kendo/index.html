@@ -539,13 +539,38 @@ function motodachiRetreat(frame) {
   return attack.defenderRetreat * easingFunctions.easeOutCubic(progress);
 }
 
+/** Ce qu'un coup déclenche, dans la forme que ça prend vraiment : rien du
+    tout sur la frame du contact, un sommet une frame et demie plus tard,
+    puis l'amortissement.
+
+    Rien ne plie ni ne part en arrière avant d'être touché. Écrites sur un
+    cosinus — d'où ces courbes sont parties — les ondes sont à leur sommet
+    sur la frame du contact elle-même : la lame y est déjà arquée de six
+    centimètres, la tête du motodachi déjà rejetée, et l'éclat, peint au
+    point où la lame est arrêtée, s'allume à quatre centimètres de la lame
+    pour ne la rejoindre que deux frames plus tard.
+
+    Le sommet est ramené à un, si bien que les amplitudes réglées sur
+    l'ancienne forme gardent leur sens : seul le moment où elles sont
+    atteintes a bougé. La crête est là où l'amortissement et l'oscillation
+    s'équilibrent — tan(vitesse × frames) = vitesse × amortissement — et on
+    la résout plutôt que de l'écrire en dur, les deux nombres étant des
+    réglages. */
+function impactWave(elapsedFrames, decayFrames, waveSpeed) {
+  if (elapsedFrames <= 0) return 0;
+  const crestFrames = Math.atan(waveSpeed * decayFrames) / waveSpeed;
+  const crest = Math.exp(-crestFrames / decayFrames) * Math.sin(crestFrames * waveSpeed);
+  return Math.exp(-elapsedFrames / decayFrames)
+    * Math.sin(elapsedFrames * waveSpeed) / crest;
+}
+
 /** Encaissement : le corps se tasse et la tête part en arrière, puis
-    l'oscillation s'amortit. */
+    l'oscillation s'amortit. Ça part du contact et pas avant. */
 function motodachiShock(frame) {
   const elapsed = frame - currentAttack().impactFrame;
   if (elapsed < 0 || elapsed > motodachiSettings.shockFrames) return 0;
-  return Math.exp(-elapsed / motodachiSettings.shockDecayFrames)
-    * Math.cos(elapsed * motodachiSettings.shockWaveSpeed);
+  return impactWave(elapsed, motodachiSettings.shockDecayFrames,
+    motodachiSettings.shockWaveSpeed);
 }
 
 function motodachiShinaiDegrees(frame) {
@@ -1881,10 +1906,11 @@ function bladeFlexAmount(frame) {
   let flex = -angularSpeed * 0.22;
   if (sceneState.sequence === "attack") {
     /* Au contact la pointe est bloquée et les mains continuent : la lame
-       s'arque, puis vibre en s'amortissant. */
+       s'arque, puis vibre en s'amortissant. L'arc naît du contact au lieu
+       d'y être déjà fait — voir impactWave. */
     const sinceImpact = frame - currentAttack().impactFrame;
     if (sinceImpact >= 0 && sinceImpact < 20) {
-      flex -= 8 * Math.exp(-sinceImpact / 3.2) * Math.cos(sinceImpact * 0.8);
+      flex -= 8 * impactWave(sinceImpact, 3.2, 0.8);
     }
   }
   return Math.max(-11, Math.min(11, flex));
