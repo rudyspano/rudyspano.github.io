@@ -810,18 +810,22 @@
           "pose": {
             "rootX": 72, "rootY": 82, "torsoLeanDegrees": 11, "headTiltDegrees": 1,
             "rightAnkleX": 98, "rightAnkleY": 10, "rightFootDegrees": 2,
-            "leftAnkleX": 40, "leftAnkleY": 16, "leftFootDegrees": -36, "gripX": 124,
+            "leftAnkleX": 40, "leftAnkleY": 16, "leftFootDegrees": -36, "gripX": 128,
             "gripY": 124, "shinaiDegrees": 9, "leftElbowBias": -2, "rightElbowBias": -3
           }
         },
         {
-          /* Touche : la pointe atteint le tsuki-dare, les deux bras tendus. */
+          /* Touche : la pointe atteint le tsuki-dare, les deux bras tendus. Six
+             centimètres de poing en plus qu'écrit d'abord : mesuré à la frame de
+             contact, le poing se tenait à 119,8 cm de la gorge pour une lame qui en
+             fait 115 — la pointe s'arrêtait 4,8 cm avant, à toutes les distances de
+             la fenêtre, et le jeu annonçait ippon quand même. */
           "frame": 82,
           "easing": "easeOutCubic",
           "pose": {
             "rootX": 82, "rootY": 80, "torsoLeanDegrees": 10, "headTiltDegrees": 0,
             "rightAnkleX": 106, "rightAnkleY": 6, "rightFootDegrees": 0,
-            "leftAnkleX": 46, "leftAnkleY": 14, "leftFootDegrees": -34, "gripX": 134,
+            "leftAnkleX": 46, "leftAnkleY": 14, "leftFootDegrees": -34, "gripX": 140,
             "gripY": 124, "shinaiDegrees": 6.5, "leftElbowBias": -1,
             "rightElbowBias": -1
           }
