@@ -115,7 +115,12 @@
        à chaque frame — de sorte qu'il file tant que c'est loin et se pose sans
        à-coup en arrivant. Doigt levé, il finit sur un pas entier. */
     "swipeTravelPerScreen": 190, "glideSpeed": 2.2, "glideFollow": 0.22,
-    "maximumApproach": 60,
+    /* Et il peut aller le chercher loin. Soixante centimètres suffisaient contre un
+       partenaire qui tient sa place ; l'adversaire du mode histoire, lui, tient sa
+       bande de terrain jusqu'à quarante-huit centimètres hors de mesure et rompt de
+       trente-deux de plus quand une coupe part. Sans de quoi couvrir tout cela, le
+       joueur reste planté à regarder un homme hors de portée. */
+    "maximumApproach": 96,
     /* Vers l'arrière il n'y a d'autre limite que le bord de l'image, la caméra
        ne travellant pas : la valeur est recalculée à l'écran, et celle-ci ne
        sert que hors écran (test de fumée, capture). `edgeMargin` est la marge
