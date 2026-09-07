@@ -219,7 +219,9 @@
         }
       },
       {
-        "name": "Rei", "seconds": 1.1, "separation": 144,
+        /* Les deux étapes que l'écran annonce en haut : le salut, puis le départ
+           du combat, dit au sankyo — c'est-à-dire juste avant de se relever. */
+        "name": "Rei", "call": "rei", "seconds": 1.1, "separation": 144,
         "pose": {
           "rootX": 4, "rootY": 90, "torsoLeanDegrees": 30,
           "headTiltDegrees": 20, "rightAnkleX": 8, "rightAnkleY": 6,
@@ -279,7 +281,7 @@
         }
       },
       {
-        "name": "Sankyo", "seconds": 1.6, "separation": 0,
+        "name": "Sankyo", "call": "hajime", "seconds": 1.6, "separation": 0,
         "pose": {
           "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
           "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
@@ -316,6 +318,48 @@
        trois secondes à traverser, ce qui n'est plus une punition mais une panne. */
     "minimumPace": 0.2
   },
+  "story": {
+    /* L'adversaire du mode histoire. Il n'est pas un motodachi : il ne présente
+       rien, n'ouvre rien et ne lève pas les bras — il se déplace, il arme et il
+       coupe, et c'est au joueur de trouver le moment.
+
+       Sa vitesse ne suit pas la jauge du joueur : elle vaut toujours ce que vaut
+       la nôtre à la moitié, si bien qu'un joueur à jauge pleine est plus vif que
+       lui et qu'un joueur à vide ne l'est plus. C'est la seule récompense du kiai
+       qui se voie en face. */
+    "opponentPace": 0.5,
+
+    /* Niveau 1. Il va et vient, et ce qu'il choisit est une distance et non un
+       terrain : il marche vers ce qui met la paire où il la veut, le joueur ayant
+       des pieds lui aussi. La bande va donc d'un pas et demi hors de mesure à un
+       pas et demi dedans, mesurée entre les deux. Et quand une coupe part, il rompt
+       huit fois sur dix — c'est sa seule défense, et elle suffit à apprendre au
+       joueur qu'une distance se prend au lieu de s'attendre. */
+    "wanderIn": 8, "wanderOut": -48, "decisionSeconds": 1.0,
+    "breakOffChance": 0.8, "breakOffRetreat": 32,
+
+    /* Et il rompt vite. Une coupe met un tiers de seconde à arriver ; à son
+       allure de marche il n'y couvre que seize centimètres, moitié moins que la
+       demi-fenêtre, si bien qu'il se faisait toucher en reculant. Une rupture
+       n'est pas une promenade : c'est un hiki-ashi, et il part au double. */
+    "breakOffSpeedUp": 2,
+
+    /* Et il attaque : men en grande amplitude, armé puis coupe enchaînée, quand
+       la distance est bonne. Une chance par décision, sans quoi il attaquerait à
+       la première mesure juste et le joueur n'aurait jamais la main.
+
+       Une sur huit, et une bande tenue plus au large qu'elle ne l'était : il
+       défend plus qu'il n'attaque, il porte un men toutes les vingt secondes au
+       lieu d'un toutes les neuf, et c'est au joueur d'aller le chercher. */
+    "attackChance": 0.12,
+
+    /* Et ce que vaut un armé lancé sous sa coupe : la moitié de la montée, pas
+       davantage. Il n'y a pas le temps d'un furikaburi quand la lame arrive déjà —
+       ce qu'on fait alors est une parade, et une parade couvre le men sans armer
+       la réponse. La montée reprend d'elle-même si on rappuie une fois le danger
+       passé. */
+    "parryRaiseShare": 0.5
+  },
   "playback": {
     /* Vitesse de lecture du combat, plus lente que le temps réel : la coupe vaut
        d'être regardée. L'armé se joue plus vite qu'elle — attendre lame en l'air,
@@ -331,7 +375,13 @@
        0,24, c'est-à-dire à deux centièmes de la durée qu'on avait déjà mesurée
        injouable. Ces deux nombres se compensent — retoucher l'un sans l'autre
        rouvre le problème, et le test de fumée le dit. */
-    "speed": 0.75, "armingSpeedUp": 1.05
+    "speed": 0.75, "armingSpeedUp": 1.05,
+
+    /* Et les attaques seules vont encore un cinquième plus vite. Le facteur porte
+       sur la séquence d'attaque et sur rien d'autre : ni la marche, ni le salut,
+       ni la montée — c'est-à-dire pas sur la fenêtre de la petite amplitude, qui
+       garde ses 0,30 s. Une coupe qu'on accélère n'est pas un jeu qu'on accélère. */
+    "attackSpeedUp": 1.2
   },
   "camera": {
     /* Aire cadrée en vue jeu : le frappeur avance jusqu'à deux mètres, le
@@ -369,6 +419,13 @@
     "tare": {
       "from": [ 0.42, 0.0 ],
       "to": [ 0.42, 1.0 ]
+    },
+    /* Le ruban de couleur, noué dans le dos. Ses deux ancres sont le nœud, en haut
+       à droite du dessin, et le bout des pans, en bas à gauche : le dessin est en
+       diagonale et c'est cette diagonale qu'on pose sur le dos. */
+    "tasuki": {
+      "from": [ 0.86, 0.12 ],
+      "to": [ 0.14, 0.88 ]
     },
     "kote": {
       "from": [ 0.07, 0.55 ],
