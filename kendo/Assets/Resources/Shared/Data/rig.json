@@ -368,7 +368,8 @@
     /* Le niveau 1 et l'homme qu'on y rencontre : son nom, et sous quelles couleurs
        il se présente. Le joueur choisit les siennes avant d'entrer ; celles-ci sont
        écrites, pour qu'on reconnaisse Yoshi d'un niveau à l'autre. */
-    "opponentName": "Yoshi", "opponentOutfit": "blanc", "opponentArmour": "marine",
+    "opponentName": "Yoshi", "opponentKeikogi": "marine",
+    "opponentHakama": "marine", "opponentArmour": "bois",
 
     "pointsToWin": 2, "pointCallSeconds": 2.2, "matchCallSeconds": 3.0,
     "returnToPlacesSeconds": 4.0,
@@ -426,37 +427,45 @@
      Les vignettes de couleur sont les mêmes dessins recolorés : la couleur vient de
      la planche, l'alpha de la pièce d'origine, si bien que la silhouette sur
      laquelle le rig est ancré ne bouge pas d'un pixel. */
-  "outfits": [
+  "keikogis": [
     {
-      "id": "marine", "label": "MARINE",
-      "keikogi": "keikogi", "hakama": "hakama-pan", "manche": "manche",
-      "nearTorso": "#3b4878", "farTorso": "#2b3459",
-      "nearHakama": "#243054", "farHakama": "#182448",
-      "nearSleeve": "#232f52", "farSleeve": "#18213f"
+      "id": "marine", "label": "MARINE", "piece": "keikogi", "manche": "manche",
+      "nearTorso": "#3b4878", "nearSleeve": "#232f52", "farSleeve": "#18213f"
     },
     {
-      "id": "blanc", "label": "BLANC",
-      "keikogi": "keikogi-blanc", "hakama": "hakama-pan-blanc",
-      "manche": "manche-blanc",
-      "nearTorso": "#a8a8ac", "farTorso": "#808083",
-      "nearHakama": "#b5b2ac", "farHakama": "#898783",
-      "nearSleeve": "#a0a0a4", "farSleeve": "#79797c"
+      "id": "blanc", "label": "BLANC", "piece": "keikogi-blanc", "manche": "manche-blanc",
+      "nearTorso": "#a8a8ac", "nearSleeve": "#a0a0a4", "farSleeve": "#79797c"
     },
     {
-      "id": "creme", "label": "CRÈME",
-      "keikogi": "keikogi-creme", "hakama": "hakama-pan-creme",
-      "manche": "manche-creme",
-      "nearTorso": "#a2a195", "farTorso": "#7b7a72",
-      "nearHakama": "#c9c7c0", "farHakama": "#999792",
-      "nearSleeve": "#9a998e", "farSleeve": "#74736b"
+      "id": "creme", "label": "CRÈME", "piece": "keikogi-creme", "manche": "manche-creme",
+      "nearTorso": "#a2a195", "nearSleeve": "#9a998e", "farSleeve": "#74736b"
+    }
+  ],
+
+  "hakamas": [
+    {
+      "id": "marine", "label": "MARINE", "piece": "hakama-pan",
+      "nearHakama": "#243054", "farHakama": "#182448"
+    },
+    {
+      "id": "blanc", "label": "BLANC", "piece": "hakama-pan-blanc",
+      "nearHakama": "#b5b2ac", "farHakama": "#898783"
+    },
+    {
+      "id": "creme", "label": "CRÈME", "piece": "hakama-pan-creme",
+      "nearHakama": "#c9c7c0", "farHakama": "#999792"
     }
   ],
 
   /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus. */
+  /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus. Certains
+     ne sont portés que par ceux qu'on affronte — `chooseable: false` les garde hors
+     des flèches sans les sortir du jeu. */
   "armours": [
-    { "id": "laque", "label": "LAQUE", "do": "do" },
-    { "id": "marine", "label": "MARINE", "do": "do-marine" },
-    { "id": "rouge", "label": "ROUGE", "do": "do-rouge" }
+    { "id": "laque", "label": "LAQUE", "do": "do", "chooseable": true },
+    { "id": "marine", "label": "MARINE", "do": "do-marine", "chooseable": true },
+    { "id": "rouge", "label": "ROUGE", "do": "do-rouge", "chooseable": true },
+    { "id": "bois", "label": "BOIS", "do": "do-bois", "chooseable": false }
   ],
 
   "colors": {
