@@ -286,7 +286,9 @@
         }
       },
       {
-        "name": "Sankyo", "call": "hajime", "seconds": 1.6, "separation": 0,
+        /* Le hajime se dit au lever et non à l'accroupi : c'est en se relevant que
+           le combat commence. Il est donc porté par le kamae, l'étape d'après. */
+        "name": "Sankyo", "seconds": 1.6, "separation": 0,
         "pose": {
           "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
           "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
@@ -298,7 +300,7 @@
         }
       },
       {
-        "name": "Kamae", "seconds": 1.0, "separation": 0,
+        "name": "Kamae", "call": "hajime", "seconds": 1.0, "separation": 0,
         "pose": {
           "rootX": 4, "rootY": 90.5, "torsoLeanDegrees": 6,
           "headTiltDegrees": 0, "rightAnkleX": 17, "rightAnkleY": 6,
@@ -358,6 +360,19 @@
        lieu d'un toutes les neuf, et c'est au joueur d'aller le chercher. */
     "attackChance": 0.12,
 
+    /* Le combat lui-même : deux ippons gagnants, donc trois échanges au plus. Entre
+       deux, l'arbitre annonce, la paire retourne à sa place et on repart au hajime ;
+       à la fin il lève le drapeau du vainqueur et dit shōbu-ari. Les secondes sont
+       celles pendant lesquelles le drapeau reste en l'air : assez pour être lu, pas
+       assez pour qu'on attende. */
+    /* Le niveau 1 et l'homme qu'on y rencontre : son nom, et sous quelles couleurs
+       il se présente. Le joueur choisit les siennes avant d'entrer ; celles-ci sont
+       écrites, pour qu'on reconnaisse Yoshi d'un niveau à l'autre. */
+    "opponentName": "Yoshi", "opponentOutfit": "blanc", "opponentArmour": "marine",
+
+    "pointsToWin": 2, "pointCallSeconds": 2.2, "matchCallSeconds": 3.0,
+    "returnToPlacesSeconds": 4.0,
+
     /* Et ce que vaut un armé lancé sous sa coupe : la moitié de la montée, pas
        davantage. Il n'y a pas le temps d'un furikaburi quand la lame arrive déjà —
        ce qu'on fait alors est une parade, et une parade couvre le men sans armer
@@ -393,9 +408,57 @@
        receveur recule d'un demi, et il faut de la marge pour les corps. Le
        centre est compté depuis le décalage courant, et il est décalé vers
        l'avant du frappeur, puisque c'est de ce côté que le terrain se gagne. */
-    "actionSpan": 430, "actionCentre": 152, "lateralDropPerCm": 0.16,
+    /* Le centre est celui de la paire **à sa distance**, et non celui de la coupe :
+       réglé sur le contact (152), le couple au repos se tenait trente-six centimètres
+       à gauche du milieu de l'écran, ce qui se voit à chaque reprise de distance. La
+       fente a de quoi aller à droite — deux cent quinze centimètres de demi-largeur
+       pour un fumikomi qui en fait cent douze. */
+    "actionSpan": 430, "actionCentre": 116, "lateralDropPerCm": 0.16,
     "lateralScalePerCm": 0.0008
   },
+  /* Les tenues que le joueur peut choisir avant un niveau, et sous quelles couleurs
+     l'adversaire se présente. Une tenue n'est pas seulement une vignette : les
+     volumes peints à plat — torse, manches, jambes — se voient au bord du tissu, et
+     un keikogi blanc cerné de marine se lit comme une erreur. Les teintes sont donc
+     prélevées sur la vignette elle-même, la proche un peu assombrie et la lointaine
+     d'un tiers, comme le reste du dessin distingue les deux côtés.
+
+     Les vignettes de couleur sont les mêmes dessins recolorés : la couleur vient de
+     la planche, l'alpha de la pièce d'origine, si bien que la silhouette sur
+     laquelle le rig est ancré ne bouge pas d'un pixel. */
+  "outfits": [
+    {
+      "id": "marine", "label": "MARINE",
+      "keikogi": "keikogi", "hakama": "hakama-pan", "manche": "manche",
+      "nearTorso": "#3b4878", "farTorso": "#2b3459",
+      "nearHakama": "#243054", "farHakama": "#182448",
+      "nearSleeve": "#232f52", "farSleeve": "#18213f"
+    },
+    {
+      "id": "blanc", "label": "BLANC",
+      "keikogi": "keikogi-blanc", "hakama": "hakama-pan-blanc",
+      "manche": "manche-blanc",
+      "nearTorso": "#a8a8ac", "farTorso": "#808083",
+      "nearHakama": "#b5b2ac", "farHakama": "#898783",
+      "nearSleeve": "#a0a0a4", "farSleeve": "#79797c"
+    },
+    {
+      "id": "creme", "label": "CRÈME",
+      "keikogi": "keikogi-creme", "hakama": "hakama-pan-creme",
+      "manche": "manche-creme",
+      "nearTorso": "#a2a195", "farTorso": "#7b7a72",
+      "nearHakama": "#c9c7c0", "farHakama": "#999792",
+      "nearSleeve": "#9a998e", "farSleeve": "#74736b"
+    }
+  ],
+
+  /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus. */
+  "armours": [
+    { "id": "laque", "label": "LAQUE", "do": "do" },
+    { "id": "marine", "label": "MARINE", "do": "do-marine" },
+    { "id": "rouge", "label": "ROUGE", "do": "do-rouge" }
+  ],
+
   "colors": {
     "nearInk": "#12151f", "farInk": "#39405e", "nearSkin": "#e5bf98",
     "farSkin": "#bd9270", "nearTorso": "#3b4878", "farTorso": "#2b3459",
