@@ -325,52 +325,16 @@
        trois secondes à traverser, ce qui n'est plus une punition mais une panne. */
     "minimumPace": 0.2
   },
+  /* Le mode histoire : cinq niveaux, cinq hommes. Ce qui suit vaut pour tous — le
+     format du match, le temps que met un arbitre à le dire, et ce que vaut un armé
+     lancé sous une coupe. Ce qui distingue un homme du suivant est dans `levelList`,
+     et rien d'autre : le moteur ne connaît aucun niveau par son numéro. */
   "story": {
-    /* L'adversaire du mode histoire. Il n'est pas un motodachi : il ne présente
-       rien, n'ouvre rien et ne lève pas les bras — il se déplace, il arme et il
-       coupe, et c'est au joueur de trouver le moment.
-
-       Sa vitesse ne suit pas la jauge du joueur : elle vaut toujours ce que vaut
-       la nôtre à la moitié, si bien qu'un joueur à jauge pleine est plus vif que
-       lui et qu'un joueur à vide ne l'est plus. C'est la seule récompense du kiai
-       qui se voie en face. */
-    "opponentPace": 0.5,
-
-    /* Niveau 1. Il va et vient, et ce qu'il choisit est une distance et non un
-       terrain : il marche vers ce qui met la paire où il la veut, le joueur ayant
-       des pieds lui aussi. La bande va donc d'un pas et demi hors de mesure à un
-       pas et demi dedans, mesurée entre les deux. Et quand une coupe part, il rompt
-       huit fois sur dix — c'est sa seule défense, et elle suffit à apprendre au
-       joueur qu'une distance se prend au lieu de s'attendre. */
-    "wanderIn": 8, "wanderOut": -48, "decisionSeconds": 1.0,
-    "breakOffChance": 0.8, "breakOffRetreat": 32,
-
-    /* Et il rompt vite. Une coupe met un tiers de seconde à arriver ; à son
-       allure de marche il n'y couvre que seize centimètres, moitié moins que la
-       demi-fenêtre, si bien qu'il se faisait toucher en reculant. Une rupture
-       n'est pas une promenade : c'est un hiki-ashi, et il part au double. */
-    "breakOffSpeedUp": 2,
-
-    /* Et il attaque : men en grande amplitude, armé puis coupe enchaînée, quand
-       la distance est bonne. Une chance par décision, sans quoi il attaquerait à
-       la première mesure juste et le joueur n'aurait jamais la main.
-
-       Une sur huit, et une bande tenue plus au large qu'elle ne l'était : il
-       défend plus qu'il n'attaque, il porte un men toutes les vingt secondes au
-       lieu d'un toutes les neuf, et c'est au joueur d'aller le chercher. */
-    "attackChance": 0.12,
-
     /* Le combat lui-même : deux ippons gagnants, donc trois échanges au plus. Entre
        deux, l'arbitre annonce, la paire retourne à sa place et on repart au hajime ;
        à la fin il lève le drapeau du vainqueur et dit shōbu-ari. Les secondes sont
        celles pendant lesquelles le drapeau reste en l'air : assez pour être lu, pas
        assez pour qu'on attende. */
-    /* Le niveau 1 et l'homme qu'on y rencontre : son nom, et sous quelles couleurs
-       il se présente. Le joueur choisit les siennes avant d'entrer ; celles-ci sont
-       écrites, pour qu'on reconnaisse Yoshi d'un niveau à l'autre. */
-    "opponentName": "Yoshi", "opponentKeikogi": "marine",
-    "opponentHakama": "marine", "opponentArmour": "bois",
-
     "pointsToWin": 2, "pointCallSeconds": 2.2, "matchCallSeconds": 3.0,
     "returnToPlacesSeconds": 4.0,
 
@@ -379,7 +343,169 @@
        ce qu'on fait alors est une parade, et une parade couvre le men sans armer
        la réponse. La montée reprend d'elle-même si on rappuie une fois le danger
        passé. */
-    "parryRaiseShare": 0.5
+    "parryRaiseShare": 0.5,
+
+    /* Et où, sur la montée, une petite amplitude fait demi-tour. À la moitié : plus
+       bas la lame n'a pas quitté la garde et il n'y a rien à voir, plus haut on est
+       à la grande amplitude et elle ne trompe plus personne. C'est la même chose que
+       fait le joueur en appuyant sur la coupe avant que son armé soit tenu. */
+    "smallAmplitudeReleaseShare": 0.5,
+
+    /* Et une rupture est rapide. Une coupe met un tiers de seconde à arriver ; à son
+       allure de marche il n'y couvre que seize centimètres, moitié moins que la
+       demi-fenêtre, si bien qu'il se faisait toucher en reculant. Une rupture n'est
+       pas une promenade : c'est un hiki-ashi, et il part au double. */
+    "breakOffSpeedUp": 2,
+
+    /* Les cinq hommes, dans l'ordre où on les rencontre. Chacun apporte une chose
+       et une seule, et cette chose est ce que le niveau apprend :
+
+       Yoshi     le men, et qu'une distance se prend au lieu de s'attendre.
+       Sojiro    le kote, et la petite amplitude — on ne peut plus attendre de voir
+                 la lame en haut, puisqu'une fois sur deux elle n'y arrive pas.
+       Naoki     rien de neuf : les mêmes armes, à la vitesse du joueur à jauge
+                 pleine, et bien plus souvent. C'est le niveau où l'on n'a plus le
+                 loisir de réfléchir à ce qu'on savait déjà faire.
+       Masahiro  le jōdan. Lame au-dessus de la tête en permanence : il n'arme
+                 jamais, donc rien n'annonce sa coupe, et il ne rompt pas — un
+                 jōdan n'a pas de défense, il a l'initiative. Son men est couvert,
+                 ses mains ne le sont pas.
+       Shoji     la garde. Il pare au lieu de rompre, et sa parade est un armé :
+                 elle couvre son men et ouvre son dō, exactement comme celle du
+                 joueur. Il connaît les quatre techniques et ne lance que celle que
+                 la garde d'en face laisse passer. */
+    /* Le décor derrière chaque homme : `background` nomme un fichier
+       `dojo-stage-<id>.png` dans Shared/Art, et une entrée de `backgroundList`.
+       L'entraînement, qui n'a pas de niveau, emprunte celui du premier — les deux
+       sont le même dojo vide. */
+    "levelList": [
+      {
+        /* Il va et vient, et ce qu'il choisit est une distance et non un terrain :
+           il marche vers ce qui met la paire où il la veut, le joueur ayant des
+           pieds lui aussi. Et quand une coupe part, il rompt huit fois sur dix —
+           c'est sa seule défense, et elle suffit à apprendre au joueur qu'une
+           distance se prend au lieu de s'attendre.
+
+           Sa vitesse ne suit pas la jauge du joueur : elle vaut ce que vaut la
+           nôtre à la moitié, si bien qu'un joueur à jauge pleine est plus vif que
+           lui et qu'un joueur à vide ne l'est plus. C'est la seule récompense du
+           kiai qui se voie en face. */
+        "name": "Yoshi", "keikogi": "marine", "hakama": "marine", "armour": "bois",
+        "background": "1",
+        "pace": 0.5, "guard": "chudan",
+        "wanderOut": -48, "wanderIn": 8, "decisionSeconds": 1.0,
+
+        /* Une chance par décision, et seulement à distance juste, sans quoi il
+           attaquerait à la première mesure juste et le joueur n'aurait jamais la
+           main. Une sur huit : il défend plus qu'il n'attaque, il porte un men
+           toutes les vingt secondes, et c'est au joueur d'aller le chercher. */
+        "attackChance": 0.12, "attackList": [ "men" ], "smallAmplitudeChance": 0.0,
+        "breakOffChance": 0.8, "breakOffRetreat": 32, "parryChance": 0.0
+      },
+      {
+        /* Le kote, et la petite amplitude une fois sur deux. Ce qu'elle change n'est
+           pas la vitesse de la coupe — elle couvre le même sol et met le même temps
+           à le couvrir — mais ce qu'on en voit venir : la lame part de mi-montée, et
+           celui qui attendait de la voir en haut a déjà perdu la moitié de son délai.
+           Elle rend aussi la cible illisible, le kote et le men montant pareillement. */
+        "name": "Sojiro", "keikogi": "blanc", "hakama": "marine", "armour": "or",
+        "background": "2",
+        "pace": 0.75, "guard": "chudan",
+        "wanderOut": -44, "wanderIn": 10, "decisionSeconds": 0.9,
+        "attackChance": 0.16, "attackList": [ "men", "kote" ],
+        "smallAmplitudeChance": 0.5,
+        "breakOffChance": 0.7, "breakOffRetreat": 32, "parryChance": 0.0
+      },
+      {
+        /* Rien de neuf, et c'est le propos : les mêmes deux coupes, à la vitesse
+           d'un joueur à jauge pleine, deux fois plus souvent, sur une bande tenue
+           plus près. Il rompt moins — un homme qui va aussi vite que vous n'a plus
+           besoin de reculer pour être hors d'atteinte. */
+        "name": "Naoki", "keikogi": "blanc", "hakama": "creme", "armour": "nuit",
+        "background": "3",
+        "pace": 1.0, "guard": "chudan",
+        "wanderOut": -40, "wanderIn": 12, "decisionSeconds": 0.8,
+        "attackChance": 0.28, "attackList": [ "men", "kote" ],
+        "smallAmplitudeChance": 0.5,
+        "breakOffChance": 0.55, "breakOffRetreat": 28, "parryChance": 0.0
+      },
+      {
+        /* Le jōdan. Il se tient lame au-dessus de la tête et y revient après chaque
+           coupe : il n'a donc pas d'armé, et rien n'annonce ce qui part. Contre lui
+           la lecture n'est plus celle de son bras mais celle du sol — il ne peut
+           couper que depuis la fenêtre, et le seul jeu est de ne pas y être quand il
+           se décide.
+
+           La petite amplitude ne lui sert à rien, sa lame étant déjà en haut, et il
+           ne rompt pas : rompre demande de baisser les bras, et il ne les baisse
+           jamais. Sa défense est qu'il frappe le premier. */
+        "name": "Masahiro", "keikogi": "marine", "hakama": "marine", "armour": "ecaille",
+        "background": "4",
+        "pace": 1.5, "guard": "jodan",
+        "wanderOut": -36, "wanderIn": 12, "decisionSeconds": 0.6,
+        "attackChance": 0.4, "attackList": [ "men", "kote" ],
+        "smallAmplitudeChance": 0.0,
+        "breakOffChance": 0.0, "breakOffRetreat": 0, "parryChance": 0.0
+      },
+      {
+        /* La garde. Six fois sur dix il répond à une coupe en levant plutôt qu'en
+           reculant, et cette montée est un armé : elle couvre son men et son kote,
+           elle ouvre son dō, et la coupe qui la suit part de là. Contre lui, une
+           attaque appelle une réponse et non un pas en arrière.
+
+           Il connaît les quatre techniques et ne lance que celle qui a une chance
+           d'arriver : le dō contre une lame levée, le men ou le kote contre une
+           lame basse, le tsuki contre l'une comme l'autre. */
+        "name": "Shoji", "keikogi": "blanc", "hakama": "blanc", "armour": "laiton",
+        "background": "5",
+        "pace": 2.0, "guard": "chudan",
+        "wanderOut": -32, "wanderIn": 14, "decisionSeconds": 0.5,
+        "attackChance": 0.45,
+        "attackList": [ "men", "kote", "do", "tsuki" ],
+        "smallAmplitudeChance": 0.5,
+        "breakOffChance": 0.3, "breakOffRetreat": 24, "parryChance": 0.6
+      }
+    ],
+
+    /* Et où l'arbitre se tient dans chacun d'eux. Il n'y a pas de profondeur dans
+       ce dojo : un homme plus loin est plus petit et ses pieds sont plus haut dans
+       l'image, et c'est tout ce qui le met au fond. Ces deux nombres-là ne peuvent
+       donc pas être communs, puisque le fond de la salle n'est pas à la même
+       hauteur d'un décor à l'autre — réglés une fois pour le dojo d'apparat,
+       l'arbitre flottait à trente centimètres du sol dans les autres.
+
+       `refereeFloor` est le sol sur lequel il pose les pieds, en centimètres au-
+       dessus de celui des combattants ; il se lit sur l'image, à la ligne où le
+       plancher rencontre le fond. `refereeHeight` est la hauteur de tout son
+       dessin, drapeau compris — l'homme en fait les neuf dixièmes.
+
+       L'arène ne fait exception que sur le sol. Sa table d'officiels est minuscule,
+       donc très lointaine : un arbitre posé à sa profondeur s'y serait tenu debout
+       sur le podium, et à la rigueur de la perspective il aurait fait quarante
+       centimètres — ce qui est la mesure juste et un homme illisible. Il descend
+       donc sur le parquet, devant le podium, et garde à peu près sa taille des
+       autres dojos : réduit d'un quart pour s'accorder à ce qu'il a derrière lui,
+       il n'était plus qu'un tiers des combattants et se lisait comme un enfant au
+       fond de la salle. C'est la taille qui porte, pas l'exactitude.
+
+       `zoom` est le seul qui ne concerne pas l'arbitre : le dessin est agrandi
+       d'autant autour du centre de l'image, ce qui rogne les quatre bords et
+       rapproche la salle. C'est tout ce qu'une image fixe peut faire pour se tenir
+       plus près de la paire, et l'arène en prend un dixième — ses gradins sont
+       loin, et de loin ils ne pèsent rien.
+
+       L'arbitre n'y grandit pas avec elle : il garde sa taille des autres dojos et
+       se tient trois centièmes de l'image plus haut que le sol où il se poserait,
+       ce qui le met un peu plus loin sur le parquet sans rien lui prendre de ce qui
+       le rend lisible. Reculer en rapetissant, comme il le faisait, revenait à le
+       renvoyer au fond : la taille est ce qu'on lit d'abord. */
+    "backgroundList": [
+      { "id": "1", "refereeFloor": 33, "refereeHeight": 116 },
+      { "id": "2", "refereeFloor": 68, "refereeHeight": 116 },
+      { "id": "3", "refereeFloor": 36, "refereeHeight": 116 },
+      { "id": "4", "refereeFloor": 50, "refereeHeight": 116 },
+      { "id": "5", "refereeFloor": 25, "refereeHeight": 116, "zoom": 1.1 }
+    ]
   },
   "playback": {
     /* Vitesse de lecture du combat, plus lente que le temps réel : la coupe vaut
@@ -457,15 +583,22 @@
     }
   ],
 
-  /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus. */
-  /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus. Certains
-     ne sont portés que par ceux qu'on affronte — `chooseable: false` les garde hors
-     des flèches sans les sortir du jeu. */
+  /* Et le dō, qui se choisit à part : c'est la pièce qu'on regarde le plus.
+
+     Trois sont offerts d'emblée (`chooseable`). Les cinq autres sont ceux des cinq
+     hommes, et on ne les porte qu'après les avoir battus : `chooseable: false` les
+     garde hors des flèches au départ, et la victoire les y met. C'est tout ce qu'on
+     gagne à un niveau en dehors du niveau suivant, et c'est la seule chose du jeu
+     qui se voie sur soi. */
   "armours": [
     { "id": "laque", "label": "LAQUE", "do": "do", "chooseable": true },
     { "id": "marine", "label": "MARINE", "do": "do-marine", "chooseable": true },
     { "id": "rouge", "label": "ROUGE", "do": "do-rouge", "chooseable": true },
-    { "id": "bois", "label": "BOIS", "do": "do-bois", "chooseable": false }
+    { "id": "bois", "label": "BOIS", "do": "do-bois", "chooseable": false },
+    { "id": "or", "label": "OR", "do": "do-or", "chooseable": false },
+    { "id": "nuit", "label": "NUIT", "do": "do-nuit", "chooseable": false },
+    { "id": "ecaille", "label": "ÉCAILLE", "do": "do-ecaille", "chooseable": false },
+    { "id": "laiton", "label": "LAITON", "do": "do-laiton", "chooseable": false }
   ],
 
   "colors": {

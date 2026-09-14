@@ -283,6 +283,12 @@
       "retreatDelay": 0,
       "target": "rightForearm",
       "requiresArming": true,
+      /* Le kote est la seule coupe qui vise les mains, et cela se juge : une lame
+         qui monte les emporte avec elle et il n'y a plus de kote à couper, mais un
+         homme installé en jōdan les tient en avant et en l'air, découvertes. Le men
+         couvert et le kote offert, c'est tout ce qu'un jōdan change pour celui d'en
+         face. */
+      "targetsTheHands": true,
       "armedFrame": 58,
       /* Petite amplitude : main gauche à 130 cm, la pointe déjà piquée vers le
          kote. Le kote finissant bas, il en reste vingt-sept centimètres de fente
