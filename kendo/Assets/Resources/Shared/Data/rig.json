@@ -67,14 +67,46 @@
        tissu et de poids réparti sur toute sa hauteur. */
     "stiffness": 0.022,
     "substeps": 3,
-    /* Le hakama pend d'aplomb sous la ceinture. Il ne suit ni l'inclinaison
-       du buste ni l'écartement des jambes : c'est une jupe lourde, et les
-       jambes passent dessous. Elles sont donc peintes de sa couleur, si bien
-       qu'aucune ne dépasse en peau nue quand elles s'écartent. */
+    /* L'ancienne mécanique : un panneau plat pendu d'aplomb sous la ceinture,
+       et deux bandes de la même vignette collées sur la cuisse et sur le
+       tibia. Elle ignorait les jambes, et les bandes partaient en planches
+       plates dès que les appuis s'écartaient. La maquette ne s'en sert plus —
+       le jeu Unity si, tant qu'il n'est pas passé au ruban qui suit. */
     "hemHeight": 9,
-    /* Débord du tissu de jambe vers l'axe du corps, sous la jupe. */
     "legInnerExtra": 16,
     "width": 46,
+    /* Le hakama est une jupe-culotte : deux jambes de tissu, pas un panneau.
+       Chacune est peinte comme un ruban posé le long d'une ligne de chute
+       calculée sur le rig — ceinture, genou qui la porte, puis d'aplomb.
+
+       `fabricLength` est ce qui commande tout : c'est du tissu, il ne s'étire
+       pas. Un genou qui monte ne rallonge donc pas la jambe du vêtement, il
+       fait remonter l'ourlet d'autant — et c'est exactement ce qu'on voit sur
+       une fente, où la jambe avant découvre le mollet.
+
+       `hemFloor` dit que le tissu ne traverse pas le sol : ce qu'il a de trop
+       ne s'enfonce pas, il s'étale. C'est ce qui fait la flaque du sankyo,
+       genoux hauts et ourlet répandu devant.
+
+       `kneeClearance` écarte la ligne de chute du côté où le genou saille :
+       le tissu passe par-dessus, pas au travers. Jambe tendue, il n'y a rien
+       à contourner et l'écart tombe à zéro de lui-même. */
+    "fabricLength": 92,
+    "hemWidth": 33,
+    "beltRise": 7,
+    "hemFloor": 4,
+    "kneeClearance": 5,
+    "sliceCount": 28,
+    /* Hauteur de la fente sous la ceinture, et la part du déport du genou que
+       ce point reprend : il suit un peu la jambe sans s'en aller avec elle. */
+    "divideDrop": 30,
+    "divideFollow": 0.18,
+    /* Part du tissu en trop qui part vers l'avant quand l'ourlet touche le sol. */
+    "floorSpread": 0.8,
+    /* Combien le ruban retombe sous sa ligne quand celle-ci n'est plus
+       d'aplomb : à zéro le tissu s'enroule autour de la cuisse, à un il pend
+       entièrement dessous. */
+    "hangShare": 0.7,
     "panelList": [
       { "anchor": "waistFront", "length": 78, "restForward": 0.35 },
       { "anchor": "waistBack", "length": 76, "restForward": -0.3 },

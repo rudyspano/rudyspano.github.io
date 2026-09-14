@@ -352,8 +352,10 @@ let MENDARE_BAND_TOP, MEN_SETBACK_CENTIMETRES, ARM_OVER_MENDARE_DEGREES, DO_TOP_
     RIGHT_KOTE_ROTATION_DEGREES;
 
 /* Hakama */
-let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_HEM_HEIGHT,
-    HAKAMA_LEG_INNER_EXTRA, HAKAMA_WIDTH, HAKAMA_PANELS;
+let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_PANELS,
+    HAKAMA_FABRIC_LENGTH, HAKAMA_HEM_WIDTH, HAKAMA_BELT_RISE, HAKAMA_HEM_FLOOR,
+    HAKAMA_KNEE_CLEARANCE, HAKAMA_SLICE_COUNT,
+    HAKAMA_DIVIDE_DROP, HAKAMA_DIVIDE_FOLLOW, HAKAMA_FLOOR_SPREAD, HAKAMA_HANG_SHARE;
 
 /* Retour à distance */
 let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES, RETURN_LOW_HIP, RETURN_MID_HIP,
@@ -436,10 +438,17 @@ function applyRigData(rig) {
   HAKAMA_DAMPING = rig.hakama.damping;
   HAKAMA_STIFFNESS = rig.hakama.stiffness;
   HAKAMA_SUBSTEPS = rig.hakama.substeps;
-  HAKAMA_HEM_HEIGHT = rig.hakama.hemHeight;
-  HAKAMA_LEG_INNER_EXTRA = rig.hakama.legInnerExtra;
-  HAKAMA_WIDTH = rig.hakama.width;
   HAKAMA_PANELS = rig.hakama.panelList;
+  HAKAMA_FABRIC_LENGTH = rig.hakama.fabricLength;
+  HAKAMA_HEM_WIDTH = rig.hakama.hemWidth;
+  HAKAMA_BELT_RISE = rig.hakama.beltRise;
+  HAKAMA_HEM_FLOOR = rig.hakama.hemFloor;
+  HAKAMA_KNEE_CLEARANCE = rig.hakama.kneeClearance;
+  HAKAMA_SLICE_COUNT = rig.hakama.sliceCount;
+  HAKAMA_DIVIDE_DROP = rig.hakama.divideDrop;
+  HAKAMA_DIVIDE_FOLLOW = rig.hakama.divideFollow;
+  HAKAMA_FLOOR_SPREAD = rig.hakama.floorSpread;
+  HAKAMA_HANG_SHARE = rig.hakama.hangShare;
 
   /* Retour à distance */
   RETURN_FRAMES_PER_HALF_STEP = rig.returnStep.framesPerHalfStep;
@@ -1039,7 +1048,7 @@ stageImage.src = SHARED_ART_DIRECTORY + "dojo-stage.png";
    par ses deux points d'ancrage, exprimés en fractions de sa propre image. */
 const pieceImages = {};
 ["men", "do", "tare", "kote", "kote-paume", "kote-poing", "manche", "pied", "hakama-pan",
-   "shinai", "keikogi"]
+   "hakama-jambe", "hakama-jambe-loin", "shinai", "keikogi"]
   .forEach(name => {
   const image = new Image();
   image.src = SHARED_ART_DIRECTORY + "pieces/" + name + ".png";
@@ -1258,38 +1267,13 @@ const BODY_VOLUME_FAR = "#ddd7c6";
 
 
 
-/** Une bande de tissu posée sur un tronçon de jambe. Elle déborde vers l'axe
-    du corps, où elle passe sous la jupe : sans ce recouvrement les deux
-    vignettes se juxtaposent et leur motif se décale, ce qui dessine une
-    couture le long de la cuisse. Le côté extérieur garde sa largeur, c'est lui
-    qui fait la silhouette. */
-function drawHakamaLegBand(from, to, widthCentimetres, rootX, options) {
-  const direction = directionBetween(from, to);
-  /* Sens dans lequel part l'axe horizontal de la vignette, une fois posée. */
-  const acrossX = -direction.y;
-  const middleX = (from.x + to.x) / 2;
-  const innerOnPositiveSide = (rootX - middleX) * acrossX > 0;
-  const total = widthCentimetres + HAKAMA_LEG_INNER_EXTRA;
-  const innerShare = (widthCentimetres / 2 + HAKAMA_LEG_INNER_EXTRA) / total;
-  const anchorX = innerOnPositiveSide ? 1 - innerShare : innerShare;
-  drawPiece("hakama-pan", [anchorX, 0.02], [anchorX, 0.98], from, to,
-    Object.assign({ widthCentimetres: total }, options));
-}
-
-function drawGameLegVolume(limb, near, rootX) {
-  /* Larges : ce qui dépasse de la jupe doit lire comme une jambe de
-     hakama, pas comme un collant. Le volume plein reste dessous, il
-     bouche les jours entre les deux tronçons de tissu. */
-  drawLimbVolume([limb.hip, limb.knee, limb.foot.ankle], [12, 10.5, 6.5],
+/** La jambe sous le hakama : un volume plein, de la couleur du tissu. Il ne
+    dessine rien, il bouche — le ruban du hakama passe par-dessus, et ce qui
+    déborde quand les appuis s'écartent se confond avec lui au lieu de trancher
+    en peau nue. Seul le pied reste nu. */
+function drawGameLegVolume(limb, near) {
+  drawLimbVolume([limb.hip, limb.knee, limb.foot.ankle], [9, 7.5, 5.5],
     near ? HAKAMA_CLOTH_NEAR : HAKAMA_CLOTH_FAR);
-
-  /* Deux bandes de la vignette du hakama posées sur la cuisse et sur le
-     tibia : le tissu de la jambe a la même trame que la jupe. */
-  if (!pieceReady("hakama-pan")) return;
-  drawHakamaLegBand(limb.hip, limb.knee, 25, rootX,
-    { sourceTop: 0.06, sourceBottom: 0.55, alpha: 0.92 });
-  drawHakamaLegBand(limb.knee, limb.foot.ankle, 19, rootX,
-    { sourceTop: 0.55, sourceBottom: 0.99, alpha: 0.92 });
 }
 
 function nearVolume() { return isGameView() ? GAME_VOLUME_NEAR : BODY_VOLUME_NEAR; }
@@ -1894,6 +1878,192 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
 
 
 
+/* ============================================================
+   Le ruban du hakama
+   Un hakama est une jupe-culotte : deux jambes de tissu, et c'est
+   par là qu'il faut le prendre. Chacune est une seule vignette,
+   dessinée droite, débitée en tranches et posée le long d'une ligne
+   de chute — le même procédé que le shinai qui plie.
+
+   La ligne de chute dit tout du mouvement : elle part de la ceinture,
+   passe par-dessus le genou quand la cuisse porte le tissu, puis
+   retombe d'aplomb. Sa longueur ne change jamais, si bien qu'un genou
+   qui monte fait remonter l'ourlet au lieu d'allonger le vêtement.
+   ============================================================ */
+
+/** Distance signée d'un point à la droite qui joint deux autres. */
+function sideOfLine(point, from, to) {
+  const alongX = to.x - from.x, alongY = to.y - from.y;
+  const length = Math.hypot(alongX, alongY) || 1;
+  return ((point.x - from.x) * alongY - (point.y - from.y) * alongX) / length;
+}
+
+function catmullRomPoint(before, from, to, after, through) {
+  const squared = through * through, cubed = squared * through;
+  const axis = (a, b, c, d) => 0.5 * (2 * b + (c - a) * through
+    + (2 * a - 5 * b + 4 * c - d) * squared + (-a + 3 * b - 3 * c + d) * cubed);
+  return {
+    x: axis(before.x, from.x, to.x, after.x),
+    y: axis(before.y, from.y, to.y, after.y)
+  };
+}
+
+/** Courbe passant par tous les points donnés, puis rééchantillonnée à pas
+    constant : le tissu ne casse pas d'un angle vif sur le genou, il s'y
+    arrondit, et chaque tranche de la vignette couvre la même longueur de
+    ligne — sinon le motif se tasse d'un côté. */
+function smoothThrough(pointList, sampleCount) {
+  const padded = [pointList[0]].concat(pointList, [pointList[pointList.length - 1]]);
+  const dense = [];
+  const steps = 12;
+  for (let span = 1; span < padded.length - 2; span++) {
+    for (let step = 0; step < steps; step++) {
+      dense.push(catmullRomPoint(padded[span - 1], padded[span],
+        padded[span + 1], padded[span + 2], step / steps));
+    }
+  }
+  dense.push(pointList[pointList.length - 1]);
+
+  const walked = [0];
+  for (let index = 1; index < dense.length; index++) {
+    walked.push(walked[index - 1]
+      + Math.hypot(dense[index].x - dense[index - 1].x, dense[index].y - dense[index - 1].y));
+  }
+  const total = walked[walked.length - 1] || 1;
+  const spaced = [];
+  let cursor = 1;
+  for (let index = 0; index <= sampleCount; index++) {
+    const wanted = total * index / sampleCount;
+    while (cursor < walked.length - 1 && walked[cursor] < wanted) cursor++;
+    const before = walked[cursor - 1], after = walked[cursor];
+    const share = after === before ? 0 : (wanted - before) / (after - before);
+    spaced.push(pointAlong(dense[cursor - 1], dense[cursor], share));
+  }
+  return spaced;
+}
+
+/** Où tombe une jambe de hakama, de la ceinture à l'ourlet. */
+function hakamaFallLine(skeleton, limb, simulatedHem) {
+  const belt = { x: skeleton.root.x, y: skeleton.root.y + HAKAMA_BELT_RISE };
+  const knee = limb.knee;
+
+  /* Une jupe-culotte n'est fendue qu'à partir de l'entrejambe, et il est bas :
+     au-dessus, les deux jambes sont un seul tissu. Les deux lignes de chute
+     passent donc par le même point avant de se séparer, faute de quoi le sol
+     se voit entre elles dès que les appuis s'écartent. Il descend d'autant
+     moins que le bassin est bas — accroupi, la fente est au genou. */
+  const divideBelowBelt = Math.max(4, Math.min(HAKAMA_DIVIDE_DROP, (belt.y - knee.y) * 0.7));
+  const divide = {
+    x: belt.x + (knee.x - belt.x) * HAKAMA_DIVIDE_FOLLOW,
+    y: belt.y - divideBelowBelt
+  };
+
+  const lengthToKnee = Math.hypot(divide.x - belt.x, divide.y - belt.y)
+    + Math.hypot(knee.x - divide.x, knee.y - divide.y);
+  /* Ce qui reste de tissu une fois le genou atteint. Jamais rien : même
+     cuisse tendue à l'horizontale il pend encore un peu de mollet. */
+  const hanging = Math.max(8, HAKAMA_FABRIC_LENGTH - lengthToKnee);
+
+  /* Sous le genou le tissu est un pendule : il pend d'aplomb au repos et
+     traîne en arrière quand la jambe part. La simulation en place donne
+     déjà ce retard, on ne fait qu'en reprendre la direction. */
+  let fallX = 0, fallY = -1;
+  if (simulatedHem) {
+    const deltaX = simulatedHem.x - knee.x, deltaY = simulatedHem.y - knee.y;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance > 1) { fallX = deltaX / distance; fallY = deltaY / distance; }
+  }
+
+  const hem = { x: knee.x + fallX * hanging, y: knee.y + fallY * hanging };
+  if (hem.y < HAKAMA_HEM_FLOOR) {
+    /* Le tissu ne traverse pas le sol : ce qu'il a de trop ne s'enfonce pas,
+       il s'étale, et il s'étale vers l'avant — c'est la flaque du sankyo,
+       répandue sur les genoux. Le surplus part de zéro au moment où l'ourlet
+       touche, si bien que rien ne saute à l'instant où il touche. Placer
+       l'ourlet sur le cercle du côté où penche le pendule le faisait sauter
+       de cinquante centimètres en une frame, le jour où ce côté changeait. */
+    const surplus = HAKAMA_HEM_FLOOR - hem.y;
+    hem.x += skeleton.forwardDirection.x * surplus * HAKAMA_FLOOR_SPREAD;
+    hem.y = HAKAMA_HEM_FLOOR;
+  }
+
+  /* Le genou saille : la ligne de chute passe par-dessus et non au travers.
+     Jambe tendue il n'y a rien à contourner, et l'écart tombe à zéro. */
+  const offset = sideOfLine(knee, divide, hem);
+  const bulge = Math.max(-1, Math.min(1, offset / 12)) * HAKAMA_KNEE_CLEARANCE;
+  const across = perpendicular(directionBetween(divide, hem));
+  const kneePass = { x: knee.x + across.x * bulge, y: knee.y + across.y * bulge };
+  return smoothThrough([belt, divide, kneePass, hem], HAKAMA_SLICE_COUNT);
+}
+
+/** La vignette débitée en tranches et posée le long de la ligne. Chaque
+    tranche est un parallélogramme : l'axe vertical de l'image suit la ligne,
+    son axe horizontal reste en travers, largeur imposée en centimètres pour
+    que le tissu ne grossisse pas en s'allongeant. */
+function drawHakamaRibbon(skeleton, limb, near, simulatedHem) {
+  const name = near ? "hakama-jambe" : "hakama-jambe-loin";
+  if (!pieceReady(name)) return false;
+  const image = pieceImages[name];
+  const line = hakamaFallLine(skeleton, limb, simulatedHem);
+  const slices = line.length - 1;
+  const sliceHeight = image.naturalHeight / slices;
+  const halfWidth = image.naturalWidth / 2;
+  /* Chaque tranche est un parallélogramme, et deux tranches voisines ne se
+     rejoignent donc pas exactement dès que la ligne tourne : il s'ouvre un
+     coin en biseau du côté extérieur du virage, d'autant plus large qu'on
+     s'éloigne de l'axe. Une tranche débordant sur ses deux voisines le
+     bouche, et le recouvrement ne se voit pas — les plis sont dans le sens
+     de la chute, ils se superposent à eux-mêmes. */
+  const overlap = sliceHeight * 0.4;
+  const acrossScale = HAKAMA_HEM_WIDTH / image.naturalWidth;
+
+  /* Le tissu ne se centre sur sa ligne que lorsqu'il pend. Posé sur une cuisse
+     couchée il ne l'entoure pas : il retombe dessous. Le ruban glisse donc
+     vers le bas à mesure que la ligne s'écarte de l'aplomb — sans quoi le
+     hakama du sankyo passait au-dessus du bassin en arc de cercle. Ce
+     glissement se relève sur les noeuds et non sur les tranches : une valeur
+     par tranche décalait deux voisines l'une par rapport à l'autre, et les
+     bords partaient en escalier. */
+  const hangAt = [];
+  for (let node = 0; node <= slices; node++) {
+    const before = Math.max(0, node - 1), after = Math.min(slices - 1, node);
+    const lying = (segmentLying(line, before) + segmentLying(line, after)) / 2;
+    hangAt.push(-halfWidth * lying * HAKAMA_HANG_SHARE);
+  }
+
+  for (let index = 0; index < slices; index++) {
+    const from = line[index], to = line[index + 1];
+    const alongX = to.x - from.x, alongY = to.y - from.y;
+    const length = Math.hypot(alongX, alongY);
+    if (length < 0.001) continue;
+    const alongScale = length / sliceHeight;
+    const acrossUnitX = -alongY / length, acrossUnitY = alongX / length;
+    /* Le glissement passe d'un noeud à l'autre au fil de la tranche : elle est
+       donc peinte en losange, et deux voisines se rejoignent bord à bord. */
+    const shear = (hangAt[index + 1] - hangAt[index]) / sliceHeight;
+    const sourceTop = Math.max(0, index * sliceHeight - overlap);
+    const sourceBottom = Math.min(image.naturalHeight, (index + 1) * sliceHeight + overlap);
+    context.save();
+    context.transform(acrossUnitX * acrossScale, acrossUnitY * acrossScale,
+      (alongX / length) * alongScale + acrossUnitX * acrossScale * shear,
+      (alongY / length) * alongScale + acrossUnitY * acrossScale * shear,
+      from.x, from.y);
+    context.drawImage(image, 0, sourceTop, image.naturalWidth, sourceBottom - sourceTop,
+      -halfWidth + hangAt[index], sourceTop - index * sliceHeight,
+      image.naturalWidth, sourceBottom - sourceTop);
+    context.restore();
+  }
+  return true;
+}
+
+/** À quel point un tronçon de la ligne de chute est couché : zéro d'aplomb,
+    un à l'horizontale. */
+function segmentLying(line, index) {
+  const alongX = line[index + 1].x - line[index].x;
+  const alongY = line[index + 1].y - line[index].y;
+  return alongX / (Math.hypot(alongX, alongY) || 1);
+}
+
 /** Flèche de la lame, en centimètres, comptée perpendiculairement.
     Deux causes : le retard de la pointe quand la lame accélère, et le
     choc qui la fait vibrer quand elle touche. */
@@ -2025,14 +2195,6 @@ function legPointAtHeight(hip, knee, ankle, height) {
   return pointAlong(knee, ankle, Math.max(0, Math.min(1, ratio)));
 }
 
-
-function drawHakamaSheet(skeleton) {
-  if (!pieceReady("hakama-pan")) return false;
-  const waist = { x: skeleton.root.x, y: skeleton.root.y + 6 };
-  const hem = { x: skeleton.root.x, y: HAKAMA_HEM_HEIGHT };
-  return drawPiece("hakama-pan", PIECE_ANCHORS.hakamaPanel.from, PIECE_ANCHORS.hakamaPanel.to,
-    waist, hem, { widthCentimetres: HAKAMA_WIDTH });
-}
 
 /** Les deux pans qui pendent de la ceinture, dessinés par-dessus les
     jambes : ce sont eux qui donnent son ampleur au hakama. */
@@ -2302,15 +2464,18 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
 
   if (solid) {
     if (isGameView()) {
-      drawGameLegVolume(far, false, skeleton.root.x);
+      drawGameLegVolume(far, false);
     } else {
       drawLimbVolume([far.hip, far.knee, far.foot.ankle], [7.5, 5.5, 4], farVolume());
     }
     drawFootVolume(far.foot, isGameView() ? GAME_VOLUME_FAR : farVolume());
   }
-  const singleSheet = isGameView() && pieceReady("hakama-pan");
-  if (showArmour && !singleSheet) drawHakamaLeg(far.hip, far.knee, farHem || far.foot.ankle, 90);
+  const ribbons = isGameView() && pieceReady("hakama-jambe");
+  if (showArmour && !ribbons) drawHakamaLeg(far.hip, far.knee, farHem || far.foot.ankle, 90);
   drawLeg(far.hip, far.knee, far.foot, farInk(), 10);
+  /* Le hakama se porte par-dessus la jambe, trait compris : peint avant, le
+     contour de la cuisse se lisait au travers du tissu. */
+  if (showArmour && ribbons) drawHakamaRibbon(skeleton, far, false, farHem);
 
   if (solid) {
     drawLimbVolume([far.shoulder, far.elbow, far.wrist, far.grip], [5.5, 4, 3.2, 3.6],
@@ -2336,17 +2501,17 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
 
   if (solid) {
     if (isGameView()) {
-      drawGameLegVolume(near, true, skeleton.root.x);
+      drawGameLegVolume(near, true);
     } else {
       drawLimbVolume([near.hip, near.knee, near.foot.ankle], [7.5, 5.5, 4], nearVolume());
     }
     drawFootVolume(near.foot, isGameView() ? GAME_VOLUME_NEAR : nearVolume());
   }
-  if (showArmour && !singleSheet) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
+  if (showArmour && !ribbons) drawHakamaLeg(near.hip, near.knee, nearHem || near.foot.ankle, 100);
   /* Le pied proche passe avant la jupe, comme le pied éloigné : peint après,
      il se posait par-dessus le tissu au lieu d'en sortir. */
   drawLeg(near.hip, near.knee, near.foot, nearInk(), 18);
-  if (singleSheet) drawHakamaSheet(skeleton);
+  if (showArmour && ribbons) drawHakamaRibbon(skeleton, near, true, nearHem);
   else if (showArmour && cloth) drawHakamaPanels(skeleton, cloth);
 
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
