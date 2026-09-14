@@ -91,6 +91,13 @@
        écrire : l'échelle est uniforme, la vignette garde ses proportions, et
        sa taille suit la hauteur du bassin.
 
+       Les cinq vignettes ont eu leur bord avant poussé de 8 % de leur largeur,
+       nul sur la ceinture et plein à partir du tiers de la hauteur : c'est le
+       ventre du vêtement qui gagne du terrain devant, là où passe le genou.
+       L'étirement partant du bord arrière, rien n'a bougé derrière le kendoka,
+       et seuls les `anchorX` ont été divisés par 1,08 — la ceinture est restée
+       sur les mêmes pixels, c'est l'image qui s'est élargie sous elle.
+
        `hemLift` : le bas du vêtement ne touche pas le sol quand les pieds le
        quittent. Il suit le pied le plus bas, à cette part-là. */
     "beltRise": 7,
@@ -99,22 +106,22 @@
       /* Accroupi : une seule image, l'écartement maximal, tissu répandu. */
       "squat": {
         "piece": "hakama-sankyo", "belowHipHeight": 72,
-        "anchorX": 0.37, "waistY": 0.02
+        "anchorX": 0.342, "waistY": 0.02
       },
       /* En l'air : le genou droit est propulsé devant, l'ourlet de cette
          jambe-là remonte et découvre le mollet, l'autre traîne derrière. */
       "airborne": {
         "piece": "hakama-propulsion", "aboveFootLift": 12,
-        "anchorX": 0.51, "waistY": 0.05
+        "anchorX": 0.472, "waistY": 0.05
       },
       /* Debout, l'échelle se lit sur l'écart des pieds, et non sur celui des
          genoux : entre une garde et un zanshin les genoux ne bougent que de
          deux centimètres quand les appuis s'écartent de dix, et c'est l'ourlet
          qu'on voit. La dernière marche n'a pas de borne. */
       "ladder": [
-        { "piece": "hakama-garde", "upToFootSpread": 33, "anchorX": 0.50, "waistY": 0.02 },
-        { "piece": "hakama-ouvert", "upToFootSpread": 52, "anchorX": 0.47, "waistY": 0.04 },
-        { "piece": "hakama-fente", "anchorX": 0.46, "waistY": 0.04 }
+        { "piece": "hakama-garde", "upToFootSpread": 33, "anchorX": 0.463, "waistY": 0.02 },
+        { "piece": "hakama-ouvert", "upToFootSpread": 52, "anchorX": 0.435, "waistY": 0.04 },
+        { "piece": "hakama-fente", "anchorX": 0.426, "waistY": 0.04 }
       ]
     },
     "panelList": [
