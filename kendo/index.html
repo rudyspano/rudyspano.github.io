@@ -1970,7 +1970,7 @@ function drawHakamaTriangle(image, sourceList, targetList) {
   context.restore();
 }
 
-function drawPropulsionHakama(skeleton, sprite) {
+function drawPropulsionHakama(skeleton, sprite, foregroundOnly = false) {
   const image = pieceImages[sprite.piece];
   const columnList = [0, 0.50, 0.54, 0.58, 0.62, 0.66, 0.70, 0.74, 0.78, 0.82, 1];
   const rowList = [0, 0.14, 0.24, 0.34, 0.44, 1];
@@ -1980,6 +1980,7 @@ function drawPropulsionHakama(skeleton, sprite) {
   })));
   for (let row = 0; row < rowList.length - 1; row++) {
     for (let column = 0; column < columnList.length - 1; column++) {
+      if (foregroundOnly && columnList[column] < 0.50) continue;
       const topLeft = vertexList[row][column], topRight = vertexList[row][column + 1];
       const bottomLeft = vertexList[row + 1][column], bottomRight = vertexList[row + 1][column + 1];
       for (const triangle of [[topLeft, topRight, bottomRight], [topLeft, bottomRight, bottomLeft]]) {
@@ -2443,6 +2444,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawZekken(skeleton);
+  // The raised right thigh overlaps the waist flaps when viewed from the right.
+  if (showArmour && drawnHakama && nearSideName === "right"
+      && hakamaSprite(skeleton).piece === "hakama-propulsion") {
+    drawPropulsionHakama(skeleton, hakamaSprite(skeleton), true);
+  }
   if (showArmour) drawDo(skeleton);
   if (showArmour) drawDoCords(skeleton);
   if (showArmour) drawMenCords(skeleton);
