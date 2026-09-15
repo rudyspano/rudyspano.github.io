@@ -1906,6 +1906,7 @@ function hakamaSprite(skeleton) {
 function drawHakamaSprite(skeleton) {
   const sprite = hakamaSprite(skeleton);
   if (!pieceReady(sprite.piece)) return false;
+  if (sprite.piece === "hakama-propulsion") return drawPropulsionHakama(skeleton, sprite);
   const right = limbSet(skeleton, "right"), left = limbSet(skeleton, "left");
   const belt = { x: skeleton.root.x, y: skeleton.root.y + HAKAMA_BELT_RISE };
   /* Le bas du vêtement ne reste pas au sol quand les pieds le quittent : il
@@ -1915,6 +1916,78 @@ function drawHakamaSprite(skeleton) {
     y: Math.min(right.foot.ankle.y, left.foot.ankle.y) * HAKAMA_HEM_LIFT
   };
   return drawPiece(sprite.piece, [sprite.anchorX, sprite.waistY], [sprite.anchorX, 1], belt, hem);
+}
+
+/** Fit the painted forward leg to the knee and ankle, keeping the rear panel fixed. */
+function propulsionHakamaPoint(skeleton, sprite, horizontal, vertical) {
+  const image = pieceImages[sprite.piece];
+  const right = limbSet(skeleton, "right"), left = limbSet(skeleton, "left");
+  const beltHeight = skeleton.root.y + HAKAMA_BELT_RISE;
+  const hemHeight = Math.min(right.foot.ankle.y, left.foot.ankle.y) * HAKAMA_HEM_LIFT;
+  const height = (beltHeight - hemHeight) / (1 - sprite.waistY);
+  const width = height * image.naturalWidth / image.naturalHeight;
+  const originalPoint = (x, y) => ({
+    x: skeleton.root.x + (x - sprite.anchorX) * width,
+    y: beltHeight - (y - sprite.waistY) * height
+  });
+  const point = originalPoint(horizontal, vertical);
+  const kneeAnchor = originalPoint(0.80, 0.14);
+  const ankleAnchor = originalPoint(0.82, 0.44);
+  const kneeOffset = { x: right.knee.x - kneeAnchor.x, y: right.knee.y - kneeAnchor.y };
+  const ankleOffset = {
+    x: right.foot.ankle.x - ankleAnchor.x,
+    y: right.foot.ankle.y + 3 - ankleAnchor.y
+  };
+  const legProgress = Math.max(0, Math.min(1, (vertical - 0.14) / 0.30));
+  const forwardWeight = Math.max(0, Math.min(1, (horizontal - 0.50) / 0.28));
+  const blend = forwardWeight * forwardWeight * (3 - 2 * forwardWeight);
+  return {
+    x: point.x + blend * (kneeOffset.x + (ankleOffset.x - kneeOffset.x) * legProgress),
+    y: point.y + blend * (kneeOffset.y + (ankleOffset.y - kneeOffset.y) * legProgress)
+  };
+}
+
+/** Map one texture triangle into world space. */
+function drawHakamaTriangle(image, sourceList, targetList) {
+  const [source, second, third] = sourceList;
+  const [target, next, last] = targetList;
+  const horizontal = second.x - source.x, vertical = second.y - source.y;
+  const otherHorizontal = third.x - source.x, otherVertical = third.y - source.y;
+  const determinant = horizontal * otherVertical - otherHorizontal * vertical;
+  const a = ((next.x - target.x) * otherVertical - (last.x - target.x) * vertical) / determinant;
+  const b = ((next.y - target.y) * otherVertical - (last.y - target.y) * vertical) / determinant;
+  const c = ((last.x - target.x) * horizontal - (next.x - target.x) * otherHorizontal) / determinant;
+  const d = ((last.y - target.y) * horizontal - (next.y - target.y) * otherHorizontal) / determinant;
+  context.save();
+  context.beginPath();
+  targetList.forEach((point, index) => index === 0
+    ? context.moveTo(point.x, point.y) : context.lineTo(point.x, point.y));
+  context.closePath();
+  context.clip();
+  context.transform(a, b, c, d, target.x - a * source.x - c * source.y,
+    target.y - b * source.x - d * source.y);
+  context.drawImage(image, 0, 0);
+  context.restore();
+}
+
+function drawPropulsionHakama(skeleton, sprite) {
+  const image = pieceImages[sprite.piece];
+  const columnList = [0, 0.50, 0.54, 0.58, 0.62, 0.66, 0.70, 0.74, 0.78, 0.82, 1];
+  const rowList = [0, 0.14, 0.24, 0.34, 0.44, 1];
+  const vertexList = rowList.map(vertical => columnList.map(horizontal => ({
+    source: { x: horizontal * image.naturalWidth, y: vertical * image.naturalHeight },
+    target: propulsionHakamaPoint(skeleton, sprite, horizontal, vertical)
+  })));
+  for (let row = 0; row < rowList.length - 1; row++) {
+    for (let column = 0; column < columnList.length - 1; column++) {
+      const topLeft = vertexList[row][column], topRight = vertexList[row][column + 1];
+      const bottomLeft = vertexList[row + 1][column], bottomRight = vertexList[row + 1][column + 1];
+      for (const triangle of [[topLeft, topRight, bottomRight], [topLeft, bottomRight, bottomLeft]]) {
+        drawHakamaTriangle(image, triangle.map(vertex => vertex.source), triangle.map(vertex => vertex.target));
+      }
+    }
+  }
+  return true;
 }
 
 /** Flèche de la lame, en centimètres, comptée perpendiculairement.
