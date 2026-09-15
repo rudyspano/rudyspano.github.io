@@ -1902,12 +1902,41 @@ function hakamaSprite(skeleton) {
   return ladder[ladder.length - 1];
 }
 
+const hakamaTintCache = {};
+
+/** Bring neutral rear-panel shadows into the same indigo palette, preserving folds and alpha. */
+function hakamaClothImage(piece) {
+  const original = pieceImages[piece];
+  if (piece !== "hakama-fente" && piece !== "hakama-ouvert") return original;
+  if (hakamaTintCache[piece]) return hakamaTintCache[piece];
+  const tinted = document.createElement("canvas");
+  tinted.width = tinted.naturalWidth = original.naturalWidth;
+  tinted.height = tinted.naturalHeight = original.naturalHeight;
+  const tintContext = tinted.getContext("2d");
+  tintContext.drawImage(original, 0, 0);
+  const pixels = tintContext.getImageData(0, 0, tinted.width, tinted.height);
+  for (let index = 0; index < pixels.data.length; index += 4) {
+    const horizontal = (index / 4 % tinted.width) / tinted.width;
+    const red = pixels.data[index], green = pixels.data[index + 1], blue = pixels.data[index + 2];
+    const shade = (red + green + blue) / 3;
+    const weight = Math.max(0, Math.min(1, (0.54 - horizontal) / 0.10))
+      * Math.max(0, Math.min(1, (75 - shade) / 20))
+      * Math.max(0, Math.min(1, (22 - (blue - red)) / 12));
+    pixels.data[index] = red + (shade * 0.8 + 8 - red) * weight;
+    pixels.data[index + 1] = green + (shade * 0.9 + 15 - green) * weight;
+    pixels.data[index + 2] = blue + (shade + 32 - blue) * weight;
+  }
+  tintContext.putImageData(pixels, 0, 0);
+  hakamaTintCache[piece] = tinted;
+  return tinted;
+}
+
 function drawHakamaSprite(skeleton, foregroundOnly = false) {
   const sprite = hakamaSprite(skeleton);
   if (!pieceReady(sprite.piece)) return false;
   if (sprite.piece === "hakama-propulsion") return drawPropulsionHakama(skeleton, sprite, foregroundOnly);
   if (sprite.piece !== "hakama-sankyo") {
-    const image = pieceImages[sprite.piece];
+    const image = hakamaClothImage(sprite.piece);
     const ankleAnchorList = {
       "hakama-garde": [[0.25, 0.97], [0.75, 0.97]],
       "hakama-ouvert": [[0.18, 0.88], [0.70, 0.97]],
@@ -2486,6 +2515,8 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   if (showArmour) drawZekken(skeleton);
   // The raised right thigh overlaps the waist flaps when viewed from the right.
   if (drawnHakama && nearSideName === "right"
+      && skeleton.rightKnee.y > skeleton.root.y - 34
+      && skeleton.rightFoot.ankle.y > 10
       && hakamaSprite(skeleton).piece !== "hakama-sankyo") {
     drawHakamaSprite(skeleton, true);
   }
