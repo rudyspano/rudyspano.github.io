@@ -2063,8 +2063,11 @@ function drawHakamaTriangle(image, sourceList, targetList, imageClip) {
       const fullnessAt = row => Math.pow(Math.sin(Math.PI * row / 32), 2)
         * imageClip.frontFullness * image.naturalWidth;
       // Cancel the image shear so the rear edge hangs vertically in world space.
-      const rearEdgeAt = row => middle - (middle + fullnessAt(16)) * imageClip.rearFullness
-        - (Math.abs(a) > 0.000001 ? c / a : 0) * (row - 16) * stripHeight;
+      const rearEdgeAt = row => {
+        const seatFullness = middle * 0.40 * Math.exp(-Math.pow((row / 32 - 0.30) / 0.25, 2));
+        return middle - (middle + fullnessAt(16)) * imageClip.rearFullness - seatFullness
+          - (Math.abs(a) > 0.000001 ? c / a : 0) * (row - 16) * stripHeight;
+      };
       const source = [{ x: middle, y: top }, { x: image.naturalWidth, y: top },
         { x: image.naturalWidth, y: bottom }, { x: middle, y: bottom }];
       const target = [{ x: rearEdgeAt(strip), y: top }, { x: image.naturalWidth + fullnessAt(strip), y: top },
