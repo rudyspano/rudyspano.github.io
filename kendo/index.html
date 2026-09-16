@@ -1952,7 +1952,8 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     const anchorList = [[sprite.anchorX, sprite.waistY],
       [rearAnchor[0] - 0.12 * closedStance, rearAnchor[1]],
       ankleAnchorList[sprite.piece][1]];
-    const spread = Math.max(18, right.x - left.x);
+    const standingAllowance = sprite.piece === "hakama-ouvert" ? 3 * closedStance : 0;
+    const spread = Math.max(18, right.x - left.x) + standingAllowance;
     const middle = (left.x + right.x) / 2;
     drawHakamaTriangle(image, anchorList.map(anchor => ({
       x: anchor[0] * image.naturalWidth, y: anchor[1] * image.naturalHeight
