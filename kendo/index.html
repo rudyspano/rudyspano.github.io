@@ -353,7 +353,7 @@ let MENDARE_BAND_TOP, MEN_SETBACK_CENTIMETRES, ARM_OVER_MENDARE_DEGREES, DO_TOP_
 
 /* Hakama */
 let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_PANELS,
-    HAKAMA_BELT_RISE, HAKAMA_HEM_LIFT, HAKAMA_SPRITES;
+    HAKAMA_BELT_RISE, HAKAMA_HEM_LIFT, HAKAMA_SPRITES, HAKAMA_RENDERING;
 
 /* Retour à distance */
 let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES, RETURN_LOW_HIP, RETURN_MID_HIP,
@@ -440,6 +440,7 @@ function applyRigData(rig) {
   HAKAMA_BELT_RISE = rig.hakama.beltRise;
   HAKAMA_HEM_LIFT = rig.hakama.hemLift;
   HAKAMA_SPRITES = rig.hakama.sprites;
+  HAKAMA_RENDERING = rig.hakama.rendering;
 
   /* Retour à distance */
   RETURN_FRAMES_PER_HALF_STEP = rig.returnStep.framesPerHalfStep;
@@ -1955,7 +1956,7 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     const spread = Math.max(18, right.x - left.x);
     const middle = (left.x + right.x) / 2;
     const levelHem = sprite.piece === "hakama-ouvert";
-    const hemHeight = Math.max(1, Math.min(left.y, right.y) - 3);
+    const hemHeight = Math.max(1, Math.min(left.y, right.y) + HAKAMA_RENDERING.ankleOffset);
     context.save();
     if (levelHem) {
       context.beginPath();
@@ -1966,13 +1967,13 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       x: anchor[0] * image.naturalWidth, y: anchor[1] * image.naturalHeight
     })), [
       { x: skeleton.root.x, y: skeleton.root.y + HAKAMA_BELT_RISE },
-      { x: middle - spread / 2, y: levelHem ? hemHeight : Math.max(1, left.y - 3) },
-      { x: middle + spread / 2, y: levelHem ? hemHeight : Math.max(1, right.y - 3) }
+      { x: middle - spread / 2, y: levelHem ? hemHeight : Math.max(1, left.y + HAKAMA_RENDERING.ankleOffset) },
+      { x: middle + spread / 2, y: levelHem ? hemHeight : Math.max(1, right.y + HAKAMA_RENDERING.ankleOffset) }
     ], { left: foregroundOnly ? 0.50 : 0, right: sprite.piece === "hakama-fente" ? 0.90 : 1,
-      frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0,
-      rearFullness: sprite.piece === "hakama-ouvert" ? 0.21 : 0,
-      rearExtension: sprite.piece === "hakama-ouvert" ? 12 : 0,
-      frontExtension: sprite.piece === "hakama-ouvert" ? 13 : 0 });
+      frontFullness: sprite.piece === "hakama-ouvert" ? HAKAMA_RENDERING.frontFullness * closedStance : 0,
+      rearFullness: sprite.piece === "hakama-ouvert" ? HAKAMA_RENDERING.rearFullness : 0,
+      rearExtension: sprite.piece === "hakama-ouvert" ? HAKAMA_RENDERING.rearExtension : 0,
+      frontExtension: sprite.piece === "hakama-ouvert" ? HAKAMA_RENDERING.frontExtension : 0 });
     context.restore();
     return true;
   }
@@ -2005,7 +2006,7 @@ function propulsionHakamaPoint(skeleton, sprite, horizontal, vertical) {
   const kneeOffset = { x: right.knee.x - kneeAnchor.x, y: right.knee.y - kneeAnchor.y };
   const ankleOffset = {
     x: right.foot.ankle.x - ankleAnchor.x,
-    y: Math.max(1, right.foot.ankle.y - 3) - ankleAnchor.y
+    y: Math.max(1, right.foot.ankle.y + HAKAMA_RENDERING.ankleOffset) - ankleAnchor.y
   };
   const legProgress = Math.max(0, Math.min(1, (vertical - 0.14) / 0.30));
   const forwardWeight = Math.max(0, Math.min(1, (horizontal - 0.50) / 0.28));
@@ -2018,7 +2019,7 @@ function propulsionHakamaPoint(skeleton, sprite, horizontal, vertical) {
     x: point.x + blend * (kneeOffset.x + (ankleOffset.x - kneeOffset.x) * legProgress)
       + rearBlend * (left.foot.ankle.x - rearAnchor.x),
     y: point.y + blend * (kneeOffset.y + (ankleOffset.y - kneeOffset.y) * legProgress)
-      + rearBlend * (Math.max(1, left.foot.ankle.y - 3) - rearAnchor.y)
+      + rearBlend * (Math.max(1, left.foot.ankle.y + HAKAMA_RENDERING.ankleOffset) - rearAnchor.y)
   };
 }
 
