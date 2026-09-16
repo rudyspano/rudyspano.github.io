@@ -1896,6 +1896,9 @@ function hakamaSprite(skeleton) {
 
   const footSpread = Math.abs(right.foot.ankle.x - left.foot.ankle.x);
   const ladder = HAKAMA_SPRITES.ladder;
+  // Keep the staggered right-leg silhouette in guard, as in the recovery pose.
+  const standingSprite = ladder.find(sprite => sprite.piece === "hakama-ouvert");
+  if (standingSprite && footSpread < standingSprite.upToFootSpread) return standingSprite;
   for (const rung of ladder) {
     if (rung.upToFootSpread === undefined || footSpread < rung.upToFootSpread) return rung;
   }
