@@ -1972,7 +1972,7 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0,
       rearFullness: sprite.piece === "hakama-ouvert" ? 0.21 : 0,
       rearExtension: sprite.piece === "hakama-ouvert" ? 12 : 0,
-      frontExtension: sprite.piece === "hakama-ouvert" ? 9 : 0 });
+      frontExtension: sprite.piece === "hakama-ouvert" ? 13 : 0 });
     context.restore();
     return true;
   }
@@ -2567,7 +2567,8 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   if (drawnHakama && nearSideName === "right"
       && skeleton.rightKnee.y > skeleton.root.y - 34
       && skeleton.rightFoot.ankle.y > 10
-      && hakamaSprite(skeleton).piece !== "hakama-sankyo") {
+      && hakamaSprite(skeleton).piece !== "hakama-sankyo"
+      && hakamaSprite(skeleton).piece !== "hakama-ouvert") {
     drawHakamaSprite(skeleton, true);
   }
   if (showArmour) drawDo(skeleton);
