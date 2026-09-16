@@ -1971,8 +1971,8 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     ], { left: foregroundOnly ? 0.50 : 0, right: sprite.piece === "hakama-fente" ? 0.90 : 1,
       frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0,
       rearFullness: sprite.piece === "hakama-ouvert" ? 0.21 : 0,
-      rearExtension: sprite.piece === "hakama-ouvert" ? 7 : 0,
-      frontExtension: sprite.piece === "hakama-ouvert" ? 2.5 : 0 });
+      rearExtension: sprite.piece === "hakama-ouvert" ? 12 : 0,
+      frontExtension: sprite.piece === "hakama-ouvert" ? 5 : 0 });
     context.restore();
     return true;
   }
@@ -2070,7 +2070,7 @@ function drawHakamaTriangle(image, sourceList, targetList, imageClip) {
       // Cancel the image shear so the rear edge hangs vertically in world space.
       const rearEdgeAt = row => middle - (middle + fullnessAt(16)) * imageClip.rearFullness
         - (Math.abs(a) > 0.000001 ? c / a : 0) * (row - 16) * stripHeight
-        - extensionAt(row, imageClip.rearExtension * (0.4 + 0.6 * row / 32));
+        - extensionAt(row, imageClip.rearExtension);
       const frontEdgeAt = row => image.naturalWidth + fullnessAt(row)
         + extensionAt(row, imageClip.frontExtension);
       const source = [{ x: middle, y: top }, { x: image.naturalWidth, y: top },
