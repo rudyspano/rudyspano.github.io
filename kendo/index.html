@@ -1942,7 +1942,7 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     const image = hakamaClothImage(sprite.piece);
     const ankleAnchorList = {
       "hakama-garde": [[0.25, 0.97], [0.75, 0.97]],
-      "hakama-ouvert": [[0.18, 0.88], [0.70, 0.97]],
+      "hakama-ouvert": [[0.18, 0.97], [0.70, 0.97]],
       "hakama-fente": [[0.18, 0.87], [0.65, 0.96]]
     };
     const left = skeleton.leftFoot.ankle, right = skeleton.rightFoot.ankle;
@@ -1954,14 +1954,23 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       ankleAnchorList[sprite.piece][1]];
     const spread = Math.max(18, right.x - left.x);
     const middle = (left.x + right.x) / 2;
+    const levelHem = sprite.piece === "hakama-ouvert";
+    const hemHeight = Math.min(left.y, right.y) + 4;
+    context.save();
+    if (levelHem) {
+      context.beginPath();
+      context.rect(skeleton.root.x - 300, hemHeight, 600, 400);
+      context.clip();
+    }
     drawHakamaTriangle(image, anchorList.map(anchor => ({
       x: anchor[0] * image.naturalWidth, y: anchor[1] * image.naturalHeight
     })), [
       { x: skeleton.root.x, y: skeleton.root.y + HAKAMA_BELT_RISE },
-      { x: middle - spread / 2, y: left.y + 3 },
-      { x: middle + spread / 2, y: right.y + 3 }
+      { x: middle - spread / 2, y: levelHem ? hemHeight : left.y + 3 },
+      { x: middle + spread / 2, y: levelHem ? hemHeight : right.y + 3 }
     ], { left: foregroundOnly ? 0.50 : 0, right: sprite.piece === "hakama-fente" ? 0.90 : 1,
       frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0 });
+    context.restore();
     return true;
   }
   const right = limbSet(skeleton, "right"), left = limbSet(skeleton, "left");
