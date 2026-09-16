@@ -1969,7 +1969,8 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       { x: middle - spread / 2, y: levelHem ? hemHeight : left.y + 3 },
       { x: middle + spread / 2, y: levelHem ? hemHeight : right.y + 3 }
     ], { left: foregroundOnly ? 0.50 : 0, right: sprite.piece === "hakama-fente" ? 0.90 : 1,
-      frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0 });
+      frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0,
+      rearFullness: sprite.piece === "hakama-ouvert" ? 0.10 : 0 });
     context.restore();
     return true;
   }
@@ -2052,7 +2053,7 @@ function drawHakamaTriangle(image, sourceList, targetList, imageClip) {
       (imageClip.right - imageClip.left + (imageClip.frontFullness || 0)) * image.naturalWidth, image.naturalHeight);
     context.clip();
   }
-  if (imageClip && imageClip.frontFullness) {
+  if (imageClip && (imageClip.frontFullness || imageClip.rearFullness)) {
     const middle = image.naturalWidth * 0.5;
     const stripHeight = image.naturalHeight / 32;
     context.drawImage(image, 0, 0, middle, image.naturalHeight, 0, 0, middle, image.naturalHeight);
@@ -2061,10 +2062,12 @@ function drawHakamaTriangle(image, sourceList, targetList, imageClip) {
       const bottom = (strip + 1) * stripHeight;
       const fullnessAt = row => Math.pow(Math.sin(Math.PI * row / 32), 2)
         * imageClip.frontFullness * image.naturalWidth;
+      const rearEdgeAt = row => middle - (middle + fullnessAt(row))
+        * imageClip.rearFullness * Math.min(1, row / 6);
       const source = [{ x: middle, y: top }, { x: image.naturalWidth, y: top },
         { x: image.naturalWidth, y: bottom }, { x: middle, y: bottom }];
-      const target = [{ x: middle, y: top }, { x: image.naturalWidth + fullnessAt(strip), y: top },
-        { x: image.naturalWidth + fullnessAt(strip + 1), y: bottom }, { x: middle, y: bottom }];
+      const target = [{ x: rearEdgeAt(strip), y: top }, { x: image.naturalWidth + fullnessAt(strip), y: top },
+        { x: image.naturalWidth + fullnessAt(strip + 1), y: bottom }, { x: rearEdgeAt(strip + 1), y: bottom }];
       for (const indexList of [[0, 1, 2], [0, 2, 3]]) {
         drawHakamaTriangle(image, indexList.map(index => source[index]), indexList.map(index => target[index]));
       }
