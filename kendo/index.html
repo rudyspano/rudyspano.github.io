@@ -1972,7 +1972,7 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       frontFullness: sprite.piece === "hakama-ouvert" ? 0.14 * closedStance : 0,
       rearFullness: sprite.piece === "hakama-ouvert" ? 0.21 : 0,
       rearExtension: sprite.piece === "hakama-ouvert" ? 12 : 0,
-      frontExtension: sprite.piece === "hakama-ouvert" ? 5 : 0 });
+      frontExtension: sprite.piece === "hakama-ouvert" ? 9 : 0 });
     context.restore();
     return true;
   }
@@ -2072,7 +2072,7 @@ function drawHakamaTriangle(image, sourceList, targetList, imageClip) {
         - (Math.abs(a) > 0.000001 ? c / a : 0) * (row - 16) * stripHeight
         - extensionAt(row, imageClip.rearExtension);
       const frontEdgeAt = row => image.naturalWidth + fullnessAt(row)
-        + extensionAt(row, imageClip.frontExtension);
+        + extensionAt(Math.min(32, row * 2), imageClip.frontExtension);
       const source = [{ x: middle, y: top }, { x: image.naturalWidth, y: top },
         { x: image.naturalWidth, y: bottom }, { x: middle, y: bottom }];
       const target = [{ x: rearEdgeAt(strip), y: top }, { x: frontEdgeAt(strip), y: top },
