@@ -347,7 +347,8 @@
           "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
           "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
           "rightFootDegrees": -20, "leftAnkleX": -8, "leftAnkleY": 10,
-          "leftFootDegrees": -20, "gripX": 30, "gripY": 62,
+          "leftFootDegrees": -20, "leftKneeOutward": 1,
+          "gripX": 30, "gripY": 62,
           "shinaiDegrees": -338, "leftElbowBias": -8, "rightElbowBias": -12,
           "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
           "shinaiBehindBody": 0

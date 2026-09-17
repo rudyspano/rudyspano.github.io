@@ -1016,7 +1016,8 @@ function solveSkeleton(pose) {
 
   const leftAnkle = { x: pose.leftAnkleX, y: pose.leftAnkleY };
   const rightAnkle = { x: pose.rightAnkleX, y: pose.rightAnkleY };
-  const leftKnee = solveTwoBoneJoint(leftHip, leftAnkle, THIGH_LENGTH, SHIN_LENGTH, KNEE_BEND_SIGN);
+  const leftKnee = solveTwoBoneJoint(leftHip, leftAnkle, THIGH_LENGTH, SHIN_LENGTH,
+    KNEE_BEND_SIGN * (1 - 2 * (pose.leftKneeOutward || 0)));
   const rightKnee = solveTwoBoneJoint(rightHip, rightAnkle, THIGH_LENGTH, SHIN_LENGTH, KNEE_BEND_SIGN);
 
   return {
@@ -3229,6 +3230,7 @@ const CEREMONY_POSE_FIELDS = [
   ["rightAnkleX", "pied D x"], ["rightAnkleY", "pied D y"],
   ["rightFootDegrees", "pied D °"], ["leftAnkleX", "pied G x"],
   ["leftAnkleY", "pied G y"], ["leftFootDegrees", "pied G °"],
+  ["leftKneeOutward", "genou G ouvert"],
   ["gripX", "poing x"], ["gripY", "poing y"],
   ["shinaiDegrees", "shinai °"], ["leftElbowBias", "coude G"],
   ["rightElbowBias", "coude D"], ["rightHandFree", "main D libre"],
