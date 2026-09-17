@@ -356,8 +356,9 @@ let HAKAMA_GRAVITY, HAKAMA_DAMPING, HAKAMA_STIFFNESS, HAKAMA_SUBSTEPS, HAKAMA_PA
     HAKAMA_BELT_RISE, HAKAMA_HEM_LIFT, HAKAMA_SPRITES, HAKAMA_RENDERING;
 
 /* Retour à distance */
-let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES, RETURN_LOW_HIP, RETURN_MID_HIP,
-    KAMAE_HIP_HEIGHT, RETURN_MAXIMUM_STEP, AIM_FOLLOW;
+let RETURN_FRAMES_PER_HALF_STEP, RETURN_SETTLE_FRAMES,
+    KAMAE_HIP_HEIGHT, RETURN_MAXIMUM_STEP, MOVEMENT_STEP_LENGTH, MOVEMENT_HIP_DROP,
+    MOVEMENT_FOLLOW_FOOT_SPEED_RATIO, AIM_FOLLOW;
 
 /* Cadrage de la vue jeu */
 let GAME_ACTION_SPAN, GAME_ACTION_CENTRE, LATERAL_DROP_PER_CM, LATERAL_SCALE_PER_CM;
@@ -445,10 +446,11 @@ function applyRigData(rig) {
   /* Retour à distance */
   RETURN_FRAMES_PER_HALF_STEP = rig.returnStep.framesPerHalfStep;
   RETURN_SETTLE_FRAMES = rig.returnStep.settleFrames;
-  RETURN_LOW_HIP = rig.returnStep.lowHip;
-  RETURN_MID_HIP = rig.returnStep.midHip;
   KAMAE_HIP_HEIGHT = rig.returnStep.kamaeHipHeight;
   RETURN_MAXIMUM_STEP = rig.returnStep.maximumStepLength;
+  MOVEMENT_STEP_LENGTH = rig.movement.stepLength;
+  MOVEMENT_HIP_DROP = rig.movement.hipDrop;
+  MOVEMENT_FOLLOW_FOOT_SPEED_RATIO = rig.movement.followFootSpeedRatio;
   AIM_FOLLOW = rig.movement.aimFollow;
 
   /* Cadrage de la vue jeu */
@@ -719,27 +721,45 @@ function guardPose(rootX, rightAnkleX, leftAnkleX, hipHeight, reference) {
   });
 }
 
-/** Un pas arrière : le pied arrière part, le bassin le suit de moitié,
-    puis le pied avant rejoint et le bassin se relève. */
+/** Le cycle exact du déplacement manuel, lu sur la distance parcourue. */
+function movementCycleOffset(travelled) {
+  const length = MOVEMENT_STEP_LENGTH;
+  const ratio = MOVEMENT_FOLLOW_FOOT_SPEED_RATIO;
+  const leadShare = ratio / (1 + ratio);
+  const forward = travelled >= 0 ? 1 : -1;
+  const cycles = Math.abs(travelled) / length;
+  const whole = Math.floor(cycles);
+  const phase = cycles - whole;
+  const lead = (whole + Math.max(0, Math.min(1, phase / leadShare))) * length * forward;
+  const follow = (whole + Math.max(0, Math.min(1,
+    (phase - leadShare) / (1 - leadShare)))) * length * forward;
+  return {
+    rootX: travelled,
+    rootY: -MOVEMENT_HIP_DROP * Math.sin(Math.PI * phase),
+    gripX: travelled,
+    rightAnkleX: forward > 0 ? lead : follow,
+    leftAnkleX: forward > 0 ? follow : lead
+  };
+}
+
+/** Le retour échantillonne à chaque frame le cycle du déplacement manuel. */
 function buildBackwardStep(startRootX, startRightAnkleX, startLeftAnkleX, travel, reference) {
   const steps = Math.max(1, Math.ceil(Math.abs(travel) / RETURN_MAXIMUM_STEP));
-  const stepLength = travel / steps;
-  const half = RETURN_FRAMES_PER_HALF_STEP;
-  const sequence = [
-    { frame: 0, easing: "easeInOutSine",
-      pose: guardPose(startRootX, startRightAnkleX, startLeftAnkleX, KAMAE_HIP_HEIGHT, reference) }
-  ];
-  for (let step = 0; step < steps; step++) {
-    const taken = -step * stepLength;
-    const next = taken - stepLength;
-    sequence.push({ frame: step * half * 2 + half, easing: "easeInOutSine",
-      pose: guardPose(startRootX + taken - stepLength / 2, startRightAnkleX + taken,
-                      startLeftAnkleX + next, RETURN_LOW_HIP, reference) });
-    sequence.push({ frame: (step + 1) * half * 2, easing: "easeInOutSine",
-      pose: guardPose(startRootX + next, startRightAnkleX + next, startLeftAnkleX + next,
-                      RETURN_MID_HIP, reference) });
+  const walkingFrames = steps * RETURN_FRAMES_PER_HALF_STEP * 2;
+  const sequence = [];
+  for (let frame = 0; frame <= walkingFrames; frame++) {
+    const progress = easingFunctions.easeInOutSine(frame / walkingFrames);
+    const offset = movementCycleOffset(-travel * progress);
+    const pose = guardPose(startRootX, startRightAnkleX, startLeftAnkleX,
+      KAMAE_HIP_HEIGHT, reference);
+    pose.rootX += offset.rootX;
+    pose.rootY += offset.rootY;
+    pose.gripX += offset.gripX;
+    pose.rightAnkleX += offset.rightAnkleX;
+    pose.leftAnkleX += offset.leftAnkleX;
+    sequence.push({ frame, easing: "linear", pose });
   }
-  sequence.push({ frame: steps * half * 2 + RETURN_SETTLE_FRAMES, easing: "linear",
+  sequence.push({ frame: walkingFrames + RETURN_SETTLE_FRAMES, easing: "linear",
     pose: guardPose(startRootX - travel, startRightAnkleX - travel, startLeftAnkleX - travel,
                     KAMAE_HIP_HEIGHT, reference) });
   return sequence;
@@ -2690,44 +2710,15 @@ function ceremonyWalked(seconds) {
   return (ceremonySettings.openingGap - ceremonySeparation(seconds)) / 2;
 }
 
-/* La marche d'approche : autant de pas que les données en demandent, pied droit
-   d'abord, les pieds se dépassant l'un l'autre. Ils se croisent comme en
-   ayumi-ashi, mais ne quittent jamais le sol — un kendoka ne lève pas les pieds,
-   il les glisse, et cela vaut pendant la cérémonie comme pendant le combat.
-
-   Tout est rendu en décalages sur la pose de l'étape, dans le repère du kendoka :
-   le déplacement du corps est porté ailleurs, donc ici un pied posé recule
-   exactement à l'allure dont le corps avance. C'est ce qui le fait paraître
-   posé. */
-function ceremonyStepOffsets(covered, distance, steps) {
-  const offset = { rightAnkleX: 0, leftAnkleX: 0 };
-  if (distance <= 0 || steps <= 0) return offset;
-  const each = distance / steps;
-  const progress = Math.max(0, Math.min(1, covered / distance));
-  const placeInWalk = progress * steps;
-  const step = Math.min(steps - 1, Math.floor(placeInWalk));
-  const through = Math.max(0, Math.min(1, placeInWalk - step));
-  const rightSwings = step % 2 === 0;
-
-  /* Un pied qui a balancé est deux longueurs de pas plus loin : il part d'un pas
-     derrière le corps et finit d'un pas devant. */
-  let right = Math.ceil(step / 2) * 2 * each;
-  let left = Math.floor(step / 2) * 2 * each;
-  const eased = easingFunctions.easeInOutSine(through);
-  if (rightSwings) right += 2 * each * eased; else left += 2 * each * eased;
-
-  /* Le sol ne bouge pas : les deux pieds reviennent à l'allure du corps. Un
-     nombre impair de pas laisserait la garde ouverte d'une longueur de pas à la
-     fin, le pied de tête ayant balancé une fois de plus que l'autre ; cette
-     dérive est reprise sur toute la marche, et les pieds finissent exactement où
-     la pose les met. */
-  right -= covered + progress * each;
-  left -= covered - progress * each;
-
-  /* Les abscisses seulement : rien ne se lève. Un pied qui quitterait le sol
-     ferait une marche, et c'est une glissade où les pieds se croisent. */
-  offset.rightAnkleX = right;
-  offset.leftAnkleX = left;
+/* Le salut porte le même okuri-ashi que le déplacement manuel. Le placement
+   déplace déjà le corps : on ne conserve ici que le mouvement relatif des pieds
+   et la descente du bassin. */
+function ceremonyStepOffsets(covered) {
+  const offset = movementCycleOffset(covered);
+  offset.rightAnkleX -= offset.rootX;
+  offset.leftAnkleX -= offset.rootX;
+  offset.rootX = 0;
+  offset.gripX = 0;
   return offset;
 }
 
@@ -2930,9 +2921,9 @@ function render() {
   if (ceremony) {
     const walked = ceremonyWalked(seconds);
     if (walked !== null) {
-      const step = ceremonyStepOffsets(walked, ceremonySettings.openingGap / 2,
-        ceremonySettings.walkSteps);
+      const step = ceremonyStepOffsets(walked);
       attackerPose = Object.assign({}, attackerPose, {
+        rootY: attackerPose.rootY + step.rootY,
         rightAnkleX: attackerPose.rightAnkleX + step.rightAnkleX,
         leftAnkleX: attackerPose.leftAnkleX + step.leftAnkleX
       });
