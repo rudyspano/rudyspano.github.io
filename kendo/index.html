@@ -326,6 +326,7 @@
    deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
    lire : on les retire avant de parser. */
 const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
+const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-8c24861");
 
 /* Cadence */
 let FRAMES_PER_SECOND;
@@ -520,7 +521,7 @@ function stripJsonComments(text) {
 }
 
 async function loadSharedFile(name) {
-  const response = await fetch(SHARED_DATA_DIRECTORY + name);
+  const response = await fetch(SHARED_DATA_DIRECTORY + name + ASSET_VERSION_QUERY);
   if (!response.ok) throw new Error(name + " : " + response.status);
   return JSON.parse(stripJsonComments(await response.text()));
 }
@@ -1052,7 +1053,7 @@ const SHARED_ART_DIRECTORY = "Assets/Resources/Shared/Art/";
 const stageImage = new Image();
 let stageImageReady = false;
 stageImage.addEventListener("load", () => { stageImageReady = true; });
-stageImage.src = SHARED_ART_DIRECTORY + "dojo-stage.png";
+stageImage.src = SHARED_ART_DIRECTORY + "dojo-stage.png" + ASSET_VERSION_QUERY;
 
 /* Le décor ne bouge pas. Il a été découpé un temps en deux bandes défilant
    à des vitesses différentes, plancher et salle, pour donner de la
@@ -1067,7 +1068,7 @@ const pieceImages = {};
    "shinai", "keikogi"]
   .forEach(name => {
   const image = new Image();
-  image.src = SHARED_ART_DIRECTORY + "pieces/" + name + ".png";
+  image.src = SHARED_ART_DIRECTORY + "pieces/" + name + ".png" + ASSET_VERSION_QUERY;
   pieceImages[name] = image;
 });
 
