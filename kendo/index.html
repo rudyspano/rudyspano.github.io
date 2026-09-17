@@ -326,7 +326,7 @@
    deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
    lire : on les retire avant de parser. */
 const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
-const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-tare");
+const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "tare-sans-languette");
 
 /* Cadence */
 let FRAMES_PER_SECOND;
@@ -1669,7 +1669,7 @@ function drawZekken(skeleton) {
   context.restore();
 }
 
-function drawTareWithoutZekken(skeleton) {
+function drawTareVisiblePanels(skeleton) {
   const waist = { x: skeleton.root.x + skeleton.forwardDirection.x * 2, y: skeleton.root.y + 6 };
   const edgeList = [[0, 0], [1, 0], [1, 0.21], [0.64, 0.21], [0.78, 1], [0, 1]];
   context.save();
@@ -1681,11 +1681,11 @@ function drawTareWithoutZekken(skeleton) {
   });
   context.closePath();
   context.clip();
-  drawTare(skeleton);
+  drawTarePiece(skeleton);
   context.restore();
 }
 
-function drawTare(skeleton) {
+function drawTarePiece(skeleton) {
   if (isGameView() && pieceReady("tare")) {
     /* Le tare pend d'aplomb, comme le hakama : monté sur l'axe du buste,
        il partait de travers dès que le corps s'inclinait. */
@@ -2628,7 +2628,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
 
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
      se porte par-dessus le tare, dont il recouvre la ceinture. */
-  if (showArmour) drawTare(skeleton);
+  if (showArmour) drawTareVisiblePanels(skeleton);
   if (showArmour) drawZekken(skeleton);
   // The raised right thigh overlaps the waist flaps when viewed from the right.
   if (drawnHakama && (hakamaSprite(skeleton).piece === "hakama-sankyo" || (nearSideName === "right"
@@ -2638,7 +2638,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
       && hakamaSprite(skeleton).piece !== "hakama-ouvert"))) {
     drawHakamaSprite(skeleton, true);
   }
-  if (showArmour && drawnHakama && hakamaSprite(skeleton).piece === "hakama-sankyo") drawTareWithoutZekken(skeleton);
+  if (showArmour && drawnHakama && hakamaSprite(skeleton).piece === "hakama-sankyo") drawTareVisiblePanels(skeleton);
   if (showArmour) drawDo(skeleton);
   if (showArmour) drawDoCords(skeleton);
   if (showArmour) drawMenCords(skeleton);
