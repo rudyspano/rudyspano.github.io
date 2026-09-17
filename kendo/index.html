@@ -326,7 +326,7 @@
    deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
    lire : on les retire avant de parser. */
 const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
-const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-foreground");
+const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-tare");
 
 /* Cadence */
 let FRAMES_PER_SECOND;
@@ -1669,6 +1669,22 @@ function drawZekken(skeleton) {
   context.restore();
 }
 
+function drawTareWithoutZekken(skeleton) {
+  const waist = { x: skeleton.root.x + skeleton.forwardDirection.x * 2, y: skeleton.root.y + 6 };
+  const edgeList = [[0, 0], [1, 0], [1, 0.21], [0.64, 0.21], [0.78, 1], [0, 1]];
+  context.save();
+  context.beginPath();
+  edgeList.forEach(([horizontal, vertical], index) => {
+    const x = waist.x + (horizontal - PIECE_ANCHORS.tare.from[0]) * 37;
+    const y = waist.y - vertical * 39;
+    if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+  });
+  context.closePath();
+  context.clip();
+  drawTare(skeleton);
+  context.restore();
+}
+
 function drawTare(skeleton) {
   if (isGameView() && pieceReady("tare")) {
     /* Le tare pend d'aplomb, comme le hakama : monté sur l'axe du buste,
@@ -2622,6 +2638,7 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
       && hakamaSprite(skeleton).piece !== "hakama-ouvert"))) {
     drawHakamaSprite(skeleton, true);
   }
+  if (showArmour && drawnHakama && hakamaSprite(skeleton).piece === "hakama-sankyo") drawTareWithoutZekken(skeleton);
   if (showArmour) drawDo(skeleton);
   if (showArmour) drawDoCords(skeleton);
   if (showArmour) drawMenCords(skeleton);
