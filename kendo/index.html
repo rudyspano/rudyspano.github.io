@@ -326,7 +326,7 @@
    deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
    lire : on les retire avant de parser. */
 const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
-const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-volume-62");
+const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-foreground");
 
 /* Cadence */
 let FRAMES_PER_SECOND;
@@ -2018,7 +2018,24 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     y: Math.min(right.foot.ankle.y, left.foot.ankle.y) * HAKAMA_HEM_LIFT
   };
   belt.y = Math.max(belt.y, hem.y + (sprite.minimumClothHeight || 0));
-  return drawPiece(sprite.piece, [sprite.anchorX, sprite.waistY], [sprite.anchorX, 1], belt, hem);
+  context.save();
+  if (foregroundOnly) {
+    const image = pieceImages[sprite.piece];
+    const height = (belt.y - hem.y) / (1 - sprite.waistY);
+    const width = height * image.naturalWidth / image.naturalHeight;
+    const edgeList = [...sprite.foregroundTopEdgeList, [1, 1], [0, 1]];
+    context.beginPath();
+    edgeList.forEach(([horizontal, vertical], index) => {
+      const x = skeleton.root.x + (horizontal - sprite.anchorX) * width;
+      const y = belt.y - (vertical - sprite.waistY) * height;
+      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    context.closePath();
+    context.clip();
+  }
+  const drawn = drawPiece(sprite.piece, [sprite.anchorX, sprite.waistY], [sprite.anchorX, 1], belt, hem);
+  context.restore();
+  return drawn;
 }
 
 /** Fit the painted forward leg to the knee and ankle, keeping the rear panel fixed. */
@@ -2598,11 +2615,11 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   if (showArmour) drawTare(skeleton);
   if (showArmour) drawZekken(skeleton);
   // The raised right thigh overlaps the waist flaps when viewed from the right.
-  if (drawnHakama && nearSideName === "right"
+  if (drawnHakama && (hakamaSprite(skeleton).piece === "hakama-sankyo" || (nearSideName === "right"
       && skeleton.rightKnee.y > skeleton.root.y - 34
       && skeleton.rightFoot.ankle.y > 10
       && hakamaSprite(skeleton).piece !== "hakama-sankyo"
-      && hakamaSprite(skeleton).piece !== "hakama-ouvert") {
+      && hakamaSprite(skeleton).piece !== "hakama-ouvert"))) {
     drawHakamaSprite(skeleton, true);
   }
   if (showArmour) drawDo(skeleton);
