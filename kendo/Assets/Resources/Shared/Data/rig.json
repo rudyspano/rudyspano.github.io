@@ -103,6 +103,7 @@
     "beltRise": 7,
     "hemLift": 0.6,
     "rendering": {
+      "standingLegFollow": 0.5, "standingRearOffset": -15, "standingFrontOffset": 13,
       "frontFullness": 0.14, "rearFullness": 0.21,
       "rearExtension": 12, "frontExtension": 13, "ankleOffset": -3
     },

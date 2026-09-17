@@ -1946,7 +1946,13 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
       "hakama-ouvert": [[0.18, 0.97], [0.70, 0.97]],
       "hakama-fente": [[0.18, 0.87], [0.65, 0.96]]
     };
-    const left = skeleton.leftFoot.ankle, right = skeleton.rightFoot.ankle;
+    const left = { ...skeleton.leftFoot.ankle }, right = { ...skeleton.rightFoot.ankle };
+    if (sprite.piece === "hakama-ouvert") {
+      const rearRest = skeleton.root.x + HAKAMA_RENDERING.standingRearOffset;
+      const frontRest = skeleton.root.x + HAKAMA_RENDERING.standingFrontOffset;
+      left.x = rearRest + (left.x - rearRest) * HAKAMA_RENDERING.standingLegFollow;
+      right.x = frontRest + (right.x - frontRest) * HAKAMA_RENDERING.standingLegFollow;
+    }
     const footSpread = Math.abs(right.x - left.x);
     const closedStance = Math.max(0, Math.min(1, (52 - footSpread) / 28));
     const rearAnchor = ankleAnchorList[sprite.piece][0];
