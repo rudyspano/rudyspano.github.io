@@ -245,8 +245,8 @@
          pouce sur la tsuba, poignée en avant, lame balayant en arrière.
        - **sanpo** : les cinq pas d'approche, droite d'abord, main droite libre le
          long du corps. Les
-         pieds sont animés par le cycle de marche du jeu, celui-là même qui sert
-         au swipe.
+         pieds se croisent en ayumi-ashi, tandis que le hakama conserve la
+         silhouette du kamae avant le sankyo.
        - **saisie** : les pas faits, la main droite quitte le tare pour la tsuka,
          au-dessus de la tsuba. `rightHandShift` la ramène de trente-sept
          centimètres vers le pommeau, faute de quoi l'écartement des poings d'une

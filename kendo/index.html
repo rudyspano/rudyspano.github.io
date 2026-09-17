@@ -1910,6 +1910,7 @@ function drawHakamaLeg(hip, knee, hemTarget, seed) {
 function hakamaSprite(skeleton) {
   const squat = HAKAMA_SPRITES.squat;
   if (skeleton.root.y < squat.belowHipHeight) return squat;
+  if (skeleton.kamaeHakama) return HAKAMA_SPRITES.ladder.find(sprite => sprite.piece === "hakama-ouvert");
 
   const right = limbSet(skeleton, "right"), left = limbSet(skeleton, "left");
   const airborne = HAKAMA_SPRITES.airborne;
@@ -1970,8 +1971,9 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     if (sprite.piece === "hakama-ouvert") {
       const rearRest = skeleton.root.x + HAKAMA_RENDERING.standingRearOffset;
       const frontRest = skeleton.root.x + HAKAMA_RENDERING.standingFrontOffset;
-      left.x = rearRest + (left.x - rearRest) * HAKAMA_RENDERING.standingLegFollow;
-      right.x = frontRest + (right.x - frontRest) * HAKAMA_RENDERING.standingLegFollow;
+      const follow = skeleton.kamaeHakama ? 0 : HAKAMA_RENDERING.standingLegFollow;
+      left.x = rearRest + (left.x - rearRest) * follow;
+      right.x = frontRest + (right.x - frontRest) * follow;
     }
     const footSpread = Math.abs(right.x - left.x);
     const closedStance = Math.max(0, Math.min(1, (52 - footSpread) / 28));
@@ -2710,16 +2712,23 @@ function ceremonyWalked(seconds) {
   return (ceremonySettings.openingGap - ceremonySeparation(seconds)) / 2;
 }
 
-/* Le salut porte le même okuri-ashi que le déplacement manuel. Le placement
-   déplace déjà le corps : on ne conserve ici que le mouvement relatif des pieds
-   et la descente du bassin. */
+/** Crossed ceremony steps, relative to the body's world displacement. */
 function ceremonyStepOffsets(covered) {
-  const offset = movementCycleOffset(covered);
-  offset.rightAnkleX -= offset.rootX;
-  offset.leftAnkleX -= offset.rootX;
-  offset.rootX = 0;
-  offset.gripX = 0;
-  return offset;
+  const distance = ceremonySettings.openingGap / 2;
+  const steps = ceremonySettings.walkSteps;
+  if (distance <= 0 || steps <= 0) return { rootY: 0, rightAnkleX: 0, leftAnkleX: 0 };
+  const stepLength = distance / steps;
+  const progress = Math.max(0, Math.min(1, covered / distance));
+  const position = progress * steps;
+  const step = Math.min(steps - 1, Math.floor(position));
+  const through = Math.max(0, Math.min(1, position - step));
+  let right = Math.ceil(step / 2) * 2 * stepLength;
+  let left = Math.floor(step / 2) * 2 * stepLength;
+  const swing = 2 * stepLength * easingFunctions.easeInOutSine(through);
+  if (step % 2 === 0) right += swing; else left += swing;
+  return { rootY: 0,
+    rightAnkleX: right - covered - progress * stepLength,
+    leftAnkleX: left - covered + progress * stepLength };
 }
 
 function currentSequence() {
@@ -2972,6 +2981,7 @@ function render() {
     clampBladeOnMen(attackerPose, targetInAttackerFrame.x, targetInAttackerFrame.y);
   }
   const skeleton = solveSkeleton(attackerPose);
+  skeleton.kamaeHakama = ceremony;
   placement.attacker.armOverMendare = armPassesOverMendare(skeleton,
     placement.attacker.facesRight ? "right" : "left");
   /* Profondeur de la lame : 1 quand elle est plantée derrière le corps, 0
@@ -3039,6 +3049,7 @@ function render() {
      le shinai de l'attaquant passe devant lui à la traversée. */
   if (viewState.showMotodachi) {
     const defenderSkeleton = solveSkeleton(defenderPose);
+    defenderSkeleton.kamaeHakama = ceremony;
     placement.defender.armOverMendare = armPassesOverMendare(defenderSkeleton,
       placement.defender.facesRight ? "right" : "left");
     drawActor(placement.defender, defenderSkeleton);
