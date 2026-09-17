@@ -344,11 +344,11 @@
            le combat commence. Il est donc porté par le kamae, l'étape d'après. */
         "name": "Sankyo", "seconds": 1.6, "separation": 0,
         "pose": {
-          "rootX": 4, "rootY": 54, "torsoLeanDegrees": 2,
-          "headTiltDegrees": 0, "rightAnkleX": 20, "rightAnkleY": 10,
-          "rightFootDegrees": -20, "leftAnkleX": -8, "leftAnkleY": 10,
-          "leftFootDegrees": -20, "leftKneeOutward": 1,
-          "gripX": 30, "gripY": 62,
+          "rootX": 4, "rootY": 42, "torsoLeanDegrees": 2,
+          "headTiltDegrees": 0, "rightAnkleX": 7, "rightAnkleY": 10,
+          "rightFootDegrees": -20, "leftAnkleX": 1, "leftAnkleY": 10,
+          "leftFootDegrees": -20, "kneeOpening": 1,
+          "gripX": 30, "gripY": 50,
           "shinaiDegrees": -338, "leftElbowBias": -8, "rightElbowBias": -12,
           "rightHandFree": 0, "gripAlongShinai": 0, "rightHandShift": 0,
           "shinaiBehindBody": 0
