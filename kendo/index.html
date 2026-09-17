@@ -326,7 +326,7 @@
    deux côtés. Ces fichiers portent des commentaires, que JSON.parse ne sait pas
    lire : on les retire avant de parser. */
 const SHARED_DATA_DIRECTORY = "Assets/Resources/Shared/Data/";
-const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-8c24861");
+const ASSET_VERSION_QUERY = "?v=" + encodeURIComponent(new URLSearchParams(window.location.search).get("v") || "sonkyo-volume-62");
 
 /* Cadence */
 let FRAMES_PER_SECOND;
@@ -2017,6 +2017,7 @@ function drawHakamaSprite(skeleton, foregroundOnly = false) {
     x: skeleton.root.x,
     y: Math.min(right.foot.ankle.y, left.foot.ankle.y) * HAKAMA_HEM_LIFT
   };
+  belt.y = Math.max(belt.y, hem.y + (sprite.minimumClothHeight || 0));
   return drawPiece(sprite.piece, [sprite.anchorX, sprite.waistY], [sprite.anchorX, 1], belt, hem);
 }
 

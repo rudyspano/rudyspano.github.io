@@ -110,7 +110,7 @@
     "sprites": {
       /* Accroupi : une seule image, l'écartement maximal, tissu répandu. */
       "squat": {
-        "piece": "hakama-sankyo", "belowHipHeight": 72,
+        "piece": "hakama-sankyo", "belowHipHeight": 72, "minimumClothHeight": 62,
         "anchorX": 0.342, "waistY": 0.02
       },
       /* En l'air : le genou droit est propulsé devant, l'ourlet de cette
