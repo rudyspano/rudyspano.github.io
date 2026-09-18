@@ -950,7 +950,7 @@ function solveSkeleton(pose) {
 
   const shinaiRadians = toRadians(pose.shinaiDegrees);
   const shinaiDirection = { x: Math.cos(shinaiRadians), y: Math.sin(shinaiRadians) };
-  const leftGrip = { x: pose.gripX, y: pose.gripY };
+  let leftGrip = { x: pose.gripX, y: pose.gripY };
   /* Toutes les pièces du shinai se mesurent depuis le poing gauche d'une garde,
      au tsuka-gashira. Quand la main est remontée sur la poignée — sous la tsuba,
      comme le sagetō et le taitō le demandent — l'arme entière coulisse d'autant
@@ -977,7 +977,7 @@ function solveSkeleton(pose) {
     x: shinaiDirection.x * MONOUCHI_START_FROM_LEFT_GRIP, y: shinaiDirection.y * MONOUCHI_START_FROM_LEFT_GRIP
   });
 
-  const leftWrist = addPointOffset(leftGrip, {
+  let leftWrist = addPointOffset(leftGrip, {
     x: -shinaiDirection.x * WRIST_TO_GRIP_LENGTH, y: -shinaiDirection.y * WRIST_TO_GRIP_LENGTH
   });
   const rightWristOnBlade = addPointOffset(rightGripOnBlade, {
@@ -1000,16 +1000,18 @@ function solveSkeleton(pose) {
     x: forwardDirection.x * 3, y: forwardDirection.y * 3
   });
 
-  /* Une main lâchée du shinai pend simplement à son épaule, d'aplomb : un bras au
-     repos tombe droit quoi que fasse le corps au-dessus, si bien que le salut
-     bascule les épaules par-dessus lui et non lui avec elles. Tout le côté droit
-     se dessine sur ces deux points — manche, kote et poing suivent — et le shinai,
-     dessiné sur la main gauche, ne bouge pas. */
   const handFree = pose.rightHandFree || 0;
-  const hangingWrist = addPoints(rightShoulder, 0, -HANGING_ARM_LENGTH);
+  const hangingWrist = addPoints(rightShoulder,
+    -torsoDirection.x * HANGING_ARM_LENGTH, -torsoDirection.y * HANGING_ARM_LENGTH);
   const rightWrist = mixPoints(rightWristOnBlade, hangingWrist, handFree);
   const rightGrip = mixPoints(rightGripOnBlade,
-    addPoints(hangingWrist, 0, -WRIST_TO_GRIP_LENGTH), handFree);
+    addPoints(hangingWrist, -torsoDirection.x * WRIST_TO_GRIP_LENGTH,
+      -torsoDirection.y * WRIST_TO_GRIP_LENGTH), handFree);
+
+  const releasedGrip = addPoints(root, 10, -2);
+  leftGrip = mixPoints(leftGrip, releasedGrip, pose.leftHandFree || 0);
+  leftWrist = mixPoints(leftWrist, addPoints(releasedGrip, 0, WRIST_TO_GRIP_LENGTH),
+    pose.leftHandFree || 0);
 
   const leftElbow = solveElbow(leftShoulder, leftWrist, pose.leftElbowBias);
   const rightElbow = solveElbow(rightShoulder, rightWrist,
@@ -1033,8 +1035,7 @@ function solveSkeleton(pose) {
   };
 }
 
-/* Où pend un bras libre : pas tout à fait sa longueur, un bras au repos gardant
-   un peu de pli, et droit vers le bas — aucune inclinaison du corps ne l'emporte. */
+/* A free arm follows the torso with a slight bend at the elbow. */
 const HANGING_ARM_LENGTH = 50;
 const HANGING_ELBOW_BIAS = -3;
 
@@ -1633,40 +1634,6 @@ function drawDoCords(skeleton) {
   strokePath([addPointOffset(waistBack, { x: -forward.x * 7, y: -forward.y * 7 }),
               addPointOffset(waistBack, { x: -forward.x * 11, y: -forward.y * 11 - 2.5 })],
     { color: ink, width: 0.45, single: true, alpha: 0.6, seed: 128 });
-}
-
-/** Zekken : la plaque de tissu qui pend au pan central du tare. Vu de profil
-    elle est presque de champ, on n'en voit qu'une bande étroite — d'où le
-    kanji écrasé à l'horizontale, qui se devine plus qu'il ne se lit. */
-function drawZekken(skeleton) {
-  if (!isSolidView() || !viewState.showArmour) return;
-  const up = skeleton.torsoDirection;
-  const forward = { x: up.y, y: -up.x };
-  const front = addPointOffset(skeleton.root,
-    { x: forward.x * 10 + up.x * 1, y: forward.y * 10 + up.y * 1 });
-  const top = addPointOffset(front, { x: -up.x * 3, y: -up.y * 3 });
-  const bottom = addPointOffset(top, { x: -up.x * 13, y: -up.y * 13 });
-  const panel = segmentQuad(top, bottom, 3, 2.7);
-  fillPath(panel, "#1b2244", 0.3);
-  strokePath(panel, { color: isGameView() ? "#0f142c" : partColor.tare,
-    width: 0.35, closed: true, alpha: 0.7, seed: 130 });
-
-  const centre = pointAlong(top, bottom, 0.46);
-  context.save();
-  context.translate(centre.x, centre.y);
-  context.rotate(-Math.atan2(up.x, up.y));
-  /* Le repère a l'axe vertical vers le haut, le texte se lit vers le bas :
-     on le retourne. L'écrasement horizontal est la perspective, pas un
-     effet de style — la plaque est vue par la tranche. */
-  context.scale(0.5, -1);
-  context.globalAlpha = 0.4;
-  context.fillStyle = isGameView() ? "#ddd8c8" : partColor.tare;
-  context.font = '5px "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif';
-  context.textAlign = "center";
-  context.fillText("剣", 0, -0.5);
-  context.fillText("道", 0, 5);
-  context.globalAlpha = 1;
-  context.restore();
 }
 
 function drawTareWithoutZekken(skeleton) {
@@ -2629,7 +2596,6 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   /* Le tare se porte par-dessus le hakama, donc après les deux jambes ; le dō
      se porte par-dessus le tare, dont il recouvre la ceinture. */
   if (showArmour) drawTare(skeleton);
-  if (showArmour) drawZekken(skeleton);
   // The raised right thigh overlaps the waist flaps when viewed from the right.
   if (drawnHakama && (hakamaSprite(skeleton).piece === "hakama-sankyo" || (nearSideName === "right"
       && skeleton.rightKnee.y > skeleton.root.y - 34
@@ -2732,8 +2698,14 @@ function ceremonyPose(seconds) {
   const at = ceremonyAt(seconds);
   const stage = ceremonyStages[at.index];
   if (at.index === 0) return stage.pose;
-  return blendPoses(ceremonyStages[at.index - 1].pose, stage.pose,
-    easingFunctions.easeInOutSine(at.through));
+  const previousPose = ceremonyStages[at.index - 1].pose;
+  const progress = easingFunctions.easeInOutSine(at.through);
+  const pose = blendPoses(previousPose, stage.pose, progress);
+  if (previousPose.gripAlongShinai !== stage.pose.gripAlongShinai) {
+    pose.leftHandFree = easingFunctions.easeInOutSine(Math.max(0, Math.min(1, progress / 0.15)))
+      * (1 - easingFunctions.easeInOutSine(Math.max(0, Math.min(1, (progress - 0.75) / 0.25))));
+  }
+  return pose;
 }
 
 /** Ce qui reste de l'écart de marche, partagé en deux. */

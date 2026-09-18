@@ -239,8 +239,7 @@
          plan. Les deux se saluent en miroir et ne se lisent pas pareil.
        - **rei** : le salut, trente degrés. **Seul le buste s'incline** : le poing
          gauche et l'angle du shinai sont ceux du sagetō, sans un chiffre de
-         changé, et la main droite tient à la ceinture et non à l'épaule, donc
-         elle ne bouge pas non plus.
+         changé. La main droite reste le long du corps pendant son inclinaison.
        - **sagetō** de nouveau : on se redresse.
        - **taitō** : le shinai monte à la hanche gauche comme un sabre porté, le
          pouce sur la tsuba, poignée en avant, lame balayant en arrière.
@@ -249,16 +248,19 @@
          pieds se croisent en ayumi-ashi, tandis que le hakama conserve la
          silhouette du kamae avant le sankyo.
        - **saisie** : les pas faits, la main droite quitte le tare pour la tsuka,
-         au-dessus de la tsuba. `rightHandShift` la ramène de trente-sept
-         centimètres vers le pommeau, faute de quoi l'écartement des poings d'une
-         garde la poserait sur la lame.
+         juste avant la tsuba, côté poignée. `rightHandShift` compense les
+         quarante-six centimètres de `gripAlongShinai` : la main droite reste
+         à vingt-huit centimètres du pommeau, un centimètre avant la tsuba,
+         pendant toute la saisie et le dégainé.
        - le **dégainé se fait d'un seul mouvement**, à l'intérieur du sankyo : la
          pointe quitte la ceinture par le haut et vient se poser en chūdan pendant
          que le corps descend. D'où l'angle du sankyo écrit -338 et non 22, qui est
          pourtant la même direction : l'interpolation prend le chemin court entre
          deux nombres, et vers 22 la pointe passerait par le bas. Une étape
          intermédiaire faisait de ce dégainé deux gestes ; un seul suffit.
-       - **sankyo** : l'accroupissement, bassin à 54 cm, talons levés.
+       La main gauche lâche pendant le dégainé, reste près de la hanche,
+       puis reprend le pommeau à la fin du mouvement.
+       - **sankyo** : l’accroupissement, bassin à 54 cm, talons levés.
        - **kamae** : on se relève, et la pose est exactement celle de la garde
          écrite, si bien que la main est rendue sans que rien ne saute.
 
@@ -336,7 +338,7 @@
           "rightFootDegrees": 0, "leftAnkleX": -2, "leftAnkleY": 6,
           "leftFootDegrees": 0, "gripX": 14, "gripY": 88,
           "shinaiDegrees": -182, "leftElbowBias": -6, "rightElbowBias": -8,
-          "rightHandFree": 0, "gripAlongShinai": 46, "rightHandShift": -37,
+          "rightHandFree": 0, "gripAlongShinai": 46, "rightHandShift": -46,
           "shinaiBehindBody": 1
         }
       },
@@ -426,7 +428,7 @@
                  jamais, donc rien n'annonce sa coupe, et il ne rompt pas — un
                  jōdan n'a pas de défense, il a l'initiative. Son men est couvert,
                  ses mains ne le sont pas.
-       Shoji     la garde. Il pare au lieu de rompre, et sa parade est un armé :
+       Kim       la garde. Il pare au lieu de rompre, et sa parade est un armé :
                  elle couvre son men et ouvre son dō, exactement comme celle du
                  joueur. Il connaît les quatre techniques et ne lance que celle que
                  la garde d'en face laisse passer. */
@@ -512,7 +514,7 @@
            Il connaît les quatre techniques et ne lance que celle qui a une chance
            d'arriver : le dō contre une lame levée, le men ou le kote contre une
            lame basse, le tsuki contre l'une comme l'autre. */
-        "name": "Shoji", "keikogi": "blanc", "hakama": "blanc", "armour": "laiton",
+        "name": "Kim", "keikogi": "blanc", "hakama": "blanc", "armour": "laiton",
         "background": "5",
         "pace": 2.0, "guard": "chudan",
         "wanderOut": -32, "wanderIn": 14, "decisionSeconds": 0.5,
@@ -560,7 +562,12 @@
       { "id": "2", "refereeFloor": 68, "refereeHeight": 116 },
       { "id": "3", "refereeFloor": 36, "refereeHeight": 116 },
       { "id": "4", "refereeFloor": 50, "refereeHeight": 116 },
-      { "id": "5", "refereeFloor": 25, "refereeHeight": 116, "zoom": 1.1 }
+      { "id": "5", "refereeFloor": 25, "refereeHeight": 116, "zoom": 1.1 },
+      /* La halle de l'entraînement, qui n'est à personne : un keikojō nu, un taiko
+         dans l'angle. Elle n'a pas de niveau, donc pas d'arbitre — les deux nombres
+         qui suivent ne servent qu'à ce qu'une halle sans arbitre ne se lise pas
+         comme une halle dont on aurait oublié de l'écrire. */
+      { "id": "training", "refereeFloor": 40, "refereeHeight": 116 }
     ]
   },
   "playback": {
@@ -631,11 +638,11 @@
     },
     {
       "id": "blanc", "label": "BLANC", "piece": "hakama-pan-blanc",
-      "nearHakama": "#b5b2ac", "farHakama": "#898783"
+      "nearHakama": "#ffffff", "farHakama": "#dce1e8"
     },
     {
-      "id": "creme", "label": "CRÈME", "piece": "hakama-pan-creme",
-      "nearHakama": "#c9c7c0", "farHakama": "#999792"
+      "id": "creme", "label": "BLANC UNI", "piece": "hakama-pan-creme",
+      "nearHakama": "#ffffff", "farHakama": "#dce1e8"
     }
   ],
 
