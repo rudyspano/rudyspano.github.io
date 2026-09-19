@@ -267,6 +267,13 @@
        `separation` est l'écart restant à la fin de l'étape, en centimètres au-delà
        de la distance d'ouverture ; il se referme à deux, moitié chacun. */
     "openingGap": 144, "walkSteps": 5,
+    /* Et l'allure à laquelle tout cela se joue. Chaque étape est écrite à la
+       longueur que son geste met à se lire ; `speed` les emporte toutes, de sorte
+       qu'un salut juste dans ses proportions et trop lent dans l'ensemble se
+       retouche d'un nombre et non de huit. À 1,4 le protocole dure 6,9 s au lieu
+       de 9,6 — on le regarde, on ne le joue pas, et neuf secondes et demie avant
+       de rendre la main, c'est long. */
+    "speed": 1.4,
     "stageList": [
       {
         "name": "Sagetō", "seconds": 0.9, "separation": 144,
@@ -395,6 +402,19 @@
        assez pour qu'on attende. */
     "pointsToWin": 2, "pointCallSeconds": 2.2, "matchCallSeconds": 3.0,
     "returnToPlacesSeconds": 4.0,
+
+    /* Et une coupe qui marque se porte jusqu'au bout : celui qui a touché entre
+       dans l'autre au lieu de s'arrêter au bout de sa lame, les deux corps se
+       retrouvent à `closestToPartner` — le tsubazeriai —, et c'est de ce contact
+       que la paire se sépare pour regagner ses places. Il y va au double d'un pas :
+       c'est l'élan de la coupe qui le porte, et une marche tranquille jusqu'au
+       contact ne serait plus la même chose. Ça s'enchaîne sans temps mort et sans
+       redescendre les bras : la coupe s'arrête à la fin de son zanshin, ses pieds
+       prennent le relais de la pose telle quelle, et la remise en garde — la
+       dernière phase de la coupe — se joue au retour. Les secondes ne sont qu'un garde-fou,
+       pour l'homme qui ne peut pas y arriver — coincé au bord de l'image, ou déjà
+       dedans sans terrain à prendre. */
+    "bodyContactSpeedUp": 2, "bodyContactSeconds": 1.6,
 
     /* Et ce que vaut un armé lancé sous sa coupe : la moitié de la montée, pas
        davantage. Il n'y a pas le temps d'un furikaburi quand la lame arrive déjà —
@@ -584,13 +604,25 @@
        que la montée garde ces 0,30 s : accélérer le jeu d'un quart la ramenait à
        0,24, c'est-à-dire à deux centièmes de la durée qu'on avait déjà mesurée
        injouable. Ces deux nombres se compensent — retoucher l'un sans l'autre
-       rouvre le problème, et le test de fumée le dit. */
-    "speed": 0.75, "armingSpeedUp": 1.05,
+       rouvre le problème, et le test de fumée le dit.
 
-    /* Et les attaques seules vont encore un cinquième plus vite. Le facteur porte
-       sur la séquence d'attaque et sur rien d'autre : ni la marche, ni le salut,
-       ni la montée — c'est-à-dire pas sur la fenêtre de la petite amplitude, qui
-       garde ses 0,30 s. Une coupe qu'on accélère n'est pas un jeu qu'on accélère. */
+       Le 18/09/2026, `speed` monte encore d'un cinquième (0,75 -> 0,9, demandé
+       « toute la vitesse du jeu ») et `armingSpeedUp` refait le même chemin,
+       1,05 -> 0,875 : le produit des deux, qui fixe la durée de la montée, reste
+       à 0,7875 et la fenêtre reste à 0,30 s — retouchée une première fois sans
+       compenser, elle tombait pile sur le plancher testé (`SmallCutWindowSeconds`
+       = 0,25 s) et le test de fumée l'a arrêté là. Le mur, la marche et la coupe
+       elle-même vont bien un cinquième plus vite ; seule la montée n'en gagne
+       rien, la petite amplitude étant tenue par un pouce et non par une horloge
+       qu'on peut accélérer sans y penser. */
+    "speed": 0.9, "armingSpeedUp": 0.875,
+
+    /* Et les attaques seules vont encore un cinquième plus vite, par-dessus le
+       facteur commun ci-dessus — lui aussi monté d'un cinquième le 18/09/2026, la
+       coupe une fois lancée (au-delà de la montée) en profite donc doublement.
+       Ce facteur-ci porte sur la séquence d'attaque et sur rien d'autre : ni la
+       marche, ni le salut, ni la montée. Une coupe qu'on accélère n'est pas un
+       jeu qu'on accélère. */
     "attackSpeedUp": 1.2
   },
   "camera": {

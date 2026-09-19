@@ -1585,28 +1585,30 @@ function drawDo(skeleton) {
 
 
 /** Himo du men : deux cordons partent de l'arrière de la coque et se nouent
-    derrière la nuque. De profil on n'en voit que ce qui en dépasse. */
+    derrière la nuque, leurs bouts pendant du nœud. De profil on n'en voit que ce
+    qui en dépasse — dessinés à la largeur d'un trait de plume, c'était une
+    rayure sur l'image et non une tresse large comme un doigt. */
 function drawMenCords(skeleton) {
   if (!isSolidView() || !viewState.showArmour) return;
   const up = skeleton.neckDirection;
   const back = { x: -up.y, y: up.x };
   const ink = isGameView() ? CORD_INK : partColor.men;
   const anchor = addPointOffset(skeleton.headCenter, {
-    x: back.x * (HEAD_RADIUS_HORIZONTAL + 1.5),
-    y: back.y * (HEAD_RADIUS_HORIZONTAL + 1.5)
+    x: back.x * (HEAD_RADIUS_HORIZONTAL + 2),
+    y: back.y * (HEAD_RADIUS_HORIZONTAL + 2)
   });
   for (let cord = 0; cord < 2; cord++) {
-    const spread = cord === 0 ? 2.4 : -1.2;
+    const spread = cord === 0 ? 3.4 : -1.7;
     const start = addPointOffset(anchor, { x: up.x * spread, y: up.y * spread });
-    const middle = addPointOffset(start, { x: back.x * 5 - up.x * 4, y: back.y * 5 - up.y * 4 });
-    const end = addPointOffset(middle, { x: back.x * 1.5 - up.x * 8, y: back.y * 1.5 - up.y * 8 });
+    const middle = addPointOffset(start, { x: back.x * 8 - up.x * 6, y: back.y * 8 - up.y * 6 });
+    const end = addPointOffset(middle, { x: back.x * 2.5 - up.x * 14, y: back.y * 2.5 - up.y * 14 });
     strokePath([start, middle, end],
-      { color: ink, width: 0.5, single: true, alpha: 0.75, seed: 120 + cord });
+      { color: ink, width: 0.85, single: true, alpha: 0.75, seed: 120 + cord });
   }
   /* Le nœud, deux traits croisés là où les cordons se rejoignent. */
-  const knot = addPointOffset(anchor, { x: back.x * 4.5 - up.x * 3, y: back.y * 4.5 - up.y * 3 });
-  strokePath([addPointOffset(knot, { x: -1, y: -1 }), addPointOffset(knot, { x: 1, y: 1 })],
-    { color: ink, width: 0.7, single: true, alpha: 0.8, seed: 123 });
+  const knot = addPointOffset(anchor, { x: back.x * 7 - up.x * 4.5, y: back.y * 7 - up.y * 4.5 });
+  strokePath([addPointOffset(knot, { x: -1.6, y: -1.6 }), addPointOffset(knot, { x: 1.6, y: 1.6 })],
+    { color: ink, width: 1.15, single: true, alpha: 0.8, seed: 123 });
 }
 
 /** Himo du dō : les cordons de poitrine montent des angles hauts du plastron,
@@ -2677,8 +2679,19 @@ let ceremonyStages = [];
 
 function isCeremony() { return sceneState.sequence === "ceremony"; }
 
+/** Ce que le salut dure une fois joué : ce qui est écrit, sur l'allure à
+    laquelle on le joue. `speed` emporte toutes les étapes à la fois — un salut
+    juste dans ses proportions et trop lent dans l'ensemble se retouche là. */
 function ceremonySeconds() {
+  return ceremonyWrittenSeconds() / ceremonyPace();
+}
+
+function ceremonyWrittenSeconds() {
   return ceremonyStages.reduce((total, stage) => total + stage.seconds, 0);
+}
+
+function ceremonyPace() {
+  return ceremonySettings.speed > 0 ? ceremonySettings.speed : 1;
 }
 
 /** L'étape jouée à cette seconde, et l'avancement dedans. */
@@ -2935,7 +2948,7 @@ function render() {
      coupé : il court-circuite donc tout ce qui suit de la mécanique de combat,
      et n'emprunte que le cadrage et le dessin. */
   const ceremony = isCeremony();
-  const seconds = frame / FRAMES_PER_SECOND;
+  const seconds = frame / FRAMES_PER_SECOND * (ceremony ? ceremonyPace() : 1);
   let attackerPose = ceremony ? ceremonyPose(seconds)
     : interpolatePose(frame, currentSequence());
   if (ceremony) {
@@ -3297,13 +3310,15 @@ function refreshCeremonyEditor() {
   });
 }
 
+/** Où poser la réglette pour voir la fin d'une étape : les durées sont écrites,
+    la réglette est en secondes jouées, d'où le passage par l'allure. */
 function secondsAtEndOf(stage) {
   let total = 0;
   for (const each of ceremonyStages) {
     total += each.seconds;
     if (each === stage) break;
   }
-  return Math.max(0, total - 0.001);
+  return Math.max(0, total / ceremonyPace() - 0.001);
 }
 
 /** Le bloc `ceremony` tel qu'il s'écrit dans rig.json, prêt à coller. */
@@ -3318,7 +3333,9 @@ function ceremonyJson() {
     }
     return `      {\n${head}\n        "pose": {\n${rows.join(',\n')}\n        }\n      }`;
   });
-  return `"openingGap": ${ceremonySettings.openingGap},\n`
+  return `"openingGap": ${ceremonySettings.openingGap}, `
+    + `"walkSteps": ${ceremonySettings.walkSteps},\n`
+    + `"speed": ${ceremonyPace()},\n`
     + `"stageList": [\n${stages.join(',\n')}\n    ]`;
 }
 
