@@ -1584,33 +1584,6 @@ function drawDo(skeleton) {
 }
 
 
-/** Himo du men : deux cordons partent de l'arrière de la coque et se nouent
-    derrière la nuque, leurs bouts pendant du nœud. De profil on n'en voit que ce
-    qui en dépasse — dessinés à la largeur d'un trait de plume, c'était une
-    rayure sur l'image et non une tresse large comme un doigt. */
-function drawMenCords(skeleton) {
-  if (!isSolidView() || !viewState.showArmour) return;
-  const up = skeleton.neckDirection;
-  const back = { x: -up.y, y: up.x };
-  const ink = isGameView() ? CORD_INK : partColor.men;
-  const anchor = addPointOffset(skeleton.headCenter, {
-    x: back.x * (HEAD_RADIUS_HORIZONTAL + 2),
-    y: back.y * (HEAD_RADIUS_HORIZONTAL + 2)
-  });
-  for (let cord = 0; cord < 2; cord++) {
-    const spread = cord === 0 ? 3.4 : -1.7;
-    const start = addPointOffset(anchor, { x: up.x * spread, y: up.y * spread });
-    const middle = addPointOffset(start, { x: back.x * 8 - up.x * 6, y: back.y * 8 - up.y * 6 });
-    const end = addPointOffset(middle, { x: back.x * 2.5 - up.x * 14, y: back.y * 2.5 - up.y * 14 });
-    strokePath([start, middle, end],
-      { color: ink, width: 0.85, single: true, alpha: 0.75, seed: 120 + cord });
-  }
-  /* Le nœud, deux traits croisés là où les cordons se rejoignent. */
-  const knot = addPointOffset(anchor, { x: back.x * 7 - up.x * 4.5, y: back.y * 7 - up.y * 4.5 });
-  strokePath([addPointOffset(knot, { x: -1.6, y: -1.6 }), addPointOffset(knot, { x: 1.6, y: 1.6 })],
-    { color: ink, width: 1.15, single: true, alpha: 0.8, seed: 123 });
-}
-
 /** Himo du dō : les cordons de poitrine montent des angles hauts du plastron,
     passent sur l'épaule et vont se nouer dans le dos ; celui de taille file
     vers l'arrière au bas de la tôle. */
@@ -2609,7 +2582,6 @@ function drawCharacter(skeleton, nearSideName, bladeFlex, cloth, armOverMendare,
   if (showArmour && drawnHakama && hakamaSprite(skeleton).piece === "hakama-sankyo") drawTareWithoutZekken(skeleton);
   if (showArmour) drawDo(skeleton);
   if (showArmour) drawDoCords(skeleton);
-  if (showArmour) drawMenCords(skeleton);
   if (showArmour) drawMen(skeleton);
   if (showArmour && armOverMendare) drawMendare(skeleton);
 
