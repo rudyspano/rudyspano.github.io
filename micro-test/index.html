@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test du micro</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+      background: #000; color: #eee; font: 20px system-ui, sans-serif; text-align: center; padding: 24px; box-sizing: border-box; }
+    button { font: inherit; font-weight: 700; padding: 18px 36px; border: 0; border-radius: 40px; color: #fff;
+      background: linear-gradient(135deg, #ff2e93, #8a3dff, #00b8ff); }
+    #bar { width: 80vw; max-width: 700px; height: 40px; border-radius: 20px; background: #222; overflow: hidden; }
+    #level { width: 0; height: 100%; background: linear-gradient(90deg, #00b8ff, #ff2e93); transition: width .08s; }
+    #verdict { font-size: 28px; font-weight: 700; }
+    #details { color: #999; font-size: 15px; max-width: 900px; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <!-- Le son reste dans le navigateur : rien n'est enregistré ni envoyé. -->
+  <h1>Est-ce que ce navigateur peut écouter ?</h1>
+  <button id="start">Tester le micro</button>
+  <div id="bar"><div id="level"></div></div>
+  <div id="verdict">Touche le bouton, puis parle.</div>
+  <div id="details"></div>
+  <script>
+    var verdict = document.getElementById('verdict');
+    var details = document.getElementById('details');
+    var level = document.getElementById('level');
+    var loudest = 0;
+    function show(text) { verdict.textContent = text; }
+    function note(text) { details.innerHTML += text.replace(/</g, '&lt;') + '<br>'; }
+    note('Navigateur : ' + navigator.userAgent);
+    note('Page sécurisée (https) : ' + (window.isSecureContext ? 'oui' : 'non'));
+    note('Accès au micro proposé : ' + (navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? 'oui' : 'non'));
+    document.getElementById('start').onclick = function () {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { show('❌ Ce navigateur ne donne pas accès au micro.'); return; }
+      show('Demande d’accès au micro…');
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        var context = new (window.AudioContext || window.webkitAudioContext)();
+        var analyser = context.createAnalyser();
+        analyser.fftSize = 1024;
+        context.createMediaStreamSource(stream).connect(analyser);
+        var samples = new Float32Array(analyser.fftSize);
+        note('Micro ouvert : ' + stream.getAudioTracks().map(function (track) { return track.label || '(sans nom)'; }).join(', '));
+        note('Fréquence : ' + context.sampleRate + ' Hz');
+        show('🎙️ Micro ouvert : parle, la barre doit bouger.');
+        (function measure() {
+          analyser.getFloatTimeDomainData(samples);
+          var sum = 0;
+          for (var index = 0; index < samples.length; index++) sum += samples[index] * samples[index];
+          var loudness = Math.min(1, Math.sqrt(sum / samples.length) * 8);
+          level.style.width = (loudness * 100) + '%';
+          if (loudness > loudest) loudest = loudness;
+          if (loudest > 0.15) show('✅ Le micro marche : ce navigateur entend la pièce.');
+          requestAnimationFrame(measure);
+        })();
+        if (navigator.mediaDevices.enumerateDevices) navigator.mediaDevices.enumerateDevices().then(function (devices) {
+          note('Micros vus : ' + devices.filter(function (device) { return device.kind === 'audioinput'; }).length);
+        });
+      }).catch(function (error) {
+        show('❌ Micro refusé : ' + error.name);
+        note('Erreur : ' + error.name + ' — ' + error.message);
+      });
+    };
+  </script>
+</body>
+</html>
