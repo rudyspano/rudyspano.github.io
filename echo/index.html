@@ -25,7 +25,7 @@
         openScreen(params.get('u'));
       }
       if (window.Alexa && typeof window.Alexa.create === 'function') {
-        window.Alexa.create({ version: '1.1' }).then(function (args) {
+        window.Alexa.create({ version: '1.0' }).then(function (args) {
           var alexa = args.alexa;
           var message = args.message;
           if (message && message.screenUrl) {
