@@ -20,6 +20,55 @@
           frame.src = url;
         }
       }
+      var WRAPPER_VERSION = 2;
+      var alexaClient = null;
+      // Réponse différée de Lumi : l’écran demande de rouvrir le micro pour l’écoute de suite, sans redire « Echo ».
+      // Sans confirmation d’ouverture en 1,5 s, la Skill s’en charge ; le résultat repart à l’écran pour le journal du Mac.
+      window.addEventListener('message', function (event) {
+        var data = event.data;
+        if (!data || data.type !== 'lumi-open-microphone') return;
+        if (!frame.src || new URL(frame.src).origin !== event.origin) return;
+        var source = event.source;
+        var report = function (result) {
+          try {
+            source.postMessage({ type: 'lumi-microphone-result', result: result, version: WRAPPER_VERSION }, event.origin);
+          } catch (error) {}
+        };
+        var alexa = alexaClient;
+        if (!alexa) {
+          report('alexa-absent');
+          return;
+        }
+        var done = false;
+        var askSkill = function (why) {
+          if (done) return;
+          done = true;
+          if (alexa.skill && typeof alexa.skill.sendMessage === 'function') {
+            alexa.skill.sendMessage({ listen: true });
+            report('message-skill:' + why);
+          } else {
+            report('aucune-voie:' + why);
+          }
+        };
+        if (alexa.voice && typeof alexa.voice.requestMicrophoneOpen === 'function') {
+          try {
+            alexa.voice.requestMicrophoneOpen({
+              onOpened: function () {
+                if (done) return;
+                done = true;
+                report('micro-ouvert');
+              },
+              onClosed: function () {},
+              onError: function (reason) { askSkill('erreur-' + reason); },
+            });
+            setTimeout(function () { askSkill('sans-confirmation'); }, 1500);
+          } catch (error) {
+            askSkill('exception');
+          }
+        } else {
+          askSkill('api-absente');
+        }
+      });
       var params = new URLSearchParams(location.search);
       if (params.get('u')) {
         openScreen(params.get('u'));
@@ -27,25 +76,8 @@
       if (window.Alexa && typeof window.Alexa.create === 'function') {
         window.Alexa.create({ version: '1.0' }).then(function (args) {
           var alexa = args.alexa;
+          alexaClient = alexa;
           var message = args.message;
-          // Réponse différée de Lumi : l’écran demande de rouvrir le micro pour l’écoute de suite, sans redire « Echo ».
-          window.addEventListener('message', function (event) {
-            var data = event.data;
-            if (!data || data.type !== 'lumi-open-microphone' || !alexa) return;
-            if (!frame.src || new URL(frame.src).origin !== event.origin) return;
-            var askSkill = function () {
-              if (alexa.skill && typeof alexa.skill.sendMessage === 'function') alexa.skill.sendMessage({ listen: true });
-            };
-            if (alexa.voice && typeof alexa.voice.requestMicrophoneOpen === 'function') {
-              try {
-                alexa.voice.requestMicrophoneOpen({ onError: askSkill });
-              } catch (error) {
-                askSkill();
-              }
-            } else {
-              askSkill();
-            }
-          });
           if (message && message.screenUrl) {
             openScreen(message.screenUrl);
           }
