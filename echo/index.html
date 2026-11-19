@@ -28,6 +28,24 @@
         window.Alexa.create({ version: '1.0' }).then(function (args) {
           var alexa = args.alexa;
           var message = args.message;
+          // Réponse différée de Lumi : l’écran demande de rouvrir le micro pour l’écoute de suite, sans redire « Echo ».
+          window.addEventListener('message', function (event) {
+            var data = event.data;
+            if (!data || data.type !== 'lumi-open-microphone' || !alexa) return;
+            if (!frame.src || new URL(frame.src).origin !== event.origin) return;
+            var askSkill = function () {
+              if (alexa.skill && typeof alexa.skill.sendMessage === 'function') alexa.skill.sendMessage({ listen: true });
+            };
+            if (alexa.voice && typeof alexa.voice.requestMicrophoneOpen === 'function') {
+              try {
+                alexa.voice.requestMicrophoneOpen({ onError: askSkill });
+              } catch (error) {
+                askSkill();
+              }
+            } else {
+              askSkill();
+            }
+          });
           if (message && message.screenUrl) {
             openScreen(message.screenUrl);
           }
